@@ -1,0 +1,50 @@
+.filter_bar_container {
+  padding: 10px 30px 10px 30px !important;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.filter_search_status {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.project-sort-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.project-sort-nav nav ul {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+  border-radius: 5px;
+  overflow: hidden;
+  padding: 4px;
+}
+.project-sort-nav nav ul li {
+  border-radius: 4px, 0px, 0px, 4px;
+  padding: 5px 10px !important;
+}
+.project-sort-nav nav {
+  background: rgb(255, 255, 255);
+  border-radius: 5px;
+  padding: 1px, 15px, 2px, 14px;
+}
+.reservation_select_sort_date {
+  width: 250px !important;
+}
+.slected_filter_status_bg {
+  background-color: #dbb961;
+  border-radius: 4px;
+}
+.project-sort-nav nav ul li a {
+  color: black;
+}

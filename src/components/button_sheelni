@@ -1,0 +1,59 @@
+import styled from 'styled-components';
+
+
+// const Text = styled.div`
+//   color: #020111;
+//   font-weight: 600;
+//   font-size: 14px;
+//   margin-top: 0px !important;
+// `;
+// const Icon = styled.img`
+//   width: 16px !important;
+//   object-fit: contain;
+//   transition: transform 0.4s ease;
+//   width: 20px !important;
+//   height: 20px !important;
+// `;
+
+const Button404 = styled.button`
+  font-weight: 600;
+  font-size: 14px;
+  color: #020111;
+  background-color: #dbb961;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-radius: 12px;
+  width: 200px;
+  height: 45px;
+
+  @media (max-width: 744px) {
+    width: 11.1875rem;
+    height: 2.8125rem;
+  }
+  &:hover {
+    background-color: #18365a;
+    border: 1px solid #dbb961;
+    color: #dbb961;
+  }
+
+  /* &:hover ${Icon} {
+    -webkit-transform: translateX(140px) rotate(45deg);
+    filter: brightness(0) saturate(100%) invert(75%) sepia(73%) saturate(1494%)
+      hue-rotate(1deg) brightness(107%) contrast(103%);
+  } */
+
+  &:hover ${Text} {
+    /* transition: transform 0.4s ease;
+    transform: translateX(-40px); */
+    filter: brightness(0) saturate(100%) invert(75%) sepia(73%) saturate(1494%)
+      hue-rotate(1deg) brightness(107%) contrast(103%);
+  }
+`;
+
+
+
+export  default Button404;

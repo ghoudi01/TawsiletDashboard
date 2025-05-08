@@ -1,0 +1,130 @@
+.bmes_service_portfolio_container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+.bmes_service_portfolio_container::-webkit-scrollbar {
+  display: none;
+}
+.bmes_service_portfolio {
+  width: 100%;
+  height: 100%;
+ display: flex;
+  gap: 2rem;
+}
+.bmes_img {
+  transition: filter 0.3s ease-in-out;
+}
+.bmes_service_portfolio_images:hover .bmes_img {
+  filter: brightness(100%);
+}
+
+.bmes_service_portfolio_images {
+  border-radius: 6px;
+  cursor: pointer;
+  /* flex-basis: 28%; */
+  width: 10vw;
+  border: 1px #00000059 solid;
+}
+.bmes_service_portfolio_images img {
+  border-radius: 5px;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  max-height: 20vh;
+}
+.bmes_service_portfolio_images .bmes_vedio_portfolio {
+  border-radius: 6px;
+  cursor: pointer;
+  flex-basis: 23.1%;
+
+  border: 1px #00000059 solid;
+  position: relative;
+}
+.bmes_service_portfolio_images .bmes_vedio_portfolio .bmes_video_overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  background-color: transparent;
+  height: 100%;
+  width: 100%;
+}
+.bmes_service_portfolio_images iframe {
+  height: 100%;
+  width: 100%;
+  z-index: -1;
+}
+.bmes_portfolio_images_caroussel {
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+  background-color: #0b0b0bed;
+  z-index: 200;
+}
+.bmes_portfolio_images_caroussel .close_caroussel_portfolio {
+  color: white;
+}
+.bmes_portfolio_images_caroussel .close_caroussel_portfolio .anticon-close svg,
+.bmes_portfolio_images_caroussel
+  .close_caroussel_portfolio
+  .anticon-zoom-in
+  svg,
+.bmes_portfolio_images_caroussel
+  .close_caroussel_portfolio
+  .anticon-zoom-out
+  svg {
+  width: 20px;
+  height: 20px;
+}
+.modal__menu {
+  width: 100%;
+  padding: 1%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2rem;
+  cursor: pointer;
+}
+.bmes_active_portfolio_image {
+  width: 100% !important;
+  height: 100vh;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.bmes_active_portfolio_image img {
+  width: 80%;
+  height: 85%;
+  object-fit: contain;
+  transition: all 0.3s ease;
+  transform: scale(1);
+}
+.bmes_active_portfolio_image iframe {
+  height: 80%;
+  width: 100%;
+}
+.zoomed_in img {
+  width: 80%;
+  height: 85%;
+  transform: scale(1.5);
+}
+.css-ohwg9z {
+  position: relative;
+  overflow: hidden;
+  height: 96vh;
+}
+@media (max-width: 700px) {
+  .bmes_service_portfolio_images {
+    flex-basis: 100%;
+  }
+}

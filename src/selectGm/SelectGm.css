@@ -1,0 +1,77 @@
+.sl-options li:first-child {
+  color: green;
+}
+.sl-options li:nth-child(2) {
+  color: red;
+}
+.sl-options li:nth-child(3) {
+  color: rgb(56, 21, 255);
+}
+.sl-options li:nth-child(4) {
+  color: rgb(255, 123, 0);
+}
+.sl-value.false {
+  color: green;
+}
+
+.sl-value.true {
+  color: red;
+}
+
+.sl-value.resolved {
+  color: green;
+}
+.sl-value.open {
+  color: red;
+}
+.sl-value.inProgress {
+  color: rgb(56, 21, 255);
+}
+
+.sl-container {
+  position: relative;
+  width: 11em;
+  min-height: 2rem;
+  max-height: 5vh;
+  border: 1px solid #7777773e;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.7em;
+  border-radius: 0.5em;
+  outline: none;
+  cursor: pointer;
+}
+
+.sl-value {
+  flex-grow: 1;
+  display: flex;
+  gap: 0.5em;
+  flex-wrap: wrap;
+}
+
+.sl-caret {
+  translate: 0 25%;
+  border: 0.25em solid transparent;
+  border-top-color: #777;
+}
+.sl-options {
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: none;
+  max-height: 15em;
+  overflow-y: auto;
+  border: 1px solid #7777773e;
+  border-radius: 0.25em;
+  width: 100%;
+  left: 0;
+  top: calc(100% + 0.25em);
+  background-color: white;
+  z-index: 100;
+  padding: 5%;
+}
+.sl-options.show {
+  display: block;
+}

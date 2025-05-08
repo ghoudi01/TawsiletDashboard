@@ -1,0 +1,40 @@
+# Node modules - already included in the final image from the build stage
+node_modules
+
+# Yarn lockfile (only needed during build, not in the final image)
+# yarn.lock
+
+# Local development environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.*.local
+
+# Logs
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Strapi build artifacts and cache
+.cache/
+.build/
+
+# Temporary files
+tmp/
+*.tmp
+*.swp
+
+# Docker related files
+Dockerfile
+docker-compose.yml
+docker-compose.prod.yml
+.dockerignore
+
+# IDE or editor folders
+.vscode/
+.idea/
+
+# Git folder
+.git
+.gitignore

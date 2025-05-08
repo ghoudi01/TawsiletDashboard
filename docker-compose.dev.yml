@@ -1,0 +1,22 @@
+version: "3.9"
+name: sheelni-dash-stack
+
+services:
+  sheelni-dash:
+    container_name: sheelni-dash
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_BACKUP_URL: http://localhost:3001/api/
+        REACT_APP_BACKEND_URL: http://localhost:3001
+    image: sheelni-dash:latest
+    restart: unless-stopped
+    ports:
+      - "4002:80"
+    networks:
+      - sheelni-dash-network
+
+networks:
+  sheelni-dash-network:
+    name: sheelni-dash-network
