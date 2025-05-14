@@ -8,6 +8,10 @@ import withAdminLayout from "../../layout/withAdminLayout";
 import { useSelector } from "react-redux";
 import ValidationOverlay from "../../ValidationOverlay/ValidationOverlay";
 import NotFound from "../../container/pages/404";
+import Param from "./Param";
+import DriverBalance from "./DriverBalance";
+import Stats from "./Stats";
+import newDriver from "./NewDriver";
 
 const Livreurs = lazy(() => import("./Livreur"));
 const Ticket = lazy(() => import("./Ticket"));
@@ -39,7 +43,7 @@ const Admin = () => {
     if (userValidation === null) {
       return null;
     }
-    if (["owner", "admin"].includes(userValidation.user_role)) {
+    if (["owner", "admin","driver"].includes(userValidation.user_role)) {
       return "valid";
     }
 
@@ -80,14 +84,13 @@ const Admin = () => {
           </div>
         }
       >
-      <ProtectedRoute
-        path={path}
-        component={Dashboard}
-        allowedRoles={["owner", "admin", "company", "agent"]}
-      />
-      
+        <ProtectedRoute
+          path={path}
+          component={Dashboard}
+          allowedRoles={["owner", "admin", "company", "agent","driver"]}
+        />
 
-         <ProtectedRoute
+        <ProtectedRoute
           path={`${path}/reservations`}
           component={Reservations}
           allowedRoles={["owner", "admin"]}
@@ -117,7 +120,12 @@ const Admin = () => {
         <ProtectedRoute
           path={`${path}/Agents`}
           component={AgentsRoutes}
-          allowedRoles={["owner", "admin", "company", "agent"]}
+          allowedRoles={["owner"]}
+        />
+        <ProtectedRoute
+          path={`${path}/newDriver`}
+          component={newDriver}
+          allowedRoles={["owner", "admin"]}
         />
         <ProtectedRoute
           path={`${path}/track`}
@@ -138,28 +146,43 @@ const Admin = () => {
         <ProtectedRoute
           path={`${path}/Admins`}
           component={AdminsRoutes}
-          allowedRoles={["owner", "admin"]}
+          allowedRoles={["owner"]}
         />
         <ProtectedRoute
           path={`${path}/Calcule`}
           component={CalculeRoutes}
-          allowedRoles={["owner", "admin"]}
+          allowedRoles={["owner"]}
+        />
+        <ProtectedRoute
+          path={`${path}/driver`}
+          component={DriverBalance}
+          allowedRoles={["driver"]}
+        />
+        <ProtectedRoute
+          path={`${path}/stats`}
+          component={Stats}
+          allowedRoles={["driver"]}
         />
         <ProtectedRoute
           path={`${path}/Maintenance`}
           component={MaintenanceRoutes}
           allowedRoles={["owner", "admin"]}
         />
-        
+        <ProtectedRoute
+          path={`${path}/param`}
+          component={Param}
+          allowedRoles={["owner"]}
+        />
+
         <ProtectedRoute
           path={`${path}/balance`}
           component={BalanceRoutes}
-          allowedRoles={["owner", "admin", "company", "agent"]}
+          allowedRoles={["owner"]}
         />
         <ProtectedRoute
           path={`${path}/Historique`}
           component={Historique}
-          allowedRoles={["owner", "admin", "company", "agent"]}
+          allowedRoles={["owner", "admin", "company", "agent","driver"]}
         />
         <ProtectedRoute
           path={`${path}/Ticket`}
@@ -175,7 +198,7 @@ const Admin = () => {
           path={`${path}/detailsTickete`}
           component={TicketDetail}
           allowedRoles={["owner", "admin"]}
-        />  
+        />
       </Suspense>
     </>
   );
@@ -199,6 +222,10 @@ const Admin = () => {
 const ProtectedRoute = ({ component: Component, allowedRoles, ...rest }) => {
   const currentUser = useSelector((state) => state.user?.currentUser);
   const userRole = currentUser?.user_role;
+  console.log("Current User:", currentUser);
+  console.log("User Role:", userRole);
+  console.log("Allowed Roles:", allowedRoles);
+  console.log("...rest:", rest);
 
   if (
     allowedRoles &&

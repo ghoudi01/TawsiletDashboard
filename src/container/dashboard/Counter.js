@@ -7,7 +7,7 @@ const CounterContainer = styled.div`
   position: relative;
 `;
 
-const Counter = ({ endValue, incrementDuration }) => {
+const Counter = ({ endValue, incrementDuration,tag="" }) => {
   const [currentValue, setCurrentValue] = useState(0);
 
   useEffect(() => {
@@ -30,7 +30,7 @@ const Counter = ({ endValue, incrementDuration }) => {
 
   return (
     <CounterContainer data-count={currentValue}>
-      {currentValue}
+      {currentValue} {tag}
     </CounterContainer>
   );
 };

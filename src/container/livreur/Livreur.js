@@ -1,21 +1,15 @@
-import React, { lazy, useState, Suspense, useEffect } from "react";
+import React, { lazy, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Row, Col, Spin, Select } from "antd";
-import { Switch, NavLink, Route, Link } from "react-router-dom";
+import { Row, Col } from "antd";
 import FeatherIcon from "feather-icons-react";
 import propTypes from "prop-types";
 // import CreateProject from "./overview/CreateProject";
-import { ProjectHeader, ProjectSorting } from "./style";
-import { AutoComplete } from "../../components/autoComplete/autoComplete";
+import { ProjectHeader } from "./style";
 import { Button } from "../../components/buttons/buttons";
-
 import { Main } from "../styled";
 import { PageHeader } from "../../components/page-headers/page-headers";
-import { getReservations } from "../../redux/reservations/reservationSlice";
-import CreateLivreurModal from "./CreateLivreurModal";
 import ModalAdd from "./ModalAdd";
 import { ExportButtonPageHeader } from "../../components/buttons/export-button/export-button";
-import { getVehicule } from "../../redux/vehicule/vehiculeSlice";
 
 const List = lazy(() => import("./overview/List"));
 
@@ -30,13 +24,6 @@ function Livreur({ match, usersList }) {
   const filteredUsers = users?.filter(
     (el) => el.company_id?.id === current
   );
-
-  // const dispatch = useDispatch();
-  //   useEffect(() => {
-  //     dispatch(getReservations());
-  //   }, []);
-
-  // const searchData = useSelector((state) => state.headerSearchData);
   const { path } = match;
   //------------------------------ modal add user ------------------------------------------------------------------
   const [shouldPrint, setShouldPrint] = useState(false);
@@ -66,70 +53,6 @@ function Livreur({ match, usersList }) {
   const currentRole = useSelector(
     (state) => state?.user?.currentUser?.user_role
   );
-
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     if (currentId && currentRole === "company") {
-  //       try {
-  //         // Assuming setUserRole is an asynchronous function
-
-  //         const response = await dispatch(
-  //           getVehicule({
-  //             pagination: {
-  //               current: 1,
-  //               pageSize: meta.pageSize,
-  //             },
-
-  //             user_id: currentId,
-  //           })
-  //         );
-  //       } catch (error) {
-  //         // Handle any errors that might occur during the data fetching
-  //         console.error("Error fetching data:", error);
-  //       }
-  //     } else if (currentId && currentRole === "agent") {
-  //       try {
-  //         // Assuming setUserRole is an asynchronous function
-
-  //         const response = await dispatch(
-  //           getVehicule({
-  //             pagination: {
-  //               current: 1,
-  //               pageSize: meta.pageSize,
-  //             },
-
-  //             user_id: currentuser?.company_id?.id,
-  //           })
-  //         );
-  //         // console.log(response.payload.data.data, "response");
-  //       } catch (error) {
-  //         // Handle any errors that might occur during the data fetching
-  //         console.error("Error fetching data:", error);
-  //       }
-  //     } else {
-  //       try {
-  //         // Assuming setUserRole is an asynchronous function
-
-  //         const response = await dispatch(
-  //           getVehicule({
-  //             pagination: {
-  //               current: 1,
-  //               pageSize: meta.pageSize,
-  //             },
-  //           })
-  //         );
-  //         // console.log(response.payload.data.data, "response");
-  //       } catch (error) {
-  //         // Handle any errors that might occur during the data fetching
-  //         console.error("Error fetching data:", error);
-  //       }
-  //     }
-  //   };
-
-  //   fetchData();
-  // }, [currentId, dispatch]);
-
-  //----------------------------------------------------------------------------------------------------------------
   const [text, settext] = useState("");
   return (
     <>
@@ -176,51 +99,6 @@ function Livreur({ match, usersList }) {
       <Main>
         <Row gutter={25}>
           <Col xs={24}>
-            {/* <ProjectSorting>
-              <div className="project-sort-bar">
-                {/* <div className="project-sort-nav">
-                  <nav>
-                    <ul>
-                      <li className="active">
-                        <Link to="#">All</Link>
-                      </li>
-                      <li className="active">
-                        <Link to="#">In Progress</Link>
-                      </li>
-                      <li className="active">
-                        <Link to="#">Complete</Link>
-                      </li>
-                      <li className="active">
-                        <Link to="#">Late</Link>
-                      </li>
-                      <li className="active">
-                        <Link to="#">Early</Link>
-                      </li>
-                    </ul>
-                  </nav>
-                </div> */}
-
-            {/* <div className="project-sort-group">
-                  <div className="sort-group">
-                    <span>Sort By:</span>
-                    <Select defaultValue="category">
-                      <Select.Option value="category">
-                        Project Category
-                      </Select.Option>
-                      <Select.Option value="rate">Top Rated</Select.Option>
-                      <Select.Option value="popular">Popular</Select.Option>
-                      <Select.Option value="time">Newest</Select.Option>
-                      <Select.Option value="price">Price</Select.Option>
-                    </Select>
-                    <div className="layout-style">
-                      <NavLink to={`${path}/list`}>
-                        <FeatherIcon icon="list" size={16} />
-                      </NavLink>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </ProjectSorting>  */}
             <div>
               <List
                 text={text}

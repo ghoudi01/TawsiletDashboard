@@ -336,25 +336,6 @@ const ThemeLayout = (WrappedComponent) => {
                     
                   )}
                 </Col>
-
-                {/* <Col md={0} sm={18} xs={12}>
-                    <div className="mobile-action">
-                      <Link
-                        className="btn-search"
-                        onClick={handleSearchHide}
-                        to="#"
-                      >
-                        {searchHide ? (
-                          <FeatherIcon icon="chevron-down" />
-                        ) : (
-                          <FeatherIcon icon="x" />
-                        )}
-                      </Link>
-                      <Link className="btn-auth" onClick={onShowHide} to="#">
-                        <FeatherIcon icon="more-vertical" />
-                      </Link>
-                    </div>
-                  </Col>   */}
                   
               </Row>
             </Header>

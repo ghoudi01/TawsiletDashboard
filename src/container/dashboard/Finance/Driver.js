@@ -13,15 +13,40 @@ import { Bar } from "react-chartjs-2";
 import "./Style.css";
 
 // Registering the necessary Chart.js components
-const Balance = () => {
-  const { commandsCount, pagination, commands } = useSelector(
+const Driver = () => {
+  const { currentUser } = useSelector(
     (state) => state.user
   );
   const [money, setMoney] = useState(0);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(100);
   const [allCommands, setAllCommands] = useState([]);
-  const dispatch = useDispatch();
+console.log(currentUser, "============");
+
+
+useEffect(() => {
+  if (currentUser) {
+    let combinedCommands = [];
+
+    // Include main user's commands if available
+    if (currentUser.driver_commands?.length > 0) {
+      combinedCommands = [...currentUser.driver_commands];
+    }
+
+    // Include sub_drivers' commands
+    if (currentUser.sub_drivers?.length > 0) {
+      currentUser.sub_drivers.forEach((subDriver) => {
+        if (subDriver.driver_commands?.length > 0) {
+          combinedCommands = [
+            ...combinedCommands,
+            ...subDriver.driver_commands,
+          ];
+        }
+      });
+    }
+
+    setAllCommands(combinedCommands);
+  }
+}, [currentUser]);
+
   useEffect(() => {
     const completedTotal = allCommands
       ?.filter((command) => command.commandStatus === "Completed")
@@ -29,27 +54,6 @@ const Balance = () => {
 
     setMoney(completedTotal);
   }, [allCommands]);
-
-  useEffect(() => {
-    dispatch(getCommands({ page, pageSize }));
-    if (page < pagination.pagination.pageCount) {
-      setPage((prevPage) => prevPage + 1);
-    }
-  }, [page, pageSize, dispatch, pagination.pagination.pageCount]);
-  useEffect(() => {
-    if (commands && commands.length > 0) {
-      setAllCommands((prevCommands) => {
-        // Use a Set to avoid duplicate commands based on the unique identifier (e.g., command.id)
-        const existingIds = new Set(prevCommands.map((command) => command.id));
-        // Filter out any commands that are already in the previous commands
-        const newCommands = commands.filter(
-          (command) => !existingIds.has(command.id)
-        );
-        // Combine the old and new commands without duplicates
-        return [...prevCommands, ...newCommands];
-      });
-    }
-  }, [commands]);
   const chartData = {
     labels: ["Completed", "Pending", "Canceled by Client", "Other"], // Categories
     datasets: [
@@ -136,7 +140,7 @@ const Balance = () => {
   );
 };
 
-export default Balance;
+export default Driver;
 const ChartHeaderItem = styled.div`
   width: auto;
   height: 100px;

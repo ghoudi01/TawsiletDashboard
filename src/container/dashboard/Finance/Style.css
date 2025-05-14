@@ -1,0 +1,28 @@
+/* Centering the entire content vertically and horizontally */
+.centered-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  text-align: center;
+}
+
+/* Styling the Chart Header Item */
+.chart-header-item {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  line-height: 16px;
+  margin-bottom: 20px; /* Space below header */
+}
+
+.chart-header-item img {
+  width: 40px; /* You can adjust the image size */
+}
+
+/* Adjusting the card content height */
+.card-content {
+  height: 60%;
+}

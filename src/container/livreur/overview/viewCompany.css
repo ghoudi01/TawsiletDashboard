@@ -26,14 +26,13 @@
   gap: 10px;
   /* flex-wrap: wrap; */
 }
-.company-elements{
-  /* border: 1px solid red; */  
+.company-elements {
+  /* border: 1px solid red; */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
   width: 50%;
-  
 }
 .company_details_main_title {
   font-weight: 700;
@@ -52,7 +51,7 @@
   /* background-color: #858688; */
 }
 
-.titel-img{
+.titel-img {
   flex-basis: 30%;
   display: flex;
   flex-direction: column;
@@ -60,11 +59,10 @@
   align-items: center;
   min-height: 100%;
   align-self: normal;
- & h3{
+  & h3 {
     font-size: 13px;
   }
 }
-
 
 .company_view_driver_section {
   width: 100%;
@@ -73,7 +71,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  
+
   gap: 1.3rem;
   padding: 4% 0%;
   overflow: scroll;
@@ -82,4 +80,43 @@
 }
 .company_view_driver_section::-webkit-scrollbar {
   display: none !important; /* Safari and Chrome */
+}
+.sub-driver-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.sub-driver-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 16px;
+  padding: 16px;
+  background-color: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.sub-driver-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.sub-driver-name {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.sub-driver-info {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.no-sub-drivers {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #999;
+  padding: 32px 0;
 }

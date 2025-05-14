@@ -185,21 +185,20 @@ export const getDriver = createAsyncThunk("drivers/all", async (params) => {
   const { page = 1, pageSize = 10, text = "" } = params;
   try {
     const jwt = localStorage.getItem("token");
-
+    console.log(jwt);
     const response = await axios.get(
       `${process.env.REACT_APP_BACKUP_URL}usersbyrole/driver`,
       {
         params: {
           page: page,
           pageSize: pageSize,
-          text: text
+          text: text,
         },
         headers: {
-          Authorization: `Bearer ${jwt}`
-        }
+          Authorization: `Bearer ${jwt}`,
+        },
       }
     );
-  
     return response.data;
   } catch (error) {
     throw error;
@@ -212,7 +211,7 @@ export const getDriverById = createAsyncThunk("driver/byId", async (params) => {
     const jwt = localStorage.getItem("token");
 
     const response = await axios.get(
-      `${process.env.REACT_APP_BACKUP_URL}users/${id}`,
+      `${process.env.REACT_APP_BACKUP_URL}users/${id}?populate=*`,
       {
         headers: {
           Authorization: `Bearer ${jwt}`,
@@ -325,32 +324,70 @@ export const getusers = createAsyncThunk("user/all", async () => {
     throw error;
   }
 });
-
-export const getClients = createAsyncThunk("clients/all", async (params) => {
-
-  const { page = 1, pageSize = 10, text = "" } = params;
+export const getCars = createAsyncThunk("cars/all", async () => {
   try {
     const jwt = localStorage.getItem("token");
 
+    const response = await axios.get(
+      `${process.env.REACT_APP_BACKUP_URL}vehicules?populate=*`,
+
+      {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+});
+
+export const getClients = createAsyncThunk("clients/all", async (params) => {
+  const { page = 1, pageSize = 10, text = "" } = params;
+  try {
+    const jwt = localStorage.getItem("token");
+    console.log(jwt);
     const response = await axios.get(
       `${process.env.REACT_APP_BACKUP_URL}usersbyrole/client`,
       {
         params: {
           page: page,
           pageSize: pageSize,
-          text: text
+          text: text,
         },
         headers: {
-          Authorization: `Bearer ${jwt}`
-        }
+          Authorization: `Bearer ${jwt}`,
+        },
       }
     );
-    return response.data 
+    return response.data;
   } catch (error) {
- 
     throw error;
   }
 });
+export const getCommands = createAsyncThunk(
+  "commands/all",
+  async ({ page = 1, pageSize = 100 }) => {
+    try {
+      const jwt = localStorage.getItem("token");
+
+      // Requesting data with dynamic `page` and `pageSize`
+      const response = await axios.get(
+        `${process.env.REACT_APP_BACKUP_URL}commands?pagination[page]=${page}&pagination[pageSize]=${pageSize}`,
+        {
+          headers: {
+            Authorization: `Bearer ${jwt}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+);
+
 
 export const getusersTwoDeep = createAsyncThunk("user/allTwoDeep", async () => {
   try {
@@ -435,15 +472,17 @@ export const loginUserTodash = createAsyncThunk(
   "user/loginDash",
   async (credentials) => {
     try {
+      console.log(`${process.env.REACT_APP_BACKUP_URL}auth/local`);
       const response = await axios.post(
         `${process.env.REACT_APP_BACKUP_URL}auth/local`,
         credentials
       );
-
       if (
         response?.data?.user?.user_role === "owner" ||
         response?.data?.user?.user_role === "agent" ||
         response?.data?.user?.user_role === "admin" ||
+        (response?.data?.user?.user_role === "driver" &&
+          response?.data?.user?.pro) ||
         response?.data?.user?.user_role === "company"
       ) {
         localStorage.setItem("token", response.data.jwt);
@@ -531,6 +570,7 @@ export const updateUser = createAsyncThunk(
   async ({ id, user }) => {
     try {
       const jwt = localStorage.getItem("token");
+      console.log(jwt, "==============");
 
       const response = await axios.put(
         `${process.env.REACT_APP_BACKUP_URL}users/${id}?pLevel=4`,
@@ -541,7 +581,7 @@ export const updateUser = createAsyncThunk(
           },
         }
       );
-
+      console.log(response.data, "==============");
       // Check if the response contains a valid data object
       if (response.data) {
         return response.data;
@@ -684,8 +724,16 @@ export const getVehiculeList = createAsyncThunk(
 
 const initialState = {
   getted: null,
+  pagination: {
+    page: 1,
+    pageSize: 100,
+    totalPages: 0,
+    totalItems: 0,
+  },
   users: [],
   clients: [],
+  commands: [],
+  commandsCount: null,
   companies: [],
   drivers: [],
   mapDrivers: [],
@@ -709,6 +757,7 @@ const initialState = {
   count: 0,
   countCompany: 0,
   reviews: [],
+  cars: [],
   currentCompany: null,
 };
 
@@ -835,6 +884,8 @@ export const getReviews = createAsyncThunk("reservation/all", async () => {
   }
 });
 
+
+
 export const userSlice = createSlice({
   name: "users",
   initialState,
@@ -907,6 +958,22 @@ export const userSlice = createSlice({
       state.isLoading = false;
       state.error = "fail";
     },
+    [getCommands.pending]: (state) => {
+      state.status = "pending";
+      state.isLoading = true;
+    },
+    [getCommands.fulfilled]: (state, action) => {
+      state.status = "success";
+      state.isLoading = false;
+      state.commands = action.payload.data;
+      state.commandsCount = action.payload.meta;
+      state.pagination = action.payload.meta;
+    },
+    [getCommands.rejected]: (state) => {
+      state.status = "fail";
+      state.isLoading = false;
+      state.error = "fail";
+    },
 
     [getDriverById.pending]: (state) => {
       state.status = "pending";
@@ -949,6 +1016,21 @@ export const userSlice = createSlice({
       // state.meta = action.payload;
     },
     [getMapDriver.rejected]: (state) => {
+      state.status = "fail";
+      state.isLoading = false;
+      state.error = "fail";
+    },
+    [getCars.pending]: (state) => {
+      state.status = "pending";
+      state.isLoading = true;
+    },
+    [getCars.fulfilled]: (state, action) => {
+      state.status = "success";
+      state.isLoading = false;
+      state.cars = action.payload;
+      // state.meta = action.payload;
+    },
+    [getCars.rejected]: (state) => {
       state.status = "fail";
       state.isLoading = false;
       state.error = "fail";
@@ -1100,20 +1182,7 @@ export const userSlice = createSlice({
       state.isLoading = false;
       state.error = "fail";
     },
-    // [getClients.pending]: (state) => {
-    //   state.status = "pending";
-    //   state.isLoading = true;
-    // },
-    // [getClients.fulfilled]: (state, action) => {
-    //   state.status = "success";
-    //   state.isLoading = false;
-    //   state.clients = action.payload;
-    // },
-    // [getClients.rejected]: (state) => {
-    //   state.status = "fail";
-    //   state.isLoading = false;
-    //   state.error = "fail";
-    // },
+
     [getusersTwoDeep.pending]: (state) => {
       state.status = "pending";
       state.isLoading = true;

@@ -10,6 +10,7 @@ import {
   Tag,
   Checkbox,
   Modal,
+  Switch,
 } from "antd";
 import FeatherIcon from "feather-icons-react";
 import jsPDF from "jspdf";
@@ -30,6 +31,7 @@ import Loader from "../../../components/loaderLine/Loader";
 import valid from "../../../static/img/Glyph.svg";
 import invalid from "../../../static/img/refuse.svg";
 import wait from "../../../static/img/wait.svg";
+import { DivIcon } from "leaflet";
 
 const Livreur = ({
   text,
@@ -46,7 +48,7 @@ const Livreur = ({
    const userRole = useSelector((state) => state?.user?.currentUser?.user_role);
   const current = useSelector((state) => state?.user?.currentUser);
   const isLoading = useSelector((state) => state?.user?.isLoading);
-
+  console.log(users, "users==========123");
   const [selectedRows, setSelectedRows] = useState([]);
   const [open, setOpen] = useState(false);
   const [openUpdate, setOpenUpdate] = useState(false);
@@ -138,6 +140,7 @@ const Livreur = ({
                 <td>${item.cin}</td>
                 <td>${item.validation}</td>
                 <td>${item.driver_company.name}</td>
+                <td>${item.pro}</td>
               </tr>
             `).join('')}
           </table>
@@ -169,8 +172,8 @@ const Livreur = ({
       item.cin,
       item.validation,
       item.driver_company.name,
+      item.pro,
     ]);
-
     doc.autoTable({
       head: [tableColumnNames],
       body: tableRows,
@@ -202,6 +205,7 @@ const Livreur = ({
       item.cin,
       item.validation,
       item.driver_company.name,
+      item.pro,
     ]);
 
     const worksheet = XLSX.utils.aoa_to_sheet([tableColumnNames, ...tableRows]);
@@ -216,7 +220,9 @@ const Livreur = ({
       title: (
         <Checkbox
           onChange={(e) => handleSelectAll(e.target.checked)}
-          indeterminate={selectedRows.length > 0 && selectedRows.length < users.length}
+          indeterminate={
+            selectedRows.length > 0 && selectedRows.length < users.length
+          }
           checked={selectedRows?.length === users?.length}
         />
       ),
@@ -232,6 +238,7 @@ const Livreur = ({
     {
       id: "id",
       title: "ID",
+
       render: (_, record) => (
         <ProjectListTitle>
           <p>{record?.id}</p>
@@ -243,14 +250,18 @@ const Livreur = ({
       title: "Nom Complet",
       render: (_, record) => (
         <ProjectListTitle>
-          <p>{record?.firstName} {record?.lastName}</p>
+          <p>
+            {record?.firstName} {record?.lastName}
+          </p>
         </ProjectListTitle>
       ),
     },
     {
       id: "phone",
       title: "Numéro de téléphone",
-      render: (_, record) => <span className="date-finished">{record?.phoneNumber}</span>,
+      render: (_, record) => (
+        <span className="date-finished">{record?.phoneNumber}</span>
+      ),
     },
     {
       id: "email",
@@ -261,16 +272,38 @@ const Livreur = ({
         </ProjectListTitle>
       ),
     },
+    // {
+    //   id: "cin",
+    //   title: "numéro de carte d'identité",
+    //   render: (_, record) => (
+    //     <ProjectListTitle>
+    //       <p>{record.cin}</p>
+    //     </ProjectListTitle>
+    //   ),
+    // },
     {
-      id: "cin",
-      title: "numéro de carte d'identité",
+      id: "pro",
+      title: "pro",
       render: (_, record) => (
         <ProjectListTitle>
-          <p>{record.cin}</p>
+          <Switch
+            checked={record?.pro}
+            onChange={(checked) => {
+              console.log(checked, "====checked=", record.id);
+              dispatch(
+                updateUser({
+                  id: record.id,
+                  user: { pro: checked },
+                })
+              ).then(() => {
+                dispatch(getDriver({}));
+              });
+            }}
+          />
         </ProjectListTitle>
       ),
     },
-    
+
     {
       title: "",
       dataIndex: "action",
@@ -282,7 +315,7 @@ const Livreur = ({
       key: "more",
     },
   ];
-
+  console.log(users,"========>>>>>");
   // Data source for the table
   const dataSource = users?.map((value) => ({
     key: value.id,
@@ -294,6 +327,7 @@ const Livreur = ({
     cin: value?.cin,
     validation: value?.validation?.validation_state,
     company: value?.driver_company?.name,
+    pro:value?.pro,
     more: (
       <Dropdown
         className="wide-dropdwon"
@@ -398,7 +432,8 @@ const Livreur = ({
       </div>
     ),
   }));
-
+console.log("==========================")
+console.log(dataSource);
   // Effects
   useEffect(() => {
     dispatch(

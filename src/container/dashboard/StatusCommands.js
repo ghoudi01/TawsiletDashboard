@@ -28,11 +28,18 @@ import livraisonImage from "../../static/img/livraison.png";
 import carte_Banquaire from "../../static/img/carte_Banquaire.png";
 import ReserveModal from "../reservations/overview/ReserveModal";
 
-const Reservations = ({ textFilter, filterStatus, dateSortBy, dateFilter }) => {
+const StatusCommand = ({
+  textFilter,
+  filterStatus,
+  dateSortBy,
+  dateFilter,
+}) => {
   const location = useLocation();
 
   const dispatch = useDispatch();
-  const reservations = useSelector((state) => state?.reservations?.reservations?.nodes);
+  const reservations = useSelector(
+    (state) => state?.reservations?.reservations?.nodes
+  );
   const meta = useSelector((state) => state?.reservations?.meta);
   const client = useSelector((state) => state?.user?.users);
   const currentId = useSelector((state) => state?.user?.currentUser?.id);
@@ -102,26 +109,7 @@ const Reservations = ({ textFilter, filterStatus, dateSortBy, dateFilter }) => {
   };
 
   const columns = [
-    {
-      title: () => (
-        <Checkbox
-          onChange={(e) => handleSelectAll(e.target.checked)}
-          indeterminate={
-            selectedRows.length > 0 && selectedRows.length < reservations.length
-          }
-          checked={selectedRows?.length === reservations?.length}
-        />
-      ),
-      dataIndex: "id",
-      key: "checkbox",
-      render: (id) => (
-        <Checkbox
-          onChange={(e) => handleSelectRow(e.target.checked, id)}
-          checked={selectedRows.includes(id)}
-        />
-      ),
-    },
-    { id: "id", title: "ID", dataIndex: "id" },
+
     {
       id: "pickupAddress",
       title: "Adresse de ramassage",
@@ -149,7 +137,6 @@ const Reservations = ({ textFilter, filterStatus, dateSortBy, dateFilter }) => {
       dataIndex: "dateCreation",
     },
     { id: "dateDepart", title: "Date de depart", dataIndex: "dateDepart" },
-    { id: "idClient", title: "idClient", dataIndex: "idClient" },
 
     { id: "payType", title: "Methode de paiemant", dataIndex: "payType" },
     { id: "commandStatus", title: "Status", dataIndex: "commandStatus" },
@@ -266,107 +253,103 @@ const Reservations = ({ textFilter, filterStatus, dateSortBy, dateFilter }) => {
       },
     });
   };
+  const [allCommands, setAllCommands] = useState([]);
+  const currentUser = useSelector((store) => store?.user?.currentUser);
 
-  const dataSource = reservations
-    ? reservations
-        
-        .map((value, i) => ({
-          key: value?.id,
-          id: value?.id,
-          pickupAddress:
-            value?.pickUpAddress?.Address.substring(0, 30) + "...",
-          deliveryAddress:
-            value?.dropOfAddress?.Address.substring(0, 30) + "...",
-          dateCreation: value?.createdAt.slice(0, 10),
-          dateDepart: value?.departDate,
-          idClient: (
-            <div className="table_cell_flex">
-              <p className="no-margin" style={{ color: "blue" }}>
-                {" "}
-                {value?.client_id?.data?.id}
-              </p>
-            </div>
-          ),
+  useEffect(() => {
+    if (currentUser) {
+      let combinedCommands = [];
 
-          payType: (
-            <div className="table_paytype">
-              <p className="no-margin">{value?.totalPrice} TND</p>{" "}
-              {value?.payType?.toLowerCase() === "livraison" ? (
-                <img src="../../images/livraison.png" />
-              ) : (
-                <img src="../../images/carte_Banquaire.png" />
-              )}
-            </div>
-          ),
-          commandStatus: (
-            <Tag
-              style={{
-                backgroundColor: `${
-                  handleStatus(value?.commandStatus) + "50"
-                }`,
-                color: `${handleStatus(value?.commandStatus)}`,
-              }}
-              color={handleStatus(value?.commandStatus)}
-              className={value?.commandStatus}
-            >
-              {handleStatusText(value?.commandStatus)}
-            </Tag>
-          ),
+      // Include main user's commands if available
+      if (currentUser.driver_commands?.length > 0) {
+        combinedCommands = [...currentUser.driver_commands];
+      }
 
-          action: (
-            <>
-              {value?.paymentStatus === "linkSend" ? (
-                <Button className="btn__impayer">Impayé</Button>
-              ) : value?.commandStatus === "Completed" ? (
-                <Button className="btn__livre">Livré</Button>
-              ) : value?.commandStatus !== "Canceled" ? (
-                <Button
-                  className="btn__reserver"
+      // Include sub_drivers' commands
+      if (currentUser.sub_drivers?.length > 0) {
+        currentUser.sub_drivers.forEach((subDriver) => {
+          if (subDriver.driver_commands?.length > 0) {
+            combinedCommands = [
+              ...combinedCommands,
+              ...subDriver.driver_commands,
+            ];
+          }
+        });
+      }
+
+      setAllCommands(combinedCommands);
+    }
+  }, [currentUser]);
+  const dataSource = allCommands
+    ? allCommands.map((value, i) => ({
+        key: value?.id,
+        id: value?.id,
+        pickupAddress: value?.pickUpAddress?.Address.substring(0, 30) + "...",
+        deliveryAddress: value?.dropOfAddress?.Address.substring(0, 30) + "...",
+        dateCreation: value?.createdAt.slice(0, 10),
+        dateDepart: value?.departDate,
+        idClient: (
+          <div className="table_cell_flex">
+            <p className="no-margin" style={{ color: "blue" }}>
+              {" "}
+              {value?.client_id?.data?.id}
+            </p>
+          </div>
+        ),
+
+        payType: (
+          <div className="table_paytype">
+            <p className="no-margin">{value?.totalPrice} TND</p>{" "}
+            {value?.payType?.toLowerCase() === "livraison" ? (
+              <img src="../../images/livraison.png" />
+            ) : (
+              <img src="../../images/carte_Banquaire.png" />
+            )}
+          </div>
+        ),
+        commandStatus: (
+          <Tag
+            style={{
+              backgroundColor: `${handleStatus(value?.commandStatus) + "50"}`,
+              color: `${handleStatus(value?.commandStatus)}`,
+            }}
+            color={handleStatus(value?.commandStatus)}
+            className={value?.commandStatus}
+          >
+            {handleStatusText(value?.commandStatus)}
+          </Tag>
+        ),
+
+        action: (
+          <>
+           
+          </>
+        ),
+
+        more: (
+          <Dropdown
+            className="wide-dropdwon"
+            content={
+              <>
+                <Link
+                  to="#"
                   onClick={() => {
-                    setSelectedId(value.id);
-                    setOpenReserver(true);
+                    setOpen(true);
+                    setSelectedData(value);
                   }}
                 >
-                  Réserver
-                </Button>
-              ) : null}
-            </>
-          ),
-
-          more: (
-            <Dropdown
-              className="wide-dropdwon"
-              content={
-                <>
-                  <Link
-                    to="#"
-                    onClick={() => {
-                      setOpen(true);
-                      setSelectedData(value);
-                    }}
-                  >
-                    {" "}
-                    Voir{" "}
-                  </Link>
-
-                  <Link
-                    to="#"
-                    onClick={() => {
-                      handleDelete(value.id);
-            
-                    }}
-                  >
-                    Supprimer
-                  </Link>
-                </>
-              }
-            >
-              <Link to="#">
-                <FeatherIcon icon="more-horizontal" size={18} />
-              </Link>
-            </Dropdown>
-          ),
-        }))
+                  {" "}
+                  Voir{" "}
+                </Link>
+              </>
+            }
+          >
+            <Link to="#">
+              <FeatherIcon icon="more-horizontal" size={18} />
+            </Link>
+          </Dropdown>
+        ),
+      }))
     : reservations;
 
   return (
@@ -408,4 +391,4 @@ const Reservations = ({ textFilter, filterStatus, dateSortBy, dateFilter }) => {
   );
 };
 
-export default Reservations;
+export default StatusCommand;

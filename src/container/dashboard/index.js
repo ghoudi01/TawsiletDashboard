@@ -27,21 +27,21 @@ import {
 } from "../../components/charts/chartjs";
 import { useDispatch } from "react-redux";
 import {
-  // getCommandCompletedCount,
   getCommandCount,
   getCommandStatusCount,
   getUsersCount,
-  // getCommandDispatchingCount,
-  // getCommandPendingCount,
-  // getCommandProcessingCount,
 } from "../../redux/chartContent/chartSlice";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
-import { getAdmins, getusersTwoDeep } from "../../redux/User/userSlice";
+import {
+  getAdmins,
+  getClients,
+  getCommands,
+  getDriver,
+} from "../../redux/User/userSlice";
 
 import Counter from "./Counter";
 
-// const Reservations = lazy(() => import("./List"));
 import Reservations from "./List";
 import Heading from "../../components/heading/heading";
 import Addagent from "../agent/Addagent";
@@ -50,6 +50,14 @@ import { NavLink } from "react-router-dom/cjs/react-router-dom.min";
 
 const Dashboard = () => {
   const currentUser = useSelector((store) => store?.user?.currentUser);
+  const drivers = useSelector((state) => state.user.drivers);
+  const clients = useSelector((state) => state.user.clients);
+  const { commandsCount, pagination, commands } = useSelector(
+    (state) => state.user
+  );
+  const [allCommands, setAllCommands] = useState([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(100);
   const chartData = useSelector((store) => {
     return {
       commandCount: store?.charts?.commandCount,
@@ -100,20 +108,11 @@ const Dashboard = () => {
         throw new Error("Invalid time period");
     }
   }
-  // ----------------- getFormattedDate(dateFilter)
-  // const todayFormatted = getFormattedDate("today");
-  // const thisWeekFormatted = getFormattedDate("thisWeek");
-  // const thisMonthFormatted = getFormattedDate("thisMonth");
-  // const thisYearFormatted = getFormattedDate("thisYear");
-
-  // console.log("Today:", todayFormatted);
-  // console.log("This Week:", thisWeekFormatted);
-  // console.log("This Month:", thisMonthFormatted);
-  // console.log("This Year:", thisYearFormatted);
 
   const [dateFilter, setDateFilter] = useState(null);
 
   useEffect(() => {
+    dispatch(getDriver());
     if (currentUser) {
       dispatch(getUsersCount());
       let dateToFilter = dateFilter ? getFormattedDate(dateFilter) : null;
@@ -125,13 +124,35 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (currentUser) {
-      dispatch(getAdmins({}))
+      dispatch(getAdmins({}));
       // dispatch(getReservations({ free: true }));
 
       // dispatch(getusersTwoDeep());
     }
   }, [currentUser]);
-
+  useEffect(() => {
+    dispatch(getClients({ page: 1, pageSize: 10, text: "" }));
+  }, [dispatch]);
+  useEffect(() => {
+    dispatch(getCommands({ page, pageSize }));
+    if (page < pagination?.pagination?.pageCount) {
+      setPage((prevPage) => prevPage + 1);
+    }
+  }, [page, pageSize, dispatch, pagination?.pagination?.pageCount]);
+  useEffect(() => {
+    if (commands && commands.length > 0) {
+      setAllCommands((prevCommands) => {
+        // Use a Set to avoid duplicate commands based on the unique identifier (e.g., command.id)
+        const existingIds = new Set(prevCommands.map((command) => command.id));
+        // Filter out any commands that are already in the previous commands
+        const newCommands = commands.filter(
+          (command) => !existingIds.has(command.id)
+        );
+        // Combine the old and new commands without duplicates
+        return [...prevCommands, ...newCommands];
+      });
+    }
+  }, [commands]);
   const charts = useSelector((store) => store.charts);
   const adminsList = useSelector((store) => store?.user?.admins?.results);
   const agentsList = useSelector((store) => store?.user?.agents?.results);
@@ -139,15 +160,13 @@ const Dashboard = () => {
     (store) => store?.reservations?.isLoading
   );
 
- 
   const translateEtatToFrench = (etat) => {
     switch (etat) {
       case "Pending":
         return "En Attente"; // French for "Pending"
       case "Processing":
         return "En Traitement"; // French for "Processing"
-      
-  
+
       case "Completed":
         return "Terminé"; // French for "Completed"
       case "Canceled":
@@ -159,67 +178,42 @@ const Dashboard = () => {
     }
   };
   // Data array with translated etat values
-const data = [
-  currentUser.user_role === "owner" || currentUser.user_role === "admin"
-    ? {
-        etat: translateEtatToFrench("Pending"), // Translate "Pending" to French
-        value: charts?.commandData?.pendingCount || 0,
-        percentage: Math.floor(
-          (charts?.commandData?.pendingCount / charts?.commandCount) * 100
-        ),
-        color: "#53B483",
-      }
-    : null,
-  {
-    etat: translateEtatToFrench("Processing"), // Translate "Processing" to French
-    value:
-      (charts?.commandData?.dispatchedToPartnerCount || 0) +
-      (charts?.commandData?.assignedToDriverCount || 0),
-    percentage: Math.floor(
-      ((charts?.commandData?.dispatchedToPartnerCount +
-        charts?.commandData?.assignedToDriverCount) /
-        charts?.commandCount) *
-        100
-    ),
-    color: "#9E57E5",
-  },
- 
-  
-  {
-    etat: translateEtatToFrench("Completed"), // Translate "Completed" to French
-    value: charts?.commandData?.completedCount || 0,
-    percentage: Math.floor(
-      (charts?.commandData?.completedCount / charts?.commandCount) * 100
-    ),
-    color: "#FF6384",
-  },
-  {
-    etat: translateEtatToFrench("Canceled"), // Translate "Canceled" to French
-    value:
-      (charts?.commandData?.canceledByClientCount || 0) +
-      (charts?.commandData?.canceledByPartnerCount || 0),
-    percentage: Math.floor(
-      ((charts?.commandData?.canceledByClientCount +
-        charts?.commandData?.canceledByPartnerCount) /
-        charts?.commandCount) *
-        100
-    ),
-    color: "#36A2EB",
-  },
-  {
-    etat: translateEtatToFrench("Failed"), // Translate "Failed" to French
-    value:
-      (charts?.commandData?.failedPickupCount || 0) +
-      (charts?.commandData?.failedDeliveryCount || 0),
-    percentage: Math.floor(
-      ((charts?.commandData?.failedPickupCount +
-        charts?.commandData?.failedDeliveryCount) /
-        charts?.commandCount) *
-        100
-    ),
-    color: "#FFCE56",
-  },
-].filter(Boolean); // Remove null values (e.g., if "Pending" is not included for non-admin/owner users)
+  const data = [
+    currentUser.user_role === "owner" || currentUser.user_role === "admin"
+      ? {
+          etat: translateEtatToFrench("Pending"), // Translate "Pending" to French
+          value: charts?.commandData?.pendingCount || 0,
+          percentage: Math.floor(
+            (charts?.commandData?.pendingCount / charts?.commandCount) * 100
+          ),
+          color: "#53B483",
+        }
+      : null,
+    
+
+    {
+      etat: translateEtatToFrench("Completed"), // Translate "Completed" to French
+      value: charts?.commandData?.completedCount || 0,
+      percentage: Math.floor(
+        (charts?.commandData?.completedCount / charts?.commandCount) * 100
+      ),
+      color: "#FF6384",
+    },
+    {
+      etat: translateEtatToFrench("Canceled"), // Translate "Canceled" to French
+      value:
+        (charts?.commandData?.canceledByClientCount || 0) +
+        (charts?.commandData?.canceledByPartnerCount || 0),
+      percentage: Math.floor(
+        ((charts?.commandData?.canceledByClientCount +
+          charts?.commandData?.canceledByPartnerCount) /
+          charts?.commandCount) *
+          100
+      ),
+      color: "#36A2EB",
+    },
+   
+  ].filter(Boolean); // Remove null values (e.g., if "Pending" is not included for non-admin/owner users)
 
   const showModalAgent = () => {
     setState({
@@ -247,14 +241,18 @@ const data = [
       visibleAdmin: false,
     });
   };
+  const commandStatuses = [
+    "Pending",
+    "On_route_to_delivery",
+    "Arrived_at_delivery",
+    "Arrived_at_pickup",
+    "driver_on_route_to_pickup",
+    "Go_to_pickup",
+  ];
   const translateToFrench = (label) => {
     switch (label) {
       case "Pending":
         return "En Attente"; // French for "Pending"
-      case "Processing":
-        return "En Traitement"; // French for "Processing"
-     
-      
       case "Completed":
         return "Terminé"; // French for "Completed"
       case "Canceled":
@@ -265,21 +263,13 @@ const data = [
         return label; // Fallback to the original label if no translation is found
     }
   };
-  
+
   // Original labels
-  const originalLabels = [
-    "Pending",
-    "Processing",
-    
-  
-    "Completed",
-    "Canceled",
-    "Failed",
-  ];
-  
+  const originalLabels = ["Pending", "Completed", "Canceled", "Failed"];
+
   // Translate labels into French
   const frenchLabels = originalLabels.map((label) => translateToFrench(label));
-  
+
   return (
     <ChartContainer>
       <PageHeader
@@ -288,48 +278,13 @@ const data = [
         buttons={[
           <div key="6" className="page-header-actions">
             <CalendarButtonPageHeader key="1" />
-            {/* <ExportButtonPageHeader key="2" />
-            <ShareButtonPageHeader key="3" /> */}
-
-            {/* <Button size="small" key="4" type="primary" className="btn_ADD">
-              <FeatherIcon icon="plus" size={14} className="btn_Suivant" />
-              Ajouter nouveau
-
-            </Button> */}
           </div>,
         ]}
       />
       <Main>
         <Row gutter={25}>
           <Col lg={24} xs={24}>
-            <Cards
-              title="Aperçus"
-              // isbutton={
-              //   <div className="card-radio">
-              //     <Radio.Group
-              //       // colorBgContainer="#53B483"
-              //       // colorBorder="#53B483"
-              //       // style={{ background: "#53B483", color: "red" }}
-              //       // onChange={forcastOverview}
-              //       defaultValue="today"
-              //     >
-              //       <Radio.Button
-              //         // style={{
-              //         //   // backgroundColor: "red",
-              //         //   color: "#53B483",
-              //         // }}
-              //         value="today"
-              //       >
-              //         Today
-              //       </Radio.Button>
-              //       <Radio.Button value="week">Week</Radio.Button>
-              //       <Radio.Button value="month">Month</Radio.Button>
-              //       <Radio.Button value="year">Year</Radio.Button>
-              //     </Radio.Group>
-              //   </div>
-              // }
-              size={"large"}
-            >
+            <Cards title="Aperçus" size={"large"}>
               <Row justify={"space-between"}>
                 {/* <ChartHeader> */}
                 {currentUser?.user_role === "owner" ||
@@ -345,7 +300,7 @@ const data = [
                           <img src={DashChartClientIcon} alt="" />
                           <div>
                             <Counter
-                              endValue={chartData.clientCount}
+                              endValue={clients?.pagination?.total}
                               incrementDuration={3}
                             />
                             <span>Client</span>
@@ -362,7 +317,7 @@ const data = [
                           <img src={dashCommandCountIcon} alt="" />
                           <div>
                             <Counter
-                              endValue={charts?.commandCount}
+                              endValue={commandsCount?.pagination?.total}
                               incrementDuration={3}
                             />
 
@@ -371,7 +326,6 @@ const data = [
                         </ChartHeaderItem>
                       </NavLink>
                     </Col>
-                
                     <Col md={6} xs={12}>
                       <NavLink
                         to="/admin/Livreurs/list"
@@ -381,7 +335,7 @@ const data = [
                           <img src={DashDriverCountIcon} alt="" />
                           <div>
                             <Counter
-                              endValue={chartData.driverCount}
+                              endValue={drivers.pagination.total}
                               incrementDuration={3}
                             />
 
@@ -567,37 +521,26 @@ const data = [
                       <Col md={24} lg={12} flex={"auto"}>
                         <section>
                           <ChartjsDonutChart
-                            // labels={[
-                            //   "Pending",
-                            //   "Processing",
-                            //   "Completed",
-                            //   "Canceled",
-                            //   "Failed",
-                            // ]}
-                            labels={frenchLabels} 
+                            labels={frenchLabels}
                             datasets={[
                               {
                                 data: [
-                                  charts?.commandData?.pendingCount || 0,
-                                  (charts?.commandData
-                                    ?.dispatchedToPartnerCount || 0) +
-                                    (charts?.commandData
-                                      ?.assignedToDriverCount || 0),
-                                  (charts?.commandData
-                                    ?.driverOnRouteToPickupCount || 0) +
-                                    (charts?.commandData
-                                      ?.arrivedAtPickupCount || 0) +
-                                    (charts?.commandData?.pickedUpCount || 0),
-                                  (charts?.commandData
-                                    ?.onRouteToDeliveryCount || 0) +
-                                    (charts?.commandData
-                                      ?.arrivedAtDeliveryCount || 0) +
-                                    (charts?.commandData?.deliveredCount || 0),
-                                  charts?.commandData?.completedCount || 0,
-                                  (charts?.commandData?.canceledByClientCount ||
-                                    0) +
-                                    (charts?.commandData
-                                      ?.canceledByPartnerCount || 0),
+                                  allCommands?.filter((command) =>
+                                    commandStatuses.includes(
+                                      command.commandStatus
+                                    )
+                                  ).length || 0,
+
+                                  allCommands?.filter(
+                                    (command) =>
+                                      command.commandStatus ===
+                                      "Canceled_by_client"
+                                  ).length || 0, //
+
+                                  allCommands?.filter(
+                                    (command) =>
+                                      command.commandStatus === "Completed"
+                                  ).length || 0, //this one is completed
                                   (charts?.commandData?.failedPickupCount ||
                                     0) +
                                     (charts?.commandData?.failedDeliveryCount ||
@@ -605,12 +548,8 @@ const data = [
                                 ],
                                 backgroundColor: [
                                   "#53B483",
-                                  "#9E57E5",
                                   "#59B4D1",
-                                  "#F3935D",
                                   "#FF6384",
-                                  "#36A2EB",
-                                  "#FFCE56",
                                 ],
                               },
                             ]}
@@ -704,7 +643,9 @@ const data = [
                                 />
                               </div>
                               <div>
-                                <Heading as="h5">{admin?.firstName} {admin?.lastName}</Heading>
+                                <Heading as="h5">
+                                  {admin?.firstName} {admin?.lastName}
+                                </Heading>
                                 <p style={{ color: "#53B483" }}>Active</p>
                               </div>
                             </div>
@@ -714,10 +655,12 @@ const data = [
                             (el) =>
                               (currentUser?.user_role === "company" &&
                                 el?.user_role === "agent" &&
-                                el?.agent_company?.documentId === currentUser?.companies[0]?.documentId) ||
+                                el?.agent_company?.documentId ===
+                                  currentUser?.companies[0]?.documentId) ||
                               (currentUser?.user_role === "agent" &&
                                 el?.user_role === "agent" &&
-                                el?.agent_company?.documentId === currentUser?.agent_company?.documentId)
+                                el?.agent_company?.documentId ===
+                                  currentUser?.agent_company?.documentId)
                           )
                           .map((agent, index) => (
                             <div className="porject-user-single">

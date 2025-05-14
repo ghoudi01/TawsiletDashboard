@@ -16,33 +16,8 @@ import { useDispatch } from "react-redux";
 
 function Maintenance() {
   const dispatch = useDispatch();
-  /*     const [showComing, setShowComing] = useState(false); */
   const [showMaintenace, setShowMaintenace] = useState(false);
-  /*  const [showInclure, setShowInclure] = useState(false);
-    const [showExclure, setShowExclure] = useState(false);
-    const [checkedValues, setCheckedValues] = useState([]); */
-  /*  const handelChange = (event) => {
-        const { value, checked } = event.target
-        if (checked) {
-            setCheckedValues(value)}
-        if(value=== "Inclure"){
-
-            setShowInclure(!showInclure)
-            // setShowExclure(false)
-
-        } 
-
-        else if (value=== "Exclure"){
-
-            setShowExclure(!showExclure)
-            // setShowInclure(false)
-        }
-
-    else if (value === ""){
-        setShowExclure(false)
-        setShowInclure(false)
-    }
-    } */
+  
 
   const selectOptions = [
     { value: "Activer", label: "Activer" },

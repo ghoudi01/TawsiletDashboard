@@ -35,9 +35,9 @@ import { capitalize } from "../../utility/utility";
 
 const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
   const dispatch = useDispatch();
-  const driver = useSelector(store=> store.user?.selectedDriver)
+  const driver = useSelector((store) => store.user?.selectedDriver);
   const thumbnailPluginInstance = thumbnailPlugin();
-
+  console.log(driver, "==================================123=============");
   const [pdfViewer, setPdfViewer] = useState(false);
   const [pdfUrl, setPdfUrl] = useState("");
   const [confirmLoading, setConfirmLoading] = useState(false);
@@ -49,9 +49,7 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
   ];
 
   const Reviews = useSelector((state) =>
-    state?.user?.reviews.filter(
-      (el) => el?.driver?.id === driver?.id
-    )
+    state?.user?.reviews.filter((el) => el?.driver?.id === driver?.id)
   );
 
   // Handlers
@@ -115,7 +113,7 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
         updateDriverStatus("invalid");
       },
       onCancel() {
-       dispatch(getDriver({}));
+        dispatch(getDriver({}));
       },
     });
   };
@@ -132,7 +130,7 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
         },
       })
     ).then(() => {
-     dispatch(getDriver({}));  
+      dispatch(getDriver({}));
       setPing(!ping);
       message.success("Statut mis à jour avec succès!");
       handleCancel();
@@ -144,9 +142,7 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
     const backupImage =
       "https://www.eprofessionnel.com/media/catalog/product/placeholder/default/image-non-disponible.jpg";
     const pdfIcon = "https://cdn-icons-png.flaticon.com/512/337/337946.png";
-    const url = isLicense
-      ? document?.url
-      : document?.url;
+    const url = isLicense ? document?.url : document?.url;
 
     return (
       <Card
@@ -243,15 +239,19 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
         className="driver-modal"
       >
         <div className="driver-header">
-        <Image
-              width={75}
-              height={75}
-              src={`${driver?.profilePicture?.url}`}
-              alt={"driver avatar"}
-              preview={true}
-              // onClick={() => isPDF && (setPdfUrl(url), setPdfViewer(true))}
-              style={{ cursor: "default", borderRadius: "50%", objectFit: "cover" }}
-            />
+          <Image
+            width={75}
+            height={75}
+            src={`${driver?.profilePicture?.url}`}
+            alt={"driver avatar"}
+            preview={true}
+            // onClick={() => isPDF && (setPdfUrl(url), setPdfViewer(true))}
+            style={{
+              cursor: "default",
+              borderRadius: "50%",
+              objectFit: "cover",
+            }}
+          />
           <div className="driver-info">
             <h2>
               {capitalize(driver?.firstName)} {capitalize(driver?.lastName)}
@@ -261,9 +261,7 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
                 count={5}
                 edit={false}
                 isHalf={true}
-                value={
-                  driver?.rating
-                }
+                value={driver?.rating}
                 size={20}
                 activeColor="#ffd700"
               />
@@ -361,6 +359,59 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
           ) : (
             <div className="no-reviews">
               <p>Aucun avis disponible pour ce chauffeur</p>
+            </div>
+          )}
+        </div>
+        <Divider orientation="left" className="section-divider">
+          {driver.sub_drivers.length} Sub Drivers
+        </Divider>
+        <div className="sub-driver-grid">
+          {driver?.sub_drivers?.length > 0 ? (
+            driver.sub_drivers.map((subDriver) => (
+              <div key={subDriver.id} className="sub-driver-card">
+                <h4 className="sub-driver-name">
+                  {subDriver.firstName} {subDriver.lastName}
+                </h4>
+                <p className="sub-driver-info">📞 {subDriver.phoneNumber}</p>
+                <p className="sub-driver-info">
+                  🌍 Lat:{" "}
+                  {subDriver.latitude ? subDriver.latitude : "not available"},
+                  Lng:{" "}
+                  {subDriver.longitude ? subDriver.longitude : "not available"}
+                </p>
+              </div>
+            ))
+          ) : (
+            <div className="no-sub-drivers">
+              Aucun sous-chauffeur disponible pour ce chauffeur
+            </div>
+          )}
+        </div>
+        <Divider orientation="left" className="section-divider">
+          {driver.vehicules.length} Cars
+        </Divider>
+        <div className="sub-driver-grid">
+          {driver?.vehicules?.length > 0 ? (
+            driver.vehicules.map((car) => (
+              <div key={car.id} className="sub-driver-card">
+                <h4 className="sub-driver-name">
+                  {car.mark} {car.model}
+                </h4>
+                <p className="sub-driver-info">
+                  Matriculation: {car.matriculation}
+                </p>
+                <p className="sub-driver-info">Color: {car.color}</p>
+                <p className="sub-driver-info">
+                  Assurance Date: {car.assuranceDate}
+                </p>
+                <p className="sub-driver-info">
+                  Vin Number: {car.vinNumber ? car.vinNumber : "not available"}
+                </p>
+              </div>
+            ))
+          ) : (
+            <div className="no-sub-drivers">
+              Aucun vehicules disponible pour ce chauffeur
             </div>
           )}
         </div>

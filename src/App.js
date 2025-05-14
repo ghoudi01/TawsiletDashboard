@@ -193,7 +193,8 @@ function ProviderConfig() {
       getReservations({ free: true, deepNumber: 2, sortBy: "departDate:asc" })
     );
   }, []); */
-
+  //
+  console.log(currentUser, "isLoggedIn");
   return (
     <ConfigProvider direction={rtl ? "rtl" : "ltr"}>
       <ThemeProvider theme={{ ...theme, rtl, topMenu, darkMode }}>
@@ -205,7 +206,7 @@ function ProviderConfig() {
             ) : (
               <ProtectedRoute path="/admin" component={Admin} />
             )}
-            {isLoggedIn &&
+            {isLoggedIn && 
               (path === process.env.PUBLIC_URL ||
                 path === `${process.env.PUBLIC_URL}/`) && (
                 <Redirect to="/admin" />
