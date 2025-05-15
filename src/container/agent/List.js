@@ -32,19 +32,14 @@ const ListDrivers = ({ text, data }) => {
   const users = useSelector((state) => state?.user?.admins?.results);
   const meta = useSelector((state) => state?.user?.admins?.pagination);
 
-  const owner = users?.user_role === "owner";
 
   // looding
 
-  const adminUpdate = useSelector((state) => state.user.getted);
 
   const isLoading = useSelector((state) => state?.user?.isLoading);
   const [loader, setLoader] = useState(isLoading);
-  //  const currentId = useSelector((state) => state?.user?.currentUser?.id);
-  const currentname = useSelector((state) => state?.user?.currentUser.name);
 
   const [open, setOpen] = useState(false);
-  const [openD, setOpenD] = useState(false);
   const [openA, setOpenA] = useState(false);
   const [openU, setOpenU] = useState(false);
   const [modalId, setmodalId] = useState();
@@ -193,51 +188,51 @@ const ListDrivers = ({ text, data }) => {
   };
 
   const dataSource =
-    data?.map((value) => ({
-      key: value.id,
-      id: value.id,
-      username: value?.username,
-      phoneNumber: value?.phoneNumber,
-      email: value?.email,
-      firstName: value?.firstName,
-      lastName: value?.lastName,
-      confirmed: value?.confirmed,
-      company:
-        value?.length !== 0 && value?.company_id !== null
-          ? value?.company_id?.name
-          : null,
+    data
+      ?.filter((value) => value.confirmed === false && value.user_role==="driver")
+      ?.map((value) => ({
+        key: value?.id,
+        id: value?.id,
+        username: value?.username,
+        phoneNumber: value?.phoneNumber,
+        email: value?.email,
+        firstName: value?.firstName,
+        lastName: value?.lastName,
+        confirmed: value?.confirmed,
+        company:
+          value?.length !== 0 && value?.company_id !== null
+            ? value?.company_id?.name
+            : null,
 
-      Status:
-        value?.blocked === true ? (
-          <Tag color="darkred">Blocked</Tag>
-        ) : (
-          <Tag color="darkgreen">Not blocked</Tag>
+        Status:
+          value?.blocked === true ? (
+            <Tag color="darkred">Blocked</Tag>
+          ) : (
+            <Tag color="darkgreen">Not blocked</Tag>
+          ),
+        more: (
+          <Dropdown
+            className="wide-dropdwon"
+            content={
+              <>
+                <Link
+                  onClick={() => {
+                    setOpen(true);
+                    setmodalId(value);
+                  }}
+                  to="#"
+                >
+                  Voir
+                </Link>
+              </>
+            }
+          >
+            <Link to="#">
+              <FeatherIcon icon="more-horizontal" size={18} />
+            </Link>
+          </Dropdown>
         ),
-      more: (
-        <Dropdown
-          className="wide-dropdwon"
-          content={
-            <>
-              <Link
-                onClick={() => {
-                  setOpen(true);
-                  setmodalId(value);
-                }}
-                to="#"
-              >
-                Voir
-              </Link>
-            </>
-          }
-        >
-          <Link to="#">
-            <FeatherIcon icon="more-horizontal" size={18} />
-          </Link>
-        </Dropdown>
-      ),
-    })) || [];
-  console.log(dataSource, "=======================data====");
-
+      })) || [];
   return (
     <>
       <Row gutter={25}>

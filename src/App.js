@@ -194,7 +194,6 @@ function ProviderConfig() {
     );
   }, []); */
   //
-  console.log(currentUser, "isLoggedIn");
   return (
     <ConfigProvider direction={rtl ? "rtl" : "ltr"}>
       <ThemeProvider theme={{ ...theme, rtl, topMenu, darkMode }}>

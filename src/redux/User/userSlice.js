@@ -199,6 +199,8 @@ export const getDriver = createAsyncThunk("drivers/all", async (params) => {
         },
       }
     );
+    console.log("apiget driver work", response.data);
+
     return response.data;
   } catch (error) {
     throw error;
@@ -388,7 +390,6 @@ export const getCommands = createAsyncThunk(
   }
 );
 
-
 export const getusersTwoDeep = createAsyncThunk("user/allTwoDeep", async () => {
   try {
     const jwt = localStorage.getItem("token");
@@ -472,7 +473,6 @@ export const loginUserTodash = createAsyncThunk(
   "user/loginDash",
   async (credentials) => {
     try {
-      console.log(`${process.env.REACT_APP_BACKUP_URL}auth/local`);
       const response = await axios.post(
         `${process.env.REACT_APP_BACKUP_URL}auth/local`,
         credentials
@@ -521,6 +521,28 @@ export const getCurrentUser = createAsyncThunk("user/current", async () => {
     throw error;
   }
 });
+export const getDriversWithCars = createAsyncThunk(
+  "user/getDriversWithCars",
+  async () => {
+    try {
+      const jwt = localStorage.getItem("token");
+      if (jwt) {
+        const response = await axios.get(
+          `${process.env.REACT_APP_BACKUP_URL}users?pLevel=3`,
+          {
+            headers: {
+              Authorization: `Bearer ${jwt}`,
+            },
+          }
+        );
+        return response.data;
+      }
+    } catch (error) {
+      console.error("current user error:", error);
+      throw error;
+    }
+  }
+);
 
 export const updateDriver = createAsyncThunk(
   "driver/update",
@@ -723,6 +745,9 @@ export const getVehiculeList = createAsyncThunk(
 );
 
 const initialState = {
+  driversPagination: null,
+  clientPagination: null,
+  driversWithCars: null,
   getted: null,
   pagination: {
     page: 1,
@@ -884,8 +909,6 @@ export const getReviews = createAsyncThunk("reservation/all", async () => {
   }
 });
 
-
-
 export const userSlice = createSlice({
   name: "users",
   initialState,
@@ -998,7 +1021,8 @@ export const userSlice = createSlice({
       state.status = "success";
       state.isLoading = false;
       state.drivers = action.payload;
-      // state.meta = action.payload;
+      state.driversPagination = action.payload.pagination;
+      // state.meta = action.payload; clientPagination
     },
     [getDriver.rejected]: (state) => {
       state.status = "fail";
@@ -1176,6 +1200,7 @@ export const userSlice = createSlice({
       state.status = "success";
       state.isLoading = false;
       state.clients = action.payload;
+      state.clientPagination = action.payload.pagination;
     },
     [getClients.rejected]: (state) => {
       state.status = "fail";
@@ -1242,6 +1267,19 @@ export const userSlice = createSlice({
       state.isLoading = false;
     },
     [getCurrentUser.rejected]: (state) => {
+      state.status = "fail";
+      state.isLoading = false;
+    },
+    [getDriversWithCars.pending]: (state) => {
+      state.status = "pending";
+      state.isLoading = true;
+    },
+    [getDriversWithCars.fulfilled]: (state, action) => {
+      state.status = "success";
+      state.driversWithCars = action.payload;
+      state.isLoading = false;
+    },
+    [getDriversWithCars.rejected]: (state) => {
       state.status = "fail";
       state.isLoading = false;
     },

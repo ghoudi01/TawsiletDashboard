@@ -32,7 +32,6 @@ function SignIn() {
     dispatch(loginUserTodash(credentials));
   };
 
- 
   return (
     <AuthWrapper>
       <div className="auth-contents">
@@ -61,7 +60,8 @@ function SignIn() {
             <Input
               placeholder="nom@example.com"
               onChange={(e) => {
-                setCredentials({ ...credentials, identifier: e.target.value });
+                const trimmedValue = e.target.value.trimEnd(); 
+                setCredentials({ ...credentials, identifier: trimmedValue });
               }}
             />
           </Form.Item>
@@ -74,7 +74,9 @@ function SignIn() {
             />
           </Form.Item>
           <div className="auth-form-action">
-            <Link className="forgot-pass" to='/forgot-password'>j'ai oublié mon mot de passe</Link>
+            <Link className="forgot-pass" to="/forgot-password">
+              j'ai oublié mon mot de passe
+            </Link>
             {/* <NavLink className="forgot-pass-link" to="#">
             Mot de passe oublié?
             </NavLink> */}

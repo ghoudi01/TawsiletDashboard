@@ -222,11 +222,6 @@ const Admin = () => {
 const ProtectedRoute = ({ component: Component, allowedRoles, ...rest }) => {
   const currentUser = useSelector((state) => state.user?.currentUser);
   const userRole = currentUser?.user_role;
-  console.log("Current User:", currentUser);
-  console.log("User Role:", userRole);
-  console.log("Allowed Roles:", allowedRoles);
-  console.log("...rest:", rest);
-
   if (
     allowedRoles &&
     allowedRoles.length > 0 &&

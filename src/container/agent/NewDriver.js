@@ -5,7 +5,7 @@ import FeatherIcon from "feather-icons-react";
 import propTypes from "prop-types";
 import { ProjectHeader, ProjectSorting } from "../admin/style";
 import { Button } from "../../components/buttons/buttons";
-import { getDriver } from "../../redux/User/userSlice";
+import { getDriver, getDriversWithCars } from "../../redux/User/userSlice";
 import { Main } from "../styled";
 import { PageHeader } from "../../components/page-headers/page-headers";
 import Addagent from "./Addagent";
@@ -14,33 +14,14 @@ import { Cards } from "../../components/cards/frame/cards-frame";
 const List = lazy(() => import("./List"));
 //updateUser
 function NewDriver({ match }) {
-  const users = useSelector((state) => state?.user?.agents?.results);
-  const drivers = useSelector((state) => state?.user?.drivers);
-  console.log(drivers?.results, "====");
-  const agents = users;
-  const agentsCount = useSelector(
-    (state) => state?.user?.agents?.pagination?.total
-  );
+  const drivers = useSelector((state) => state?.user?.driversWithCars);
   const dispatch = useDispatch();
-  const current = useSelector((state) => state?.user?.currentUser?.id);
-  const currentUser = useSelector((state) => state?.user?.currentUser);
   const userRole = useSelector((state) => state?.user?.currentUser?.user_role);
-  const companyID = currentUser?.company_id?.id;
-
-  const filteredUsers = agents?.filter((el) => el.company_id?.id === current);
-
-  const filtereAgents = agents?.filter((el) => el.company_id?.id === companyID);
-
-  const { path } = match;
-
   const [state, setState] = useState({
     //  notData: searchData,
     visible: false,
     categoryActive: "all",
   });
-
-  const { notData, visible } = state;
-
   const showModal = () => {
     setState({
       ...state,
@@ -48,8 +29,9 @@ function NewDriver({ match }) {
     });
   };
   useEffect(() => {
-    dispatch(getDriver());
-  }, [dispatch]);
+    dispatch(getDriversWithCars());
+    
+  }, [ dispatch]);
 
   const onCancel = () => {
     setState({
@@ -102,7 +84,7 @@ function NewDriver({ match }) {
       </ProjectHeader>
       <Row>
         <Cards>
-          <List text={text} data={drivers?.results} />
+          <List text={text} data={drivers} />
         </Cards>
       </Row>
     </>

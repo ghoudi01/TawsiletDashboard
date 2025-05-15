@@ -52,6 +52,17 @@ const Dashboard = () => {
   const currentUser = useSelector((store) => store?.user?.currentUser);
   const drivers = useSelector((state) => state.user.drivers);
   const clients = useSelector((state) => state.user.clients);
+  const [pageDriver, setPageDriver] = useState(1);
+  const [pageSizeDriver, setPageSizeDriver] = useState(100);
+  const driversPagination = useSelector(
+    (state) => state?.user?.driversPagination
+  );
+  const [pageClient, setPageClient] = useState(1);
+  const [pageSizeClient, setPageSizeClient] = useState(100);
+
+  const clientsPagination = useSelector(
+    (state) => state?.user?.clientPagination
+  );
   const { commandsCount, pagination, commands } = useSelector(
     (state) => state.user
   );
@@ -112,15 +123,13 @@ const Dashboard = () => {
   const [dateFilter, setDateFilter] = useState(null);
 
   useEffect(() => {
-    dispatch(getDriver());
-    if (currentUser) {
-      dispatch(getUsersCount());
-      let dateToFilter = dateFilter ? getFormattedDate(dateFilter) : null;
-      dispatch(
-        getCommandStatusCount({ dateFilter: dateFilter ? dateToFilter : null })
-      );
+    dispatch(
+      getDriver({ page: pageDriver, pageSize: pageSizeDriver, text: "" })
+    );
+    if (pageDriver < driversPagination?.pageCount) {
+      setPageDriver((prevPage) => prevPage + 1);
     }
-  }, [currentUser, dateFilter, dispatch]);
+  }, [pageDriver, pageSizeDriver, dispatch, driversPagination?.pageCount]);
 
   useEffect(() => {
     if (currentUser) {
@@ -131,8 +140,14 @@ const Dashboard = () => {
     }
   }, [currentUser]);
   useEffect(() => {
-    dispatch(getClients({ page: 1, pageSize: 10, text: "" }));
-  }, [dispatch]);
+    dispatch(
+      getClients({ page: pageClient, pageSize: pageSizeClient, text: "" })
+    );
+    if (pageClient < clientsPagination?.pageCount) {
+      setPageClient((prevPage) => prevPage + 1);
+    }
+  }, [pageClient, pageSizeClient, dispatch, clientsPagination?.pageCount]);
+
   useEffect(() => {
     dispatch(getCommands({ page, pageSize }));
     if (page < pagination?.pagination?.pageCount) {
@@ -189,7 +204,6 @@ const Dashboard = () => {
           color: "#53B483",
         }
       : null,
-    
 
     {
       etat: translateEtatToFrench("Completed"), // Translate "Completed" to French
@@ -212,7 +226,6 @@ const Dashboard = () => {
       ),
       color: "#36A2EB",
     },
-   
   ].filter(Boolean); // Remove null values (e.g., if "Pending" is not included for non-admin/owner users)
 
   const showModalAgent = () => {
@@ -335,7 +348,7 @@ const Dashboard = () => {
                           <img src={DashDriverCountIcon} alt="" />
                           <div>
                             <Counter
-                              endValue={drivers.pagination.total}
+                              endValue={drivers?.pagination?.total}
                               incrementDuration={3}
                             />
 

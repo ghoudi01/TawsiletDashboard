@@ -24,7 +24,6 @@ const MenuItems = ({ darkMode, toggleCollapsed, topMenu }) => {
   const driverCount = useSelector((state) => state?.user?.count);
   const companyCount = useSelector((state) => state?.user?.countCompany);
   const currentUser = useSelector((state) => state?.user?.currentUser);
-  console.log(currentUser);
   useEffect(() => {
     dispatch(
       getReservationsCount({
