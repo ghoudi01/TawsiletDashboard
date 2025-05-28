@@ -25,7 +25,7 @@ const FilterBar = ({
             type="text"
             onChange={(e) => {
               dispatch(setReservationsFilter({...filters,pickUpAddress:{Address:{containsi:e.target.value}}}))
-              // setTextFilter(e.target.value)
+               setTextFilter(e.target.value)
             }}
             placeholder="Recherche ..."
             patterns

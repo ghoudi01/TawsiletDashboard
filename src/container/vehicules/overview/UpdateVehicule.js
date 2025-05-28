@@ -10,7 +10,7 @@ import {
   Steps,
   Input,
   Upload,
-  Select
+  Select,
 } from "antd";
 import propTypes from "prop-types";
 import { useDispatch } from "react-redux";
@@ -25,7 +25,6 @@ import { BasicFormWrapper, ImportStyleWrap } from "../../styled";
 import Heading from "../../../components/heading/heading";
 import Dragger from "antd/lib/upload/Dragger";
 import {
- 
   getVehiculeById,
   updateVehicule,
 } from "../../../redux/vehicule/vehiculeSlice";
@@ -38,7 +37,7 @@ import face4 from "../../../static/img/face4.png";
 
 import { useSelector } from "react-redux";
 import { icons } from "antd/lib/image/PreviewGroup";
-const types = {"1":"Éco", "2":"Berline", "3":"Van"}
+const types = { 1: "Éco", 2: "Berline", 3: "Van" };
 
 function UpdateVehicule({
   visible,
@@ -51,7 +50,6 @@ function UpdateVehicule({
 }) {
   const [form] = Form.useForm();
   // const toUpdate = useSelector((state) => state?.vehicule?.getv);
-  // console.log("toUpdate", toUpdate);
   const dispatch = useDispatch();
   const [image, setimage] = useState();
   function beforeUpload(file) {
@@ -68,7 +66,7 @@ function UpdateVehicule({
 
   useEffect(() => {
     if (visible) {
-      dispatch(getVehiculeById(recorddata.documentId));
+      dispatch(getVehiculeById(recorddata?.id));
     }
   }, [visible]);
   const uploadButton = (
@@ -90,23 +88,28 @@ function UpdateVehicule({
       color: "",
       matriculation: "",
       assuranceDate: "",
-      validation: { validation_state: "waiting" },
-      assurancePictures:
-        recorddata?.assurancePictures?.data?.attributes,
-      grayCardPictures:
-        recorddata?.grayCardPictures?.data?.attributes,
-      vehiculePictureface1:
-        recorddata?.vehiculePictureface1?.data?.attributes,
-      vehiculePictureface2:
-        recorddata?.vehiculePictureface2?.data?.attributes,
-      vehiculePictureface3:
-        recorddata?.vehiculePictureface3?.data?.attributes,
-      vehiculePictureface4:
-        recorddata?.vehiculePictureface4?.data?.attributes,
-        type: recorddata?.type.id,
+      assurancePictures: null,
+      grayCardPictures: null,
+      vehiculePictureface1: null,
+      vehiculePictureface2: null,
+      vehiculePictureface3: null,
+      vehiculePictureface4: null,
+      grayCardPicturesBack: null,
+      type: recorddata?.type?.id,
     },
   });
-
+  const handleUpload = () => {
+    dispatch(
+      updateVehicule({
+        id: recorddata.documentId,
+        vehicule: updatevehicule,
+      })
+    ).then(() => {
+      setPing(!ping);
+      message.success("modifier avec sucsesss!");
+    });
+    handleCancel();
+  };
   useEffect(() => {
     if (recorddata) {
       setupdatevehicule({
@@ -117,44 +120,31 @@ function UpdateVehicule({
           color: recorddata?.color,
           matriculation: recorddata?.matriculation,
           assuranceDate: recorddata?.assuranceDate,
-          type: recorddata?.type.id,
-          validation: { validation_state: "waiting" },
-          assurancePictures: {
-            ...recorddata?.assurancePictures?.data?.attributes,
-            id: recorddata?.assurancePictures?.data?.id,
-          },
-          grayCardPictures: {
-            ...recorddata?.grayCardPictures?.data?.attributes,
-            id: recorddata?.grayCardPictures?.data?.id,
-          },
+          type: recorddata?.type?.id,
           vehiculePictureface1: {
-            ...recorddata?.vehiculePictureface1?.data?.attributes,
-            id: recorddata?.vehiculePictureface1?.data?.id,
+            id: recorddata?.vehiculePictureface1?.id,
           },
           vehiculePictureface2: {
-            ...recorddata?.vehiculePictureface2?.data?.attributes,
-            id: recorddata?.vehiculePictureface2?.data?.id,
+            id: recorddata?.vehiculePictureface2?.id,
           },
           vehiculePictureface3: {
-            ...recorddata?.vehiculePictureface3?.data?.attributes,
-            id: recorddata?.vehiculePictureface3?.data?.id,
+            id: recorddata?.vehiculePictureface3?.id,
           },
           vehiculePictureface4: {
-            ...recorddata?.vehiculePictureface4?.data?.attributes,
-            id: recorddata?.vehiculePictureface4?.data?.id,
+            id: recorddata?.vehiculePictureface4?.id,
+          },
+          assurancePictures: { id: recorddata?.assurancePictures?.id },
+          grayCardPictures: { id: recorddata?.grayCardPictures?.id },
+          grayCardPicturesBack: {
+            id: recorddata?.grayCardPicturesBack?.id,
           },
         },
       });
     }
+
     setimage({
-      file: recorddata
-        ? recorddata?.vehiculePictureface1?.data?.attributes
-        : null,
-      list: [
-        recorddata
-          ? recorddata?.vehiculePictureface1?.data?.attributes
-          : null,
-      ],
+      file: recorddata ? recorddata?.vehiculePictureface1 : null,
+      list: [recorddata ? recorddata?.vehiculePictureface1 : null],
     });
   }, [recorddata]);
   // upload images
@@ -162,11 +152,11 @@ function UpdateVehicule({
   const fileListvehiculePictureface1 = [
     {
       uid: "-1",
-      name: recorddata?.vehiculePictureface1?.data?.attributes
-        ? recorddata?.vehiculePictureface1?.data?.name
+      name: recorddata?.vehiculePictureface1
+        ? recorddata?.vehiculePictureface1?.name
         : "",
       status: "done",
-      url: recorddata?.vehiculePictureface1?.data?.attributes
+      url: recorddata?.vehiculePictureface1
         ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.vehiculePictureface1?.data?.url}`
         : "",
 
@@ -262,13 +252,16 @@ function UpdateVehicule({
         formData
       );
 
-      if (response.status === 200) {
+      if (response.status === 201) {
         const imageUrl = response.data[0];
         setupdatevehicule((prevState) => ({
           ...prevState,
           data: {
             ...prevState.data,
-            vehiculePictureface1: imageUrl,
+            vehiculePictureface1: {
+              id: imageUrl?.id,
+             
+            },
           },
         }));
         message.success("Fichier téléchargé avec succès.");
@@ -281,7 +274,6 @@ function UpdateVehicule({
       message.error("Le téléchargement du fichier a échoué.");
     }
   };
- 
 
   const fileUploadProps = {
     name: "files",
@@ -323,16 +315,25 @@ function UpdateVehicule({
     formData.append("files", file);
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_BACKUP_URL}upload`,
-        formData
+        `https://api.tawsilet.com/api/upload`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
-      if (response.status === 200) {
+
+      if (response.status === 201) {
         const imageUrl = response.data[0];
         setupdatevehicule((updatevehicule) => ({
           ...updatevehicule,
           data: {
             ...updatevehicule.data,
-            vehiculePictureface2: imageUrl,
+            vehiculePictureface2: {
+              id: imageUrl?.id,
+             
+            },
           },
         }));
         setPicturesErrors({});
@@ -385,16 +386,25 @@ function UpdateVehicule({
     formData.append("files", file);
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_BACKUP_URL}upload`,
-        formData
+        `https://api.tawsilet.com/api/upload`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
-      if (response.status === 200) {
+
+      if (response.status === 201) {
         const imageUrl = response.data[0];
         setupdatevehicule((updatevehicule) => ({
           ...updatevehicule,
           data: {
             ...updatevehicule.data,
-            vehiculePictureface3: imageUrl,
+            vehiculePictureface3: {
+              id: imageUrl?.id,
+             
+            },
           },
         }));
         setPicturesErrors({});
@@ -438,25 +448,31 @@ function UpdateVehicule({
   const handleFileSelect03 = async (e) => {
     const file = e;
     // .target.files[0];
-
-    const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
-
     // console.log("file", file);
     const formData = new FormData();
 
     formData.append("files", file);
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_BACKUP_URL}upload`,
-        formData
+        `https://api.tawsilet.com/api/upload`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
-      if (response.status === 200) {
+
+      if (response.status === 201) {
         const imageUrl = response.data[0];
         setupdatevehicule((updatevehicule) => ({
           ...updatevehicule,
           data: {
             ...updatevehicule.data,
-            vehiculePictureface4: imageUrl,
+            vehiculePictureface4: {
+              id: imageUrl?.id,
+             
+            },
           },
         }));
         setPicturesErrors({});
@@ -509,16 +525,25 @@ function UpdateVehicule({
     formData.append("files", file);
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_BACKUP_URL}upload`,
-        formData
+        `https://api.tawsilet.com/api/upload`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
-      if (response.status === 200) {
+
+      if (response.status === 201) {
         const imageUrl = response.data[0];
         setupdatevehicule((updatevehicule) => ({
           ...updatevehicule,
           data: {
             ...updatevehicule.data,
-            assurancePictures: imageUrl,
+            assurancePictures: {
+              id: imageUrl?.id,
+             
+            },
           },
         }));
         setPicturesErrors({});
@@ -573,16 +598,25 @@ function UpdateVehicule({
     formData.append("files", file);
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_BACKUP_URL}upload`,
-        formData
+        `https://api.tawsilet.com/api/upload`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
-      if (response.status === 200) {
+
+      if (response.status === 201) {
         const imageUrl = response.data[0];
         setupdatevehicule((updatevehicule) => ({
           ...updatevehicule,
           data: {
             ...updatevehicule.data,
-            grayCardPictures: imageUrl,
+            grayCardPictures: {
+              id: imageUrl?.id,
+             
+            },
           },
         }));
         setPicturesErrors({});
@@ -617,6 +651,74 @@ function UpdateVehicule({
     },
     listType: "picture",
     // defaultFileList: fileListgrayCardPictures,
+    showUploadList: {
+      showRemoveIcon: true,
+      removeIcon: <FeatherIcon icon="trash-2" />,
+    },
+  };
+  const handleFileSelectGrayCardBack = async (file) => {
+    const isLt2MB = file.size / 1024 / 1024 < 2;
+    if (!isLt2MB) {
+      message.error("Le fichier doit être inférieur à 2MB.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("files", file);
+
+    try {
+      const response = await axios.post(
+        `https://api.tawsilet.com/api/upload`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.status === 201) {
+        const uploadedFile = response.data[0];
+
+        setupdatevehicule((prev) => ({
+          ...prev,
+          data: {
+            ...prev.data,
+            grayCardPicturesBack: {
+              id: uploadedFile?.id,
+            },
+          },
+        }));
+
+        setPicturesErrors({});
+        message.success("Fichier téléchargé avec succès.");
+      } else {
+        message.error("Le téléchargement du fichier a échoué.");
+      }
+    } catch (error) {
+      message.error("Le téléchargement du fichier a échoué.");
+    }
+  };
+  const fileUploadPropsGrayCardBack = {
+    name: "files",
+    multiple: false,
+    beforeUpload: (file) => {
+      handleFileSelectGrayCardBack(file);
+      return false; // Prevent automatic upload
+    },
+    onChange(info) {
+      const { status } = info.file;
+
+      if (status !== "uploading") {
+        setimage({ ...image, file: info.file, list: info.fileList });
+      }
+      if (status === "done") {
+        message.success(`${info.file.name} téléchargé avec succès.`);
+      } else if (status === "error") {
+        message.error(`${info.file.name} a échoué.`);
+      }
+    },
+    listType: "picture",
     showUploadList: {
       showRemoveIcon: true,
       removeIcon: <FeatherIcon icon="trash-2" />,
@@ -689,12 +791,17 @@ function UpdateVehicule({
       vehiculePictureface2,
       vehiculePictureface3,
       vehiculePictureface4,
+      grayCardPicturesBack,
     } = updatevehicule.data;
 
     const errors = {};
 
     if (!assurancePictures) {
       errors.assurancePictures = "Veuillez choisier une Image.";
+      message.error(`Assurance image vide Veuillez remplire.`);
+    }
+    if (!grayCardPicturesBack) {
+      errors.grayCardPicturesBack = "Veuillez choisier une Image.";
       message.error(`Assurance image vide Veuillez remplire.`);
     }
     if (!grayCardPictures) {
@@ -722,23 +829,7 @@ function UpdateVehicule({
     return Object.keys(errors).length === 0 ? true : errors;
   };
   const [assurancePictures, setAssurancePictures] = useState("");
-  const handleUpload = () => {
-    const validationResult = PicturesValidation();
 
-     
-    dispatch(
-      updateVehicule({
-        id: recorddata.documentId,
-        vehicule: updatevehicule,
-      })
-    ).then(() => {
-      setPing(!ping);
-      message.success("modifier avec sucsesss!");
-    });
-    handleCancel();
-
-    
-  };
 
   const [state, setState] = useState({
     join: "",
@@ -767,7 +858,6 @@ function UpdateVehicule({
     onCancel();
   };
 
-  
   const steps = [
     {
       title: "Information de Vehicule ",
@@ -922,7 +1012,7 @@ function UpdateVehicule({
                   <Select
                     placeholder="Sélectionnez le type de véhicule"
                     value={updatevehicule?.data?.type}
-                    defaultValue={types[updatevehicule?.data?.type]} 
+                    defaultValue={types[updatevehicule?.data?.type]}
                     onChange={(value) => {
                       setupdatevehicule({
                         ...updatevehicule,
@@ -934,7 +1024,7 @@ function UpdateVehicule({
                     }}
                   >
                     {Object.entries(types).map(([key, value]) => (
-                      <Select.Option   key={key} value={key}>
+                      <Select.Option key={key} value={key}>
                         {value}
                       </Select.Option>
                     ))}
@@ -1008,10 +1098,77 @@ function UpdateVehicule({
                             <img
                               width={"20%"}
                               src={
-                                recorddata?.vehiculePictureface1
-                                  ?.data?.attributes
-                                  ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.vehiculePictureface1?.data?.url}`
+                                recorddata?.vehiculePictureface1?.data
+                                  ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.vehiculePictureface1?.url}`
                                   : face1
+                              }
+                            />
+                            <FeatherIcon icon="upload" size={50} />
+                          </p>
+                        </Dragger>
+                        {PicturesErrors.assurancePictures && (
+                          <p
+                            className="error__message"
+                            style={{ color: "red" }}
+                          >
+                            {PicturesErrors.assurancePictures}
+                          </p>
+                        )}
+
+                        <Dragger {...fileUploadProps2}>
+                          <p
+                            className="ant-upload-drag-icon"
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "20px",
+                            }}
+                          >
+                            <h3 className="company_details_main_title">
+                              Face Avant
+                            </h3>
+                            <img
+                              width={"20%"}
+                              src={
+                                recorddata?.assurancePictures?.data
+                                  ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.assurancePictures?.url}`
+                                  : face2
+                              }
+                            />
+                            <FeatherIcon icon="upload" size={50} />
+                          </p>
+                        </Dragger>
+                        {PicturesErrors.grayCardPictures && (
+                          <p
+                            className="error__message"
+                            style={{ color: "red" }}
+                          >
+                            {PicturesErrors.grayCardPictures}
+                          </p>
+                        )}
+
+                        <Dragger {...fileUploadProps3}>
+                          <p
+                            className="ant-upload-drag-icon"
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "20px",
+                            }}
+                          >
+                            <h3 className="company_details_main_title">
+                              Face Avant
+                            </h3>
+                            <img
+                              width={"20%"}
+                              src={
+                                recorddata?.grayCardPictures?.data
+                                  ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.grayCardPictures?.url}`
+                                  : face2
                               }
                             />
                             <FeatherIcon icon="upload" size={50} />
@@ -1043,9 +1200,8 @@ function UpdateVehicule({
                             <img
                               width={"20%"}
                               src={
-                                recorddata?.vehiculePictureface2
-                                  ?.data?.attributes
-                                  ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.vehiculePictureface2?.data?.url}`
+                                recorddata?.vehiculePictureface2?.data
+                                  ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.vehiculePictureface2?.url}`
                                   : face2
                               }
                             />
@@ -1078,9 +1234,8 @@ function UpdateVehicule({
                             <img
                               width={"50%"}
                               src={
-                                recorddata?.vehiculePictureface3
-                                  ?.data?.attributes
-                                  ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.vehiculePictureface3?.data?.url}`
+                                recorddata?.vehiculePictureface3?.data
+                                  ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.vehiculePictureface3?.url}`
                                   : face3
                               }
                             />
@@ -1113,15 +1268,48 @@ function UpdateVehicule({
                             <img
                               width={"19%"}
                               src={
-                                recorddata?.vehiculePictureface4
-                                  ?.data?.attributes
-                                  ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.vehiculePictureface4?.data?.url}`
+                                recorddata?.vehiculePictureface4?.data
+                                  ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.vehiculePictureface4?.url}`
                                   : face4
                               }
                             />
                             <FeatherIcon icon="upload" size={50} />
                           </p>
                         </Dragger>
+                        {PicturesErrors.grayCardPicturesBack && (
+                          <p
+                            className="error__message"
+                            style={{ color: "red" }}
+                          >
+                            {PicturesErrors.grayCardPicturesBack}
+                          </p>
+                        )}
+                        <Dragger {...fileUploadPropsGrayCardBack}>
+                          <p
+                            className="ant-upload-drag-icon"
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "20px",
+                            }}
+                          >
+                            <h3 className="company_details_main_title">
+                              Carte Grise (Verso)
+                            </h3>
+                            <img
+                              width={"20%"}
+                              src={
+                                recorddata?.grayCardPicturesBack?.data
+                                  ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.grayCardPicturesBack?.url}`
+                                  : face4 // Replace with your fallback image
+                              }
+                            />
+                            <FeatherIcon icon="upload" size={50} />
+                          </p>
+                        </Dragger>
+
                         {PicturesErrors.vehiculePictureface4 && (
                           <p
                             className="error__message"
@@ -1130,192 +1318,6 @@ function UpdateVehicule({
                             {PicturesErrors.vehiculePictureface1}
                           </p>
                         )}
-
-                        {/* code sources 4 pictures */}
-                        {/* <div
-                          className="personal_info_driver_action"
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "flex-start",
-                            flexWrap: "wrap",
-                            gap: "65px",
-                          }}
-                        >
-                          <div>
-                            <h3>Face Gauche</h3>
-                            <UploadNew
-                              dataToShow={
-                                updateVehicule?.vehiculePictureface1
-                                  ?.data?.attributes
-                                  ? [
-                                      {
-                                        uid: "-1",
-                                        name: updateVehicule?.attributes
-                                          ?.vehiculePictureface1?.data
-                                          ?.attributes
-                                          ? updateVehicule?.attributes
-                                              ?.vehiculePictureface1?.data
-                                              ?.name
-                                          : "",
-                                        status: "done",
-                                        url: updateVehicule?.attributes
-                                          ?.vehiculePictureface1?.data
-                                          ?.attributes
-                                          ? `${process.env.REACT_APP_BACKUP_URL}${updateVehicule?.vehiculePictureface1?.data?.url}`
-                                          : face1,
-                                      },
-                                    ]
-                                  : fileListvehiculePictureface1
-                              }
-                              setFunction={Editface1}
-                            />
-                          </div>
-
-                          <div>
-                            <h3>Face Avant</h3>
-                            <UploadNew
-                              dataToShow={
-                                updateVehicule?.vehiculePictureface2
-                                  ?.data?.attributes
-                                  ? [
-                                      {
-                                        uid: "-1",
-                                        name: updateVehicule?.attributes
-                                          ?.vehiculePictureface2?.data
-                                          ?.attributes
-                                          ? updateVehicule?.attributes
-                                              ?.vehiculePictureface2?.data
-                                              ?.name
-                                          : "",
-                                        status: "done",
-                                        url: updateVehicule?.attributes
-                                          ?.vehiculePictureface2?.data
-                                          ?.attributes
-                                          ? `${process.env.REACT_APP_BACKUP_URL}${updateVehicule?.vehiculePictureface2?.data?.url}`
-                                          : face2,
-                                      },
-                                    ]
-                                  : fileListvehiculePictureface2
-                              }
-                              setFunction={Editface2}
-                            />
-                          </div>
-
-                          <div>
-                            <h3>Face Droite</h3>
-                            <UploadNew
-                              dataToShow={
-                                updateVehicule?.vehiculePictureface3
-                                  ?.data?.attributes
-                                  ? [
-                                      {
-                                        uid: "-1",
-                                        name: updateVehicule?.attributes
-                                          ?.vehiculePictureface3?.data
-                                          ?.attributes
-                                          ? updateVehicule?.attributes
-                                              ?.vehiculePictureface3?.data
-                                              ?.name
-                                          : "",
-                                        status: "done",
-                                        url: updateVehicule?.attributes
-                                          ?.vehiculePictureface3?.data
-                                          ?.attributes
-                                          ? `${process.env.REACT_APP_BACKUP_URL}${updateVehicule?.vehiculePictureface3?.data?.url}`
-                                          : face3,
-                                      },
-                                    ]
-                                  : fileListvehiculePictureface3
-                              }
-                              setFunction={Editface3}
-                            />
-                          </div>
-
-                          <div>
-                            <h3>Face Arrière</h3>
-                            <UploadNew
-                              dataToShow={
-                                updateVehicule?.vehiculePictureface4
-                                  ?.data?.attributes
-                                  ? [
-                                      {
-                                        uid: "-1",
-                                        name: updateVehicule?.attributes
-                                          ?.vehiculePictureface4?.data
-                                          ?.attributes
-                                          ? updateVehicule?.attributes
-                                              ?.vehiculePictureface4?.data
-                                              ?.name
-                                          : "",
-                                        status: "done",
-                                        url: updateVehicule?.attributes
-                                          ?.vehiculePictureface4?.data
-                                          ?.attributes
-                                          ? `${process.env.REACT_APP_BACKUP_URL}${updateVehicule?.vehiculePictureface4?.data?.url}`
-                                          : face4,
-                                      },
-                                    ]
-                                  : fileListvehiculePictureface4
-                              }
-                              setFunction={Editface4}
-                            />
-                          </div>
-                          <div>
-                            <h3>Assurance</h3>
-                            <UploadNew
-                              dataToShow={
-                                updateVehicule?.assurancePictures
-                                  ?.data?.attributes
-                                  ? [
-                                      {
-                                        uid: "-1",
-                                        name: updateVehicule?.attributes
-                                          ?.assurancePictures?.data?.attributes
-                                          ? updateVehicule?.attributes
-                                              ?.assurancePictures?.data
-                                              ?.name
-                                          : "",
-                                        status: "done",
-                                        url: updateVehicule?.attributes
-                                          ?.assurancePictures?.data?.attributes
-                                          ? `${process.env.REACT_APP_BACKUP_URL}${updateVehicule?.assurancePictures?.data?.url}`
-                                          : face4,
-                                      },
-                                    ]
-                                  : fileListassurancePictures
-                              }
-                              setFunction={assuranceP}
-                            />
-                          </div>
-                          <div>
-                            <h3>Carte Grise</h3>
-                            <UploadNew
-                              dataToShow={
-                                updateVehicule?.grayCardPictures
-                                  ?.data?.attributes
-                                  ? [
-                                      {
-                                        uid: "-1",
-                                        name: updateVehicule?.attributes
-                                          ?.grayCardPictures?.data?.attributes
-                                          ? updateVehicule?.attributes
-                                              ?.grayCardPictures?.data
-                                              ?.name
-                                          : "",
-                                        status: "done",
-                                        url: updateVehicule?.attributes
-                                          ?.grayCardPictures?.data?.attributes
-                                          ? `${process.env.REACT_APP_BACKUP_URL}${updateVehicule?.grayCardPictures?.data?.url}`
-                                          : face4,
-                                      },
-                                    ]
-                                  : fileListgrayCardPictures
-                              }
-                              setFunction={grayCardP}
-                            />
-                          </div>
-                        </div> */}
                       </Cards>
                     </div>
                   </Col>
@@ -1343,13 +1345,6 @@ function UpdateVehicule({
       footer={null}
       onCancel={handleCancel}
     >
-      {/* <StepsUpdateVehicule
-        visible={visible}
-        onCancel={onCancel}
-        setSelectedId={record}
-        recorddata={recorddata}
-      /> */}
-
       <>
         <Steps current={current} items={items} />
         <div style={contentStyle}>{steps[current].content}</div>

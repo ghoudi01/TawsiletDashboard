@@ -120,16 +120,16 @@ function Project({ match }) {
               date={setDateFilter}
             />,
 
-            <Button
-              key="1"
-              type="primary"
-              size="default"
-              className="btn_ADD"
-              onClick={() => showModal(true)}
-            >
-              <FeatherIcon icon="plus" size={16} /> Créer une nouvelle
-              Réservation
-            </Button>,
+            // <Button
+            //   key="1"
+            //   type="primary"
+            //   size="default"
+            //   className="btn_ADD"
+            //   onClick={() => showModal(true)}
+            // >
+            //   <FeatherIcon icon="plus" size={16} /> Créer une nouvelle
+            //   Réservation
+            // </Button>,
           ]}
         />
       </ProjectHeader>

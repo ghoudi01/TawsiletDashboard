@@ -28,7 +28,7 @@
     "es-abstract": "^1.22.1",
     "feather-icons-react": "^0.5.0",
     "file-saver": "^2.0.5",
-    "firebase": "^7.14.2",
+    "firebase": "^11.8.1",
     "geocode": "^0.0.3",
     "google-maps-react": "^2.0.6",
     "graphql": "^16.9.0",

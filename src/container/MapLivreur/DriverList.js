@@ -78,84 +78,80 @@ const DriverList = ({
           </ReloadContainer>{" "}
         </div>
         <div className="divWithScrollbar">
-          {driversList.length
-            ? driversList
-                .filter(
-                  (el) =>
-                    el?.firstName
-                      ?.toLowerCase()
-                      ?.includes(filterText?.toLowerCase()) ||
-                    el?.phoneNumber
-                      .toLowerCase()
-                      .includes(filterText?.toLowerCase())
-                )
-                .map((el, i) => (
-                  <DriverCard
-                    key={i}
-                    onClick={() => {
-                      setCenterSelected({
-                        lat: el?.location?.latitude,
-                        lng: el?.location?.longitude,
-                      });
-                      setSelectedDriver(el);
-                      setZoomSelected(12);
-                    }}
-                    disabled={!el?.location}
-                    disablecard={el?.location?.longitude}
-                    style={{
-                      // color: el.coordinates[0] ? "black" : "rgba(200,200,200,0.9)",
-                      backgroundColor: el?.location?.longitude
-                        ? "none"
-                        : "rgba(200,200,200,0.3)",
-                      pointerEvents: !el?.location && "none",
-                    }}
-                  >
-                    {el?.profilePicture ? (
-                      <img
-                        alt="driver profile"
-                        src={`${el?.profilePicture.url}`}
-                        style={{ height: "100px" }}
-                      />
-                    ) : (
-                      <img
-                        alt="driver avatar"
-                        src="https://static.vecteezy.com/system/resources/previews/026/175/074/original/driver-avatar-round-flat-icon-vector.jpg"
-                        style={{ height: "100px" }}
-                      />
-                    )}
-                    {/* <h1>
-                      {el?.firstName} {el?.lastName}
-                    </h1> */}
-                    {asideActive && (
-                      <>
-                        {" "}
-                        <h1>{el?.firstName} {el?.lastName}</h1>
-                        <Bulle
-                          driverstatus={
-                            el?.isActive && el?.isFree
-                              ? "#0BDA51	"
-                              : el?.isActive && !el?.isFree
-                              ? "red"
-                              : "gray"
-                          }
-                        />
-                      </>
-                    )}
-                  </DriverCard>
-                ))
-            : Array(7)
-                .fill(null)
-                .map((el, i) => (
-                  <DriverCard key={i}>
-                    <Skeleton
-                      active
-                      avatar
-                      paragraph={{
-                        rows: 1,
+          {(() => {
+            // 1. Group drivers by region (default: 'Inconnue')
+            const groupedDrivers = driversList.reduce((acc, driver) => {
+              const region = driver?.region?.trim() || "Inconnue";
+              if (
+                driver?.firstName
+                  ?.toLowerCase()
+                  .includes(filterText?.toLowerCase()) ||
+                driver?.phoneNumber
+                  ?.toLowerCase()
+                  .includes(filterText?.toLowerCase())
+              ) {
+                if (!acc[region]) acc[region] = [];
+                acc[region].push(driver);
+              }
+              return acc;
+            }, {});
+
+            // 2. Render grouped regions
+            return Object.entries(groupedDrivers).map(
+              ([regionName, drivers]) => (
+                <div key={regionName}>
+                  <h3 style={{ margin: "10px 0", fontWeight: "bold" }}>
+                    {regionName}
+                  </h3>
+                  {drivers.map((el, i) => (
+                    <DriverCard
+                      key={i}
+                      onClick={() => {
+                        setCenterSelected({
+                          lat: el?.latitude,
+                          lng: el?.longitude,
+                        });
+                        setSelectedDriver(el);
+                        setZoomSelected(12);
                       }}
-                    />
-                  </DriverCard>
-                ))}
+                      disabled={!el?.location}
+                      disablecard={el?.longitude}
+                      style={{
+                        backgroundColor: el?.longitude
+                          ? "none"
+                          : "rgba(200,200,200,0.3)",
+                        pointerEvents: !el?.location && "none",
+                      }}
+                    >
+                      {el?.profilePicture ? (
+                        <img
+                          alt="driver profile"
+                          src={el?.profilePicture.url}
+                          style={{ height: "100px" }}
+                        />
+                      ) : (
+                        <img
+                          alt="driver avatar"
+                          src="https://static.vecteezy.com/system/resources/previews/026/175/074/original/driver-avatar-round-flat-icon-vector.jpg"
+                          style={{ height: "100px" }}
+                        />
+                      )}
+                      {asideActive && (
+                        <>
+                          <h1>
+                            {el?.firstName} {el?.lastName}
+                          </h1>
+                          <Bulle
+                            driverstatus={el?.isFree ? "#0BDA51" : "red"}
+                          />
+                        </>
+                      )}
+                    </DriverCard>
+                  ))}
+                </div>
+              )
+            );
+          })()}
         </div>
       </DriverListContainer>
     </DriverListParent>

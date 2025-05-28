@@ -20,9 +20,9 @@ export const transformReservations = (
     id: value?.refNumber,
     pickupAddress: value.pickUpAddress?.Address.substring(0, 30) + "...",
     deliveryAddress: value.dropOfAddress?.Address.substring(0, 30) + "...",
-    dateCreation: value.createdAt.slice(0, 10),
+    dateCreation: value.createdAt?.slice(0, 10),
     dateDepart: value.departDate,
-    deparTime: value.deparTime.slice(0, 5),
+    deparTime: value.deparTime?.slice(0, 5),
 
     idClient: (
       <div className="table_cell_flex">

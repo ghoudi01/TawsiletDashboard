@@ -2,14 +2,14 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 const jwt = localStorage.getItem("token");
 const constructApiUrl = (params) => {
-  let {
+  const {
     current = 1,
     pageSize = 10,
     text = "",
     reserved = false,
     free = false,
     status = null,
-    deepNumber = 4,
+    deepNumber = 3,
     user = null,
     startDate = null,
     endDate = null,
@@ -17,47 +17,44 @@ const constructApiUrl = (params) => {
     user_id = null,
   } = params;
 
-  const apiUrl = new URL(
-    `${process.env.REACT_APP_BACKUP_URL}vehicules`
-  );
-  
-  return apiUrl.toString();
-};
+  const apiUrl = new URL(`${process.env.REACT_APP_BACKUP_URL}vehicules`);
 
-// Function to fetch data
-const fetchData = async ({ url, page = 1, pageSize = 10, text = "" }) => {
-  const jwt = localStorage.getItem("token");
+  // Core parameters
+  apiUrl.searchParams.append("pLevel", deepNumber);
+  apiUrl.searchParams.append("pagination[page]", current);
+  apiUrl.searchParams.append("pagination[pageSize]", pageSize);
 
-  const params = {
-    pagination: {
-      page,
-      pageSize
-    },
-    populate:["validation","type"]
-  };
-
+  // Optional filters
   if (text) {
-    params.filters = {
-      text: {
-        $contains: text
-      },
-      
-    };
+    apiUrl.searchParams.append("filters[$or][0][mark][$containsi]", text);
+    apiUrl.searchParams.append("filters[$or][1][model][$containsi]", text);
+    apiUrl.searchParams.append(
+      "filters[$or][2][matriculation][$containsi]",
+      text
+    );
   }
 
-  try {
-    const response = await axios.get(url, {
-      params,
-      headers: {
-        Authorization: `Bearer ${jwt}`,
-      },
-    });
-
-     return response.data;
-  } catch (error) {
-    console.error(error);
-    throw error;
+  if (status !== null) {
+    apiUrl.searchParams.append("filters[status][$eq]", status);
   }
+
+  if (user_id) {
+    apiUrl.searchParams.append("filters[user][id][$eq]", user_id);
+  }
+
+  if (startDate) {
+    apiUrl.searchParams.append("filters[createdAt][$gte]", startDate);
+  }
+
+  if (endDate) {
+    apiUrl.searchParams.append("filters[createdAt][$lte]", endDate);
+  }
+
+  if (sortBy) {
+    apiUrl.searchParams.append("sort", sortBy);
+  }
+
+  return apiUrl.toString();
 };
 
 
@@ -87,7 +84,7 @@ export const getVehicule = createAsyncThunk(
       text,
       reserved,
       free,
-      status: status,
+      status,
       deepNumber,
       user,
       startDate,
@@ -97,17 +94,49 @@ export const getVehicule = createAsyncThunk(
     });
 
     try {
-      const data = await fetchData({
-        url: apiUrl,
-        page: current,
-        pageSize: pageSize,
-        text: text,
-      });
-
+      const data = await fetchData({ url: apiUrl });
       return { data: data, etat: free };
-    } catch (error) {}
+    } catch (error) {
+      console.error("Error fetching vehicules:", error);
+      throw error;
+    }
   }
 );
+
+// Function to fetch data
+const fetchData = async ({ url, page = 1, pageSize = 10, text = "" }) => {
+  const jwt = localStorage.getItem("token");
+
+  const params = {
+    pagination: {
+      page,
+      pageSize,
+    },
+    populate: ["validation", "type"],
+  };
+
+  if (text) {
+    params.filters = {
+      text: {
+        $contains: text,
+      },
+    };
+  }
+
+  try {
+    const response = await axios.get(url, {
+      params,
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 
 export const getVehiculeCount = createAsyncThunk(
   "vehicule/countWaiting",
@@ -143,7 +172,7 @@ export const getVehiculeCount = createAsyncThunk(
     });
 
     try {
-      const data = await fetchData({url:apiUrl});
+      const data = await fetchData({ url: apiUrl });
 
       return { data: data, etat: free };
     } catch (error) {}
@@ -197,6 +226,9 @@ export const updateVehicule = createAsyncThunk(
   async ({ id, vehicule }) => {
     try {
       const jwt = localStorage.getItem("token");
+      console.log(vehicule, "updatevehicule==========>");
+      console.log(id, "id==========>");
+      const { id: _, ...cleanedData } = vehicule.data; // exclude id from body
 
       const response = await axios.put(
         `${process.env.REACT_APP_BACKUP_URL}vehicules/${id}`,
@@ -210,6 +242,7 @@ export const updateVehicule = createAsyncThunk(
 
       return response.data;
     } catch (error) {
+      console.log(error, "err====>");
       throw error;
     }
   }

@@ -37,9 +37,8 @@ const Vehicules = ({
   const [selectedata, setSelecteData] = useState();
   const meta = useSelector((state) => state?.vehicules?.meta);
    const dispatch = useDispatch();
-
+  console.log(textFilter, "textFilter===========>");
   const vehicules = useSelector((state) => state?.vehicules?.vehicules);
-
   const [AddModalVisible, setAddModalVisible] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
 
@@ -86,97 +85,54 @@ const Vehicules = ({
       pageSize,
     }));
   };
-  const onHandleChange = (pagination) => {
-    // You can create pagination in here
-    setState((prevState) => ({
-      ...prevState,
-      current: pagination.current,
-      pageSize: pagination.pageSize,
-    }));
-  };
+ const onHandleChange = (pagination, filters, sorter) => {
+   const { current, pageSize } = pagination;
+
+   // Update pagination state
+   setState((prev) => ({
+     ...prev,
+     page: current,
+     pageSize: pageSize,
+   }));
+
+   // Trigger data fetch with new pagination
+   dispatch(
+     getVehicule({
+       pagination: { current, pageSize },
+       text: textFilter,
+       status: filterStatus,
+       deepNumber: 3,
+     })
+   );
+ };
+
   const [state, setState] = useState({
     data: vehicules,
     current: 1,
     pageSize: 10,
   });
   const [ping, setPing] = useState(false);
-  useEffect(() => {
-    const fetchData = async () => {
-      if (currentId && currentRole === "company") {
-        try {
-          // Assuming setUserRole is an asynchronous function
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      await dispatch(
+        getVehicule({
+          pagination: {
+            current: state.page,
+            pageSize: state.pageSize,
+          },
+          text: textFilter,
+          status: filterStatus,
+          deepNumber: 3,
+        })
+      );
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
 
-          const response = await dispatch(
-            getVehicule({
-              text: textFilter,
-              status: filterStatus,
-              user_id: currentId,
-              deepNumber: 3,
-            })
-          );
-          // console.log(response.payload.data.data, "response");
-          // if (response) {
-          //   setMapp(response.payload.data.data);
-          // }
-        } catch (error) {
-          // Handle any errors that might occur during the data fetching
-          console.error("Error fetching data:", error);
-        }
-      } else if (currentId && currentRole === "agent") {
-        try {
-          // Assuming setUserRole is an asynchronous function
-
-          const response = await dispatch(
-            getVehicule({
-              text: textFilter,
-              status: filterStatus,
-              user_id: currentuser?.company_id?.id,
-              deepNumber: 3,
-            })
-          );
-          // console.log(response.payload.data.data, "response");
-          // if (response) {
-          //   setMapp(response.payload.data.data);
-          // }
-        } catch (error) {
-          // Handle any errors that might occur during the data fetching
-          console.error("Error fetching data:", error);
-        }
-      } else {
-        try {
-          await setUserRole(currentId); // Assuming setUserRole is an asynchronous function
-
-          dispatch(
-            getVehicule({
-              status: filterStatus,
-              text: textFilter,
-            })
-          );
-          // console.log(response.payload.data.data, "response");
-          // if (response) {
-          //   setMapp(response.payload.data.data);
-          // }
-        } catch (error) {
-          // Handle any errors that might occur during the data fetching
-          console.error("Error fetching data:", error);
-        }
-      }
-    };
-
-    fetchData();
-
-    setState({ data: vehicules, current: 1, pageSize: 10 });
-  }, [currentId, dispatch, textFilter, filterStatus, ping]);
-  // console.log(mappp, "mappppp");
-  // useEffect(() => {
-  //   if (vehicules) {
-  //     setState((prevState) => ({
-  //       ...prevState,
-  //       data: vehicules,
-  //     }));
-  //   }
-  // }, [vehicules]);
-
+  fetchData();
+}, [dispatch, textFilter, filterStatus, ping, state.page, state.pageSize]);
   useEffect(() => {
     if (shouldPrint) {
       printTable();
@@ -424,16 +380,6 @@ const Vehicules = ({
         </ProjectListTitle>
       ),
     },
-    // {
-    // id: "assuranceDate",
-    // title: "assuranceDate",
-    // dataIndex: "assuranceDate",
-    // },
-    // {
-    //   id: "Status",
-    //   title: "Status",
-    //   dataIndex: "Status",
-    // },
     {
       title: "",
 
@@ -467,20 +413,16 @@ const Vehicules = ({
 
   const dataSource = vehicules?.map((value) => {
     return {
-      key: value.id,
-      id: value.id,
+      key: value?.id,
+      id: value?.id,
       mark: value?.mark,
+      documentId: value?.documentId,
       model: value?.model,
       year: value?.year,
       matriculation: value?.matriculation,
       assuranceDate: value?.assuranceDate,
       validation: value?.validation?.validation_state,
       company: value?.company?.name ? value?.company?.name : "",
-      // name:
-      //   value?.company_id.data !== null
-      //     ? value?.company_id?.data
-      //         ?.name
-      //     : "",
       action: (
         <div style={{ display: "flex", justifyContent: "flex-start" }}>
           {value.validation?.validation_state === "waiting" ? (
@@ -509,19 +451,6 @@ const Vehicules = ({
               >
                 Voir
               </Link>
-              {currentRole === "owner" && (
-                <Link
-                  onClick={() => {
-                    setShowCompanyChanger(!showCompanyChanger);
-                    setSelectedId(value?.id);
-                    setSelecteData(value);
-                  }}
-                  type="1"
-                >
-                  Change société
-                </Link>
-              )}
-
               <Link
                 onClick={() => {
                   showModalUpdate();
@@ -538,14 +467,14 @@ const Vehicules = ({
                   to="#"
                   onClick={() => {
                     Modal.confirm({
-                      title: `Supprimer Vehicule N° ${value?.id} `,
+                      title: `Supprimer Vehicule N° ${value?.documentId} `,
                       content:
                         "Etes vous sure de vouloir supprimer cette vehicule?",
                       okText: "Supprimer",
                       okType: "danger",
                       cancelText: "Annuler",
                       onOk() {
-                        dispatch(deleteVehicule(value?.id));
+                        dispatch(deleteVehicule(value?.documentId));
                       },
                       onCancel() {
                         setSelectedId(null);

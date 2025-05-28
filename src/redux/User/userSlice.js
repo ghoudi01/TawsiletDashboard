@@ -232,7 +232,6 @@ export const getMapDriver = createAsyncThunk(
     const { text = "" } = params;
     try {
       const jwt = localStorage.getItem("token");
-
       const response = await axios.post(
         `${process.env.REACT_APP_BACKUP_URL}usersbyrole/driverslocation`,
         { text: text },

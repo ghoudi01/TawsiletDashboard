@@ -19,6 +19,7 @@ const List = lazy(() => import("./overview/ListVehicule"));
 function Project({ match }) {
   // const vehicules = useSelector((state) => state.headervehicules);
   const vehicules = useSelector((state) => state?.vehicules.vehicules);
+  const meta = useSelector((state) => state?.vehicules.meta);
   const [shouldPrint, setShouldPrint] = useState(false);
   const [shouldExportPdf, setShouldExportPdf] = useState(false);
   const [shouldExportExcel, setShouldExportExcel] = useState(false);
@@ -29,30 +30,7 @@ function Project({ match }) {
     visible: false,
     categoryActive: "all",
   });
-
   const { visible } = state;
-  // const handleSearch = (searchText) => {
-  //   const data = vehicules.filter((item) =>
-  //     item.title.toUpperCase().startsWith(searchText.toUpperCase())
-  //   );
-  //   setState({
-  //     ...state,
-  //     notData: data,
-  //   });
-  // };
-
-  // const onSorting = (selectedItems) => {
-  //   dispatch(sortingProjectByCategory(selectedItems));
-  // };
-
-  // const onChangeCategory = (value) => {
-  //   setState({
-  //     ...state,
-  //     categoryActive: value,
-  //   });
-  //   dispatch(filterProjectByStatus(value));
-  // };
-
   const showModal = () => {
     setState({
       ...state,
@@ -80,7 +58,7 @@ function Project({ match }) {
           title="Vehicules"
           subTitle={
             <div style={{ display: "flex", alignItems: "center" }}>
-              <>{vehicules?.length} Vehicules </>{" "}
+              <>{meta?.total} Vehicules </>{" "}
             </div>
           }
           buttons={[

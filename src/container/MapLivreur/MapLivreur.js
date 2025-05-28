@@ -1,86 +1,112 @@
 import React, { useEffect, useState } from "react";
 import { GoogleMap, Marker, InfoWindow } from "@react-google-maps/api";
-
 import styled from "styled-components";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   getDriver,
+  getDriversWithCars,
   getMapDriver,
   getReviews,
 } from "../../redux/User/userSlice";
-import { useSelector } from "react-redux";
 import { getLocalisation } from "../../redux/Localisation/localisationSlice";
 import ReactStars from "react-rating-stars-component";
 import DriverList from "./DriverList";
 import { Image, Spin } from "antd";
-// import Truck from "../../../public/images/Layer 1.png";
+import { database } from "../../config/firebase";
+import { ref, onValue } from "firebase/database";
+
+const defaultProps = {
+  center: { lat: 34.8566, lng: 9.3522 },
+  zoom: 7,
+};
 
 const MapLivreur = () => {
   const dispatch = useDispatch();
-  const isLoading = useSelector((state) => state.user.isLoading);
-  const drivers = useSelector((state) => state?.user?.mapDrivers);
-  const role = useSelector((state) => state?.user?.currentUser?.user_role);
-  const currentUser = useSelector((state) => state?.user?.currentUser);
   const [driversList, setDriversList] = useState([]);
-  const Reviews = useSelector((state) => state?.user?.reviews);
+  const [selectedDriver, setSelectedDriver] = useState(null);
+  const [centerSelected, setCenterSelected] = useState(defaultProps.center);
+  const [zoomSelected, setZoomSelected] = useState(defaultProps.zoom);
   const [ping, setPing] = useState(false);
   const [filterText, setFilterText] = useState("");
+
+  const isLoading = useSelector((state) => state.user.isLoading);
+  const drivers = useSelector((state) => state.user.driversWithCars);
+  const Reviews = useSelector((state) => state.user.reviews);
+  const currentUser = useSelector((state) => state.user.currentUser);
+  const role = currentUser?.user_role;
+  // Firebase subscription
+  const iconFree = "../../images/Layer 1 (3).png";
+  const iconBusy = "../../images/Layer 1 (1).png";
   useEffect(() => {
-    dispatch(getMapDriver({ text: filterText }));
-  }, [ping, filterText]);
+    dispatch(getDriversWithCars());
+  }, [dispatch]);
+  
+  useEffect(() => {
+    const driversRef = ref(database, "drivers");
+
+    const unsubscribe = onValue(driversRef, (snapshot) => {
+      const firebaseData = snapshot.val();
+
+      if (firebaseData) {
+        const firebaseDrivers = Object.entries(firebaseData).map(
+          ([id, driver]) => ({
+            ...driver,
+            id,
+            coordinates: driver?.location
+              ? [driver.location.latitude, driver.location.longitude]
+              : [null, null],
+          })
+        );
+
+        if (drivers && drivers.length > 0) {
+          const mergedDrivers = firebaseDrivers
+            .map((fbDriver) => {
+              const reduxDriver = drivers.find(
+                (d) => d.documentId === fbDriver.id && d.user_role === "driver"
+              );
+              if (!reduxDriver) return null;
+              console.log(reduxDriver,"========>");
+              return {
+                ...fbDriver,
+                vehicule: reduxDriver?.vehicule,
+                firstName: reduxDriver?.firstName,
+                lastName: reduxDriver?.lastName,
+                email: reduxDriver?.email,
+                phoneNumber: reduxDriver?.phoneNumber,
+                profilePicture: reduxDriver?.profilePicture,
+                isActive: reduxDriver?.isActive,
+                isFree: reduxDriver?.isFree,
+                rating: reduxDriver?.rating,
+                region: reduxDriver?.region,
+              };
+            })
+            .filter((d) => d !== null); // Remove unmatched entries
+
+          setDriversList(mergedDrivers);
+        } else {
+          setDriversList([]); // No Redux drivers loaded yet
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [drivers]);
 
   useEffect(() => {
     dispatch(getReviews());
   }, []);
+
   useEffect(() => {
-    if (drivers) {
-      // Map the data inside the if block
-      const formattedData = drivers.map((driver) => {
-        return {
-          vehicule: driver?.vehicule_id,
-          firstName: driver?.firstName,
-          lastName: driver?.lastName,
-          company: driver?.company_id?.id,
-          email: driver.email,
-          id: driver.id,
-          location: driver?.location,
-          phoneNumber: driver.phoneNumber,
-          profilePicture: driver?.profilePicture,
-          isActive: driver?.isActive,
-          isFree: driver?.isFree,
-          coordinates: [
-            driver?.location?.latitude,
-            driver?.location?.longitude,
-          ],
-          rating: driver?.rating,
-        };
-      });
-
-      // if (role === "admin" || role === "owner") {
-      setDriversList(formattedData);
-      // } else {
-      //   // Filter data outside of the if block
-      //   const companyDrivers = formattedData.filter(
-      //     (el) => el.company === currentUser?.id
-      //   );
-      //   setDriversList(companyDrivers);
-      // }
-    }
-  }, [drivers, role, currentUser]);
-
-  const [selectedDriver, setSelectedDriver] = useState(null);
-  const [centerSelected, setCenterSelected] = useState(defaultProps.center);
-  const [zoomSelected, setZoomSelected] = useState(defaultProps.zoom);
-
+    dispatch(getMapDriver({ text: filterText }));
+  }, [filterText, ping]);
   return (
     <div
       style={{
         height: "calc(100vh - 125px)",
         display: "flex",
-        position: "relativew",
+        position: "relative",
       }}
     >
-      {/* {driversList.length ? ( */}
       <>
         <DriverList
           driversList={driversList}
@@ -93,6 +119,7 @@ const MapLivreur = () => {
           filterText={filterText}
           setFilterText={setFilterText}
         />
+
         <PlienMap>
           <GoogleMap
             center={centerSelected}
@@ -100,93 +127,52 @@ const MapLivreur = () => {
             mapContainerClassName="mapcadre"
             mapContainerStyle={{ width: "100%", height: "100%" }}
           >
-            {drivers &&
-              drivers?.map((el, i) => (
+            {driversList.map((el, i) => {
+              return el?.latitude !== null && el?.longitude !== null ? (
                 <Marker
                   key={i}
-                  // icon={{
-                  //   url: el?.profilePicture
-                  //     ? el?.isActive & el.isFree
-                  //       ? `${process.env.REACT_APP_BACKUP_URL}${el?.profilePicture}` + "#green"
-                  //       : `${process.env.REACT_APP_BACKUP_URL}${el?.profilePicture}` +
-                  //         "#custom_marker"
-                  //     : el?.isActive && el.isFree
-                  //     ? "https://static.vecteezy.com/system/resources/previews/026/175/074/original/driver-avatar-round-flat-icon-vector.jpg" +
-                  //       "#green"
-                  //     : "https://static.vecteezy.com/system/resources/previews/026/175/074/original/driver-avatar-round-flat-icon-vector.jpg" +
-                  //       "#custom_marker",
-                  //   scaledSize: new window.google.maps.Size(30, 30),
-                  // }}
                   icon={{
-                    // path: window.google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-                    url: el?.isActive
-                      ? el?.isFree
-                        ? "../../images/Layer 1 (3).png"
-                        : "../../images/Layer 1 (1).png"
-                      : "../../images/Layer 1 (4).png",
-                    scale: 1, // Adjust the scale as needed
+                    url: el.isFree ? iconFree : iconBusy,
                     scaledSize: new window.google.maps.Size(30, 20),
-                    fillColor: el?.isActive && el.isFree ? "green" : "red",
-                    fillOpacity: 1,
-
-                    strokeColor: "black", // Set the stroke (border) color
-                    strokeWeight: 1, // Set the stroke weight as needed
                   }}
                   position={{
-                    lat: parseFloat(el?.location?.latitude),
-                    lng: parseFloat(el?.location?.longitude),
+                    lat: parseFloat(el.latitude),
+                    lng: parseFloat(el.longitude),
                   }}
                   onClick={() => setSelectedDriver(el)}
-                >
-                  <div></div>
-                </Marker>
-              ))}
+                />
+              ) : null;
+            })}
 
             {selectedDriver && (
               <InfoWindow
                 position={{
-                  lat: selectedDriver?.location?.latitude,
-                  lng: selectedDriver?.location?.longitude,
+                  lat: selectedDriver?.latitude,
+                  lng: selectedDriver?.longitude,
                 }}
                 onCloseClick={() => setSelectedDriver(null)}
               >
                 <InfoCard
-                  bordercolor={
-                    selectedDriver?.isActive
-                      ? selectedDriver?.isFree
-                        ? "green"
-                        : "orange"
-                      : "gray"
-                  }
+                  bordercolor={selectedDriver?.isFree ? "green" : "red"}
                 >
                   <div
                     style={{ display: "flex", alignItems: "center", gap: 10 }}
                   >
-                    {" "}
-                    <Image.PreviewGroup movable={true}>
+                    <Image.PreviewGroup>
                       <div className="titel-img">
-                        {/* <h3 className="company_details_main_title">Face Gauche</h3> */}
                         <Image
-                          // style={{ borderRadius: 16 }}
                           className="roundImage"
                           alt="vehicule pic"
                           width={40}
                           height={40}
-                          src={`${
-                            selectedDriver?.profilePicture
-                              ? `${selectedDriver?.profilePicture?.url}`
-                              : "https://static.vecteezy.com/system/resources/previews/026/175/074/original/driver-avatar-round-flat-icon-vector.jpg"
-                          }`}
+                          src={
+                            selectedDriver?.profilePicture?.url ??
+                            "https://static.vecteezy.com/system/resources/previews/026/175/074/original/driver-avatar-round-flat-icon-vector.jpg"
+                          }
                         />
                       </div>
                     </Image.PreviewGroup>
-                    {/* {selectedDriver?.profilePicture ? (
-                    <img
-                      src={`${process.env.REACT_APP_BACKUP_URL}${selectedDriver?.profilePicture}`}
-                    />
-                  ) : (
-                    <img src="https://static.vecteezy.com/system/resources/previews/026/175/074/original/driver-avatar-round-flat-icon-vector.jpg" />
-                  )} */}
+                    
                     <div>
                       <h4>{selectedDriver?.firstName}</h4>
                       {selectedDriver?.vehicule?.mark ? (
@@ -212,23 +198,8 @@ const MapLivreur = () => {
                         count={5}
                         edit={false}
                         isHalf={true}
-                        value={
-                          Reviews.filter(
-                            (el) =>
-                              el?.driver?.data?.id ===
-                              selectedDriver?.id
-                          ).reduce(
-                            (acc, obj) => acc + obj?.note,
-                            0
-                          ) /
-                          Reviews.filter(
-                            (el) =>
-                              el?.driver?.data?.id ===
-                              selectedDriver?.id
-                          ).length
-                        }
-                        // onChange={ratingChanged}
                         size={15}
+                        value={selectedDriver.rating}
                         activeColor="#ffd700"
                       />
                     </h6>
@@ -240,30 +211,18 @@ const MapLivreur = () => {
           </GoogleMap>
         </PlienMap>
       </>
-      {/* ) : (
-        <LoaderFull>
-          <Spin />
-        </LoaderFull>
-      )} */}
     </div>
   );
 };
 
-const defaultProps = {
-  center: {
-    lat: 34.8566,
-    lng: 9.3522,
-  },
-  zoom: 7,
-};
-
 export default MapLivreur;
 
+// Styled Components
 export const PlienMap = styled.div`
-  /* width: 100%; */
   flex: 1;
   height: 100%;
   position: relative;
+
   @media (max-width: 744px) {
     display: flex;
     height: 100vh;
