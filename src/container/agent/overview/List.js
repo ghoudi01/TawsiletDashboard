@@ -26,35 +26,14 @@ import Loader from "../../../components/loaderLine/Loader";
 
 const Agent = ({ text }) => {
   const dispatch = useDispatch();
-  const users = useSelector((state) => state?.user?.agents?.results);
+  const users = useSelector((state) => state?.user?.agents);
   const meta = useSelector((state) => state?.user?.agents?.pagination);
   // const drivers = useSelector((state) => state.user.drivers);
-  const currentId = useSelector((state) => state?.user?.currentUser?.id);
   const currentUser = useSelector((state) => state?.user?.currentUser);
-  const currentname = useSelector(
-    (state) => state?.user?.currentUser?.name
-  );
 
   // looding
   const isLoading = useSelector((state) => state?.user?.isLoading);
-  const [loader, setLoader] = useState(isLoading);
-  const companyID = currentUser?.company_id?.id;
-  const companyname = currentUser?.company_id?.id;
 
-  // filter tabel for agents current
-  const agents = users?.filter(
-    (user) =>
-      user?.user_role === "agent" &&
-      user?.company_id?.id === companyID
-  );
-  // filter tabel for company current
-  const AgentsCompany = users?.filter(
-    (user) =>
-      user?.user_role === "agent" &&
-      user?.company_id?.id === currentId
-  );
-  // filter tabel for owner or admin
-  const AllAgents = users?.filter((user) => user?.user_role === "agent");
 
   const [open, setOpen] = useState(false);
   const [openD, setOpenD] = useState(false);
@@ -62,12 +41,6 @@ const Agent = ({ text }) => {
   const [openU, setOpenU] = useState(false);
   const [modalId, setmodalId] = useState();
   const [modaldata, setmodaldata] = useState();
-  const [UpdateModal, setUpdateModal] = useState(false);
-  const [addAgent, setAddAgent] = useState(false);
-
-  const showAdd = () => {
-    setOpenA(true);
-  };
   const showUpdate = () => {
     setOpenU(true);
   };
@@ -162,16 +135,14 @@ const Agent = ({ text }) => {
     },
 
     {
-      id: "Société",
-      title: "Société",
-      dataIndex: "Société",
+      id: "Role",
+      title: "Role",
       render: (text, record) => (
         <ProjectListTitle>
-          <p>{record?.company}</p>
+          <p>{record?.user_role}</p>
         </ProjectListTitle>
       ),
     },
-
     {
       id: "Status",
       title: "Status",
@@ -223,43 +194,21 @@ const Agent = ({ text }) => {
       pageSize: pagination.pageSize,
     }));
   };
-
+// console.log(users, "===============users>");
   // company
   const dataCompany =
     users
-      // ?.filter((data) => {
-      //   const id = data?.id;
-      //   //  const name = data?.company_id?.name;
-      //   const username = data?.username;
-      //   const phoneNumber = data?.phoneNumber;
-      //   const email = data?.email;
-      //   const firstName = data?.firstName;
-      //   const lastName = data?.lastName;
-
-      //   return (
-      //     id?.toString().toLowerCase().includes(text.toLowerCase()) ||
-      //     username?.toLowerCase().includes(text.toLowerCase()) ||
-      //     email?.toLowerCase().includes(text.toLowerCase()) ||
-      //     phoneNumber?.toLowerCase()?.includes(text.toLowerCase()) ||
-      //     firstName?.toLowerCase()?.includes(text.toLowerCase()) ||
-      //     lastName?.toLowerCase()?.includes(text.toLowerCase())
-      //   );
-      // })
       ?.map((value) => ({
         key: value.id,
         id: value.id,
-        //  name : value?.company_id?.name,
         username: value?.username,
         phoneNumber: value?.phoneNumber,
         email: value?.email,
         firstName: value?.firstName,
         lastName: value?.lastName,
         company_id: value?.company_id,
-        company:
-          value?.length !== 0 &&
-          value?.company_id !== null
-            ? value?.company_id?.name
-            : null,
+        user_role:
+          value?.user_role,
 
         Status:
           value?.blocked === false ? (
@@ -328,23 +277,6 @@ const Agent = ({ text }) => {
   // admin owner
   const dataSource =
     users
-      // .filter((data) => {
-      //   // const id = data?.id;
-      //   // const username = data?.username;
-      //   // const phoneNumber = data?.phoneNumber;
-      //   // const email = data?.email;
-      //   // const firstName = data?.firstName;
-      //   // const lastName = data?.lastName;
-
-      //   return (
-      //     id?.toString().toLowerCase().includes(text.toLowerCase()) ||
-      //     username?.toLowerCase().includes(text.toLowerCase()) ||
-      //     email?.toLowerCase().includes(text.toLowerCase()) ||
-      //     phoneNumber?.toLowerCase()?.includes(text.toLowerCase()) ||
-      //     firstName?.toLowerCase()?.includes(text.toLowerCase()) ||
-      //     lastName?.toLowerCase()?.includes(text.toLowerCase())
-      //   );
-      // })
       ?.map((value) => ({
         key: value.id,
         id: value.id,
@@ -354,11 +286,8 @@ const Agent = ({ text }) => {
         firstName: value?.firstName,
         lastName: value?.lastName,
         company_id: value?.company_id,
-        company:
-          value?.agent_company !== null
-            ? value?.agent_company?.name
-            : null,
-
+        user_role:
+          value?.user_role,
         Status:
           value?.blocked === false ? (
             <Tag color="darkgreen">Activé</Tag>
@@ -434,11 +363,7 @@ const Agent = ({ text }) => {
       firstName: value?.firstName,
       lastName: value?.lastName,
       company_id: value?.agent_company,
-      company:
-        value?.length !== 0 &&
-        value?.agent_company !== null
-          ? value?.agent_company?.name
-          : null,
+      user_role: value?.user_role,
 
       Status:
         value?.blocked === false ? (
@@ -460,41 +385,7 @@ const Agent = ({ text }) => {
               >
                 Voir
               </Link>
-              {/* <Link
-                 onClick={() => {
-                   showUpdate();
-                   // setOpenU(true);
-                   setmodalId(value);
-                   setmodaldata(value);
-                   // handleDelete(value.id)
-                 }}
-                 to="#"
-               >
-                 Modifier
-               </Link>
-
-               <Link
-                 onClick={() => {
-                   setOpenD(true);
-
-                   Modal.confirm({
-                     title: `Supprimer Agent N° ${value?.id} `,
-                     content: "Êtes-vous sûr de supprimer cet élément?",
-                     okText: "Supprimer",
-                     okType: "danger",
-                     cancelText: "Annuler",
-                     onOk() {
-                       dispatch(usersDel(value?.id)).then(() => {
-                         dispatch(getusers());
-                       });
-                     },
-                     onCancel() {},
-                   });
-                 }}
-                 to="#"
-               >
-                 Supprimer
-               </Link> */}
+             
             </>
           }
         >

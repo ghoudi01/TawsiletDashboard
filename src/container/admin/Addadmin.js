@@ -1,7 +1,12 @@
 import React, { useState } from "react";
 import { Form, Input, Modal, message, Row, Col } from "antd";
 import { useDispatch, useSelector } from "react-redux";
-import { registerUser, getusers, registerAdmin, getAdmins } from "../../redux/User/userSlice";
+import {
+  registerUser,
+  getusers,
+  registerAdmin,
+  getAdmins,
+} from "../../redux/User/userSlice";
 import propTypes from "prop-types";
 import { Button } from "../../components/buttons/buttons";
 
@@ -10,13 +15,17 @@ const AddAdminModal = ({ visible, onCancel }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
-  const initialValues = {
-  };
+  const initialValues = {};
 
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
-      await dispatch(registerAdmin(values)).unwrap();
+      const payload = {
+        ...values,
+        user_role: "admin",
+        confirmed: true,
+      };
+      await dispatch(registerAdmin(payload)).unwrap();
       await dispatch(getAdmins({}));
       message.success("Administrateur ajouté avec succès !");
       onCancel();
@@ -31,21 +40,24 @@ const AddAdminModal = ({ visible, onCancel }) => {
   const formItems = [
     { name: "firstName", label: "Nom d'admin", rules: [{ required: true }] },
     { name: "lastName", label: "Prénom d'admin", rules: [{ required: true }] },
-    { name: "phoneNumber", label: "Numéro de téléphone", rules: [{ required: true }] },
-    { name: "adress", label: "Adresse d'admin", rules: [{ required: true }] },
-    { 
-      name: "email", 
-      label: "Adresse e-mail", 
-      rules: [
-        { required: true }, 
-        { type: "email", message: "E-mail non valide" }
-      ]
-    },
-    { 
-      name: "password", 
-      label: "Mot de passe", 
+    {
+      name: "phoneNumber",
+      label: "Numéro de téléphone",
       rules: [{ required: true }],
-      inputType: "password" 
+    },
+    {
+      name: "email",
+      label: "Adresse e-mail",
+      rules: [
+        { required: true },
+        { type: "email", message: "E-mail non valide" },
+      ],
+    },
+    {
+      name: "password",
+      label: "Mot de passe",
+      rules: [{ required: true }],
+      inputType: "password",
     },
   ];
 
@@ -66,11 +78,7 @@ const AddAdminModal = ({ visible, onCancel }) => {
         <Row gutter={16}>
           {formItems.map((item) => (
             <Col span={12} key={item.name}>
-              <Form.Item
-                name={item.name}
-                label={item.label}
-                rules={item.rules}
-              >
+              <Form.Item name={item.name} label={item.label} rules={item.rules}>
                 {item.inputType === "password" ? (
                   <Input.Password placeholder={`${item.label}...`} />
                 ) : (
@@ -82,11 +90,7 @@ const AddAdminModal = ({ visible, onCancel }) => {
         </Row>
 
         <div style={{ textAlign: "right", marginTop: 24 }}>
-          <Button 
-            type="primary" 
-            htmlType="submit"
-            loading={loading}
-          >
+          <Button type="primary" htmlType="submit" loading={loading}>
             Sauvegarder
           </Button>
         </div>

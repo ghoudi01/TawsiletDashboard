@@ -19,9 +19,6 @@ const Driver = () => {
   );
   const [money, setMoney] = useState(0);
   const [allCommands, setAllCommands] = useState([]);
-console.log(currentUser, "============");
-
-
 useEffect(() => {
   if (currentUser) {
     let combinedCommands = [];

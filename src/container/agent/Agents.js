@@ -34,13 +34,9 @@ function Agents({ match }) {
   const userRole = useSelector((state) => state?.user?.currentUser?.user_role);
   const companyID = currentUser?.company_id?.id;
 
-  const filteredUsers = agents?.filter(
-    (el) => el.company_id?.id === current
-  );
+  const filteredUsers = agents?.filter((el) => el.company_id?.id === current);
 
-  const filtereAgents = agents?.filter(
-    (el) => el.company_id?.id === companyID
-  );
+  const filtereAgents = agents?.filter((el) => el.company_id?.id === companyID);
 
   // console.log(agents?.length,"admin")
   // console.log(current,"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
@@ -96,23 +92,18 @@ function Agents({ match }) {
                   />
                 </div>
               </div>
-              
             </div>
           }
           buttons={[
-            userRole === "owner" ||
-              userRole === "admin" ||
-              (userRole === "company" && (
-                <Button
-                  className="btn_ADD"
-                  key="1"
-                  type="primary"
-                  size="default"
-                  onClick={() => showModal()}
-                >
-                  <FeatherIcon icon="plus" size={16} /> Créer un nouvel Agent
-                </Button>
-              )),
+            <Button
+              className="btn_ADD"
+              key="1"
+              type="primary"
+              size="default"
+              onClick={() => showModal()}
+            >
+              <FeatherIcon icon="plus" size={16} /> Créer un nouvel Agent
+            </Button>,
             // <Buttonobtenez><FeatherIcon icon="plus" size={16} />Créer un nouvel Agent</Buttonobtenez>
           ]}
         />

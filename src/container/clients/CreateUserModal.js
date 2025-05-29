@@ -99,8 +99,8 @@ function CreateUserModal({ visible, onCancel }) {
       errors.email = "Veuillez saisir une adresse e-mail valide.";
     }
 
-    const passwordRegex =
-      /^(?=.*[0-9])(?=.*[a-zA-Z])[a-zA-Z0-9!@#$%^&*()_+{}\[\]:;<>,.?~\\-|]{8,}$/;
+    const passwordRegex = /^.{6,}$/;
+
 
     if (!newUser?.password) {
       errors.password = "Veuillez saisir votre mot de passe.";

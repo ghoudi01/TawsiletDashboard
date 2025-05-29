@@ -1,219 +1,133 @@
-import { AutoComplete, Button, Modal, Input } from "antd";
 import React, { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { useSelector } from "react-redux";
-import { getCompanies, getCompanyList } from "../../../redux/User/userSlice";
-import {
-  addHistorique,
-  getHistorique,
-} from "../../../redux/chartContent/chartSlice";
+import { AutoComplete, Button, Modal, Input } from "antd";
+import { useDispatch, useSelector } from "react-redux";
+import { getDriver } from "../../../redux/User/userSlice";
+import { addHistorique, getHistorique } from "../../../redux/chartContent/chartSlice";
 
-function AddHistorique({ visible, onCancel, record }) {
+function AddHistorique({ visible, onCancel }) {
   const dispatch = useDispatch();
-  const companies = useSelector((state) => state?.user?.companyList);
+  const drivers = useSelector((state) => state?.user?.drivers?.results ?? []);
+  const pagination = useSelector(
+    (state) => state?.user?.drivers?.pagination ?? {}
+  );
+  const currentUser = useSelector((state) => state.user.currentUser);
 
   const [selectedLabel, setSelectedLabel] = useState("");
+  const [selectedDriverId, setSelectedDriverId] = useState(null);
+  const [montant, setMontant] = useState("");
+  const [transactionType, setTransactionType] = useState("virement");
+  const [type, setType] = useState(true); // true = income, false = outcome
 
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(100);
+  const [searchText, setSearchText] = useState("");
+
+  // Fetch drivers when modal is visible or when page/searchText changes
   useEffect(() => {
     if (visible) {
-      dispatch(getCompanyList());
+      dispatch(getDriver({ page, pageSize, text: searchText }));
     }
-  }, [visible]);
+  }, [visible, page, pageSize, searchText, dispatch]);
 
-  const companyList = companies?.map((el) => ({
-    value: el?.id,
-    label: el?.name,
+  // Prepare options for AutoComplete
+  const driverOptions = drivers.map((driver) => ({
+    value: driver.id,
+    label: `${driver.name} (${driver.email})`,
   }));
 
-  const [state, setState] = useState({
-    visible,
-    modalType: "primary",
-    checked: [],
-  });
+  const handleSearch = (value) => {
+    setSearchText(value);
+    setPage(1); // reset to first page on new search
+  };
 
-  useEffect(() => {
-    let unmounted = false;
+  const handleSelect = (driverId) => {
+    const selected = driverOptions.find((opt) => opt.value === driverId);
+    setSelectedDriverId(driverId);
+    setSelectedLabel(selected?.label || "");
+  };
 
-    if (!unmounted) {
-      setState({
-        visible,
-      });
+  const handleSubmit = () => {
+    if (!selectedDriverId || !montant) {
+      // Add your validation here
+      return;
     }
 
-    return () => {
-      unmounted = true;
-    };
-  }, [visible]);
+    dispatch(
+      addHistorique({
+        data: {
+          sender: selectedDriverId,
+          reciever: currentUser.id,
+          sold: montant,
+          transactionType: type ? "incomes" : "outcomes",
+          payType: transactionType,
+        },
+      })
+    ).then(() => dispatch(getHistorique()));
 
-  const handleCancel = () => {
+    // Clear form and close modal
+    setMontant("");
+    setSelectedLabel("");
+    setSelectedDriverId(null);
     onCancel();
   };
-  const [type, settype] = useState(true);
-  const [id, setId] = useState();
-  const [montant, setMontant] = useState();
-  const [transactionType, settransactionType] = useState("virement");
 
   return (
     <Modal
-      type={state.modalType}
-      title="Nouvelle Transaction"
-      visible={state.visible}
+      visible={visible}
+      onCancel={onCancel}
       footer={null}
-      onCancel={handleCancel}
+      title="Nouvelle Transaction"
     >
-      {type ? (
-        <div className="modalT">
-          <Button onClick={() => settype(false)}> revenus</Button>
-          <h1>La société que tu vas selectionner vous a payer :</h1>
-          <div style={{ display: "flex", gap: "20px", width: "100%" }}>
-            <AutoComplete
-              className="create_reservation_select"
-              options={companyList}
-              onSelect={(companyId) => {
-                const selectedCompany = companyList.find(
-                  (option) => option.value === companyId
-                );
+      <Button onClick={() => setType(!type)}>
+        {type ? "Passer à Dépense" : "Passer à Revenus"}
+      </Button>
 
-                setId(companyId);
+      <h1>
+        {type
+          ? "Le chauffeur que vous sélectionnez vous a payé :"
+          : "Vous avez payé au chauffeur sélectionné :"}
+      </h1>
 
-                setSelectedLabel(selectedCompany?.label);
-              }}
-              placeholder={
-                companyList?.length === 0
-                  ? "Aucun société disponible"
-                  : "Choisir une société ..."
-              }
-              value={selectedLabel}
-              onChange={(e) => setSelectedLabel(e)}
-              filterOption={(inputValue, option) =>
-                option.label.includes(inputValue.toUpperCase())
-              }
-            />{" "}
-            <Input
-              placeholder="Montant en chiffre"
-              style={{ width: "30%", height: "38px" }}
-              onChange={(e) => setMontant(e.target.value)}
-              value={montant}
-            />
-            <select onChange={(e) => settransactionType(e.target.value)}>
-              <option value="virement">Virement</option>
-              <option value="espece">Espece</option>
-              <option value="cheque">Cheque bancaire</option>
-            </select>
-          </div>
-          <div key="1" className="project-modal-footer">
-            <Button
-              size="default"
-              className="btn_Suivant"
-              key="back"
-              outlined
-              onClick={handleCancel}
-            >
-              Annuler
-            </Button>
-            <Button
-              size="default"
-              type="primary"
-              className="btn_ADD"
-              key="submit"
-              onClick={() => {
-                {
-                  dispatch(
-                    addHistorique({
-                      data: {
-                        sender: id,
-                        reciever: 227,
-                        sold: montant,
-                        transactionType: "incomes",
-                        payType: transactionType,
-                      },
-                    })
-                  ).then((res) => dispatch(getHistorique()));
-                  setMontant(null);
-                  setSelectedLabel("");
-                  handleCancel();
-                }
-              }}
-            >
-              Enregistrer
-            </Button>
-          </div>
-        </div>
-      ) : (
-        <div className="modalT">
-          <Button onClick={() => settype(true)}>Dépense</Button>
-          <h1>Vous avez Payer à la société selectionner :</h1>
-          <div style={{ display: "flex", gap: "20px", width: "100%" }}>
-            <AutoComplete
-              className="create_reservation_select"
-              options={companyList}
-              onSelect={(companyId) => {
-                const selectedCompany = companyList.find(
-                  (option) => option.value === companyId
-                );
-                setId(companyId);
+      <div style={{ display: "flex", gap: 20, width: "100%" }}>
+        <AutoComplete
+          options={driverOptions}
+          onSelect={handleSelect}
+          onSearch={handleSearch}
+          placeholder="Rechercher chauffeur par nom ou email..."
+          value={selectedLabel}
+          onChange={setSelectedLabel}
+          filterOption={(inputValue, option) =>
+            option.label.toLowerCase().includes(inputValue.toLowerCase())
+          }
+          style={{ flexGrow: 1 }}
+        />
 
-                setSelectedLabel(selectedCompany?.label);
-              }}
-              placeholder={
-                companyList?.length === 0
-                  ? "Aucun société disponible"
-                  : "Choisir une société ..."
-              }
-              value={selectedLabel}
-              onChange={(e) => setSelectedLabel(e)}
-              filterOption={(inputValue, option) =>
-                option.label.includes(inputValue.toUpperCase())
-              }
-            />{" "}
-            <Input
-              placeholder="Montant en chiffre"
-              style={{ width: "30%", height: "38px" }}
-              onChange={(e) => setMontant(e.target.value)}
-            />
-            <select onChange={(e) => settransactionType(e.target.value)}>
-              <option value="virement">Virement</option>
-              <option value="espece">Espece</option>
-              <option value="cheque">Cheque bancaire</option>
-            </select>
-          </div>
-          <div key="1" className="project-modal-footer">
-            <Button
-              size="default"
-              className="btn_Suivant"
-              key="back"
-              outlined
-              onClick={handleCancel}
-            >
-              Annuler
-            </Button>
-            <Button
-              size="default"
-              type="primary"
-              className="btn_ADD"
-              key="submit"
-              onClick={() => {
-                {
-                  dispatch(
-                    addHistorique({
-                      data: {
-                        sender: 227,
-                        reciever: id,
-                        sold: montant,
-                        transactionType: "outcomes",
-                        payType: transactionType,
-                      },
-                    })
-                  ).then((res) => dispatch(getHistorique()));
-                  handleCancel();
-                }
-              }}
-            >
-              Enregistrer
-            </Button>
-          </div>
-        </div>
-      )}
+        <Input
+          placeholder="Montant en chiffre"
+          style={{ width: "30%" }}
+          value={montant}
+          onChange={(e) => setMontant(e.target.value)}
+          type="number"
+        />
+
+        <select
+          value={transactionType}
+          onChange={(e) => setTransactionType(e.target.value)}
+        >
+          <option value="virement">Virement</option>
+          <option value="espece">Espèce</option>
+          <option value="cheque">Chèque bancaire</option>
+        </select>
+      </div>
+
+      <div style={{ marginTop: 20, textAlign: "right" }}>
+        <Button onClick={onCancel} style={{ marginRight: 10 }}>
+          Annuler
+        </Button>
+        <Button type="primary" onClick={handleSubmit}>
+          Enregistrer
+        </Button>
+      </div>
     </Modal>
   );
 }

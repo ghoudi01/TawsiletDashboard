@@ -12,6 +12,7 @@ import Param from "./Param";
 import DriverBalance from "./DriverBalance";
 import Stats from "./Stats";
 import newDriver from "./NewDriver";
+import RedirectByRole from "./RedirectByRole";
 
 const Livreurs = lazy(() => import("./Livreur"));
 const Ticket = lazy(() => import("./Ticket"));
@@ -31,7 +32,7 @@ const AdminsRoutes = lazy(() => import("./Admin"));
 const livreurMap = lazy(() => import("./MapLivreur"));
 const CalculeRoutes = lazy(() => import("./Calcule"));
 const MaintenanceRoutes = lazy(() => import("./Maintenance"));
- const BalanceRoutes = lazy(() => import("./Balance"));
+const BalanceRoutes = lazy(() => import("./Balance"));
 const Historique = lazy(() => import("./Historique"));
 
 const Admin = () => {
@@ -43,7 +44,7 @@ const Admin = () => {
     if (userValidation === null) {
       return null;
     }
-    if (["owner", "admin","driver"].includes(userValidation.user_role)) {
+    if (["owner", "admin", "driver"].includes(userValidation.user_role)) {
       return "valid";
     }
 
@@ -67,14 +68,6 @@ const Admin = () => {
     }
   }, [userValidation]);
 
-  // const isLoggedIn = localStorage.getItem("token");
-
-  // useLayoutEffect(() => {
-  //   if (isLoggedIn) {
-  //     dispatch(getCurrentUser());
-  //   }
-  // }, []);
-
   const renderRoutes = () => (
     <>
       <Suspense
@@ -85,9 +78,16 @@ const Admin = () => {
         }
       >
         <ProtectedRoute
+          exact
           path={path}
+          component={RedirectByRole}
+          allowedRoles={["owner", "admin", "company", "agent", "driver"]}
+        />
+
+        <ProtectedRoute
+          path={`${path}/dashboard`}
           component={Dashboard}
-          allowedRoles={["owner", "admin", "company", "agent","driver"]}
+          allowedRoles={["owner", "admin", "company", "agent"]}
         />
 
         <ProtectedRoute
@@ -120,7 +120,7 @@ const Admin = () => {
         <ProtectedRoute
           path={`${path}/Agents`}
           component={AgentsRoutes}
-          allowedRoles={["owner"]}
+          allowedRoles={["owner", "admin"]}
         />
         <ProtectedRoute
           path={`${path}/newDriver`}
@@ -182,7 +182,7 @@ const Admin = () => {
         <ProtectedRoute
           path={`${path}/Historique`}
           component={Historique}
-          allowedRoles={["owner", "admin", "company", "agent","driver"]}
+          allowedRoles={["owner", "admin", "company", "agent", "driver"]}
         />
         <ProtectedRoute
           path={`${path}/Ticket`}

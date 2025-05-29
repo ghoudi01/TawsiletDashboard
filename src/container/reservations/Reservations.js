@@ -4,9 +4,8 @@ import { Row, Col, Pagination } from "antd";
 import { Link } from "react-router-dom";
 import FeatherIcon from "feather-icons-react";
 import propTypes from "prop-types";
-import { ProjectHeader, ProjectSorting } from "./style";
+import { ProjectHeader } from "./style";
 import { Button } from "../../components/buttons/buttons";
-
 import { Main } from "../styled";
 import { PageHeader } from "../../components/page-headers/page-headers";
 import {
@@ -17,115 +16,112 @@ import {
 import CreateReservation from "./overview/CreateReservation";
 import { CalendarButtonPageHeader } from "../../components/buttons/calendar-button/calendar-button";
 import FilterBar from "../../components/filtersBar/FilterBar";
-import { getCompanies, getusers } from "../../redux/User/userSlice";
 import { ExportButtonPageHeader } from "../../components/buttons/export-button/export-button";
 const List = lazy(() => import("./overview/List"));
 
 function Project({ match }) {
   const dispatch = useDispatch();
+
+  // Filters from Redux store
   const filters = useSelector(
     (store) => store?.reservations?.reservationsFilters
   );
 
-  useEffect(() => {
-    dispatch(
-      getReservations({
-        Pagination: { page: 1, pageSize: 10 },
-        filters,
-      })
-    );
-  }, [dispatch, filters]);
+  // Pagination meta from API response
+  const meta = useSelector((state) => state?.reservations?.reservations?.meta);
 
+  // Reservations data array
   const reservations = useSelector(
-    (state) => state?.reservations?.reservations?.nodes
+    (state) => state?.reservations?.reservations?.data
   );
-  console.log("🚀 ~ Project ~ reservations:", reservations);
-  
+
+  // Local state for pagination controls
+  // Default page & pageSize from meta or fallback
+  const [page, setPage] = useState(meta?.pagination?.page || 1);
+  const [pageSize, setPageSize] = useState(meta?.pagination?.pageSize || 10);
+
+  // Local states for UI controls
   const [dateFilter, setDateFilter] = useState({
     startDate: null,
     endDate: null,
   });
-  const meta = useSelector(
-    (state) => state?.reservations?.reservations?.pageInfo
-  );
   const [filterStatus, setFilterStatus] = useState(null);
   const [shouldPrint, setShouldPrint] = useState(false);
   const [shouldExportPdf, setShouldExportPdf] = useState(false);
   const [shouldExportExcel, setShouldExportExcel] = useState(false);
-  // const { path } = match;
-
-  const [state, setState] = useState({
-    visible: false,
-  });
-  const { notData, visible } = state;
-  useEffect(() => {
-    if (visible) {
-      dispatch(getCompanies());
-    }
-  }, [visible]);
-
-  const showModal = () => {
-    setState({
-      ...state,
-      visible: true,
-    });
-  };
-
-  const onCancel = () => {
-    setState({
-      ...state,
-      visible: false,
-    });
-  };
-  const [trashView, settrashView] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [trashView, setTrashView] = useState(false);
   const [textFilter, setTextFilter] = useState("");
   const [dateSortBy, setDateSortBy] = useState("createdAt:desc");
   const [ping, setPing] = useState(false);
   const [activeFilter, setActiveFilter] = useState("");
+
+  // Fetch reservations on mount and when page, pageSize, filters or ping changes
+  useEffect(() => {
+    dispatch(
+      getReservations({
+        page,
+        pageSize,
+        // Include additional filters or search params as needed
+        ...filters,
+      })
+    );
+  }, [dispatch, page, pageSize, filters, ping]);
+
+  // Handle filter selection changes
   const handleFilterClick = (filter) => {
     setActiveFilter(filter);
   };
+
+  // Toggle modal visibility
+  const showModal = () => setVisible(true);
+  const onCancel = () => setVisible(false);
+
+  // Pagination handlers for Ant Design Pagination component
+  const onPageChange = (newPage, newPageSize) => {
+    setPage(newPage);
+    setPageSize(newPageSize);
+  };
+
   return (
     <>
       <ProjectHeader>
         <PageHeader
           ghost
           title="Réservations"
-          subTitle={<>{meta?.total} Reservations</>}
+          subTitle={<>{meta?.pagination?.total || 0} Réservations</>}
           buttons={[
-            <button
-              className="btn_ADD"
-              onClick={() =>
-                trashView ? settrashView(false) : settrashView(true)
-              }
-            >
-              {trashView ? (
-                <FeatherIcon icon="list" size={16} />
-              ) : (
-                <FeatherIcon icon="trash-2" size={16} />
-              )}
-              {trashView ? "liste des réservations" : "Corbeille"}
-            </button>,
+            // <button
+            //   key="trash-toggle"
+            //   className="btn_ADD"
+            //   onClick={() => setTrashView((prev) => !prev)}
+            // >
+            //   {trashView ? (
+            //     <FeatherIcon icon="list" size={16} />
+            //   ) : (
+            //     <FeatherIcon icon="trash-2" size={16} />
+            //   )}
+            //   {trashView ? "Liste des réservations" : "Corbeille"}
+            // </button>,
             <ExportButtonPageHeader
-              key="2"
+              key="export"
               setShouldPrint={setShouldPrint}
               setShouldExportPdf={setShouldExportPdf}
               setShouldExportExcel={setShouldExportExcel}
             />,
             <CalendarButtonPageHeader
+              key="calendar"
               type="primary"
               size="default"
               className="btn_ADD"
-              key="1"
               date={setDateFilter}
             />,
-
             // <Button
-            //   key="1"
+            //   key="create"
             //   type="primary"
             //   size="default"
             //   className="btn_ADD"
-            //   onClick={() => showModal(true)}
+            //   onClick={showModal}
             // >
             //   <FeatherIcon icon="plus" size={16} /> Créer une nouvelle
             //   Réservation
@@ -134,22 +130,23 @@ function Project({ match }) {
         />
       </ProjectHeader>
 
-      <FilterBar
-      // setFilterStatus={setFilterStatus}
-      // setTextFilter={setTextFilter}
-      // setDateSortBy={setDateSortBy}
-      // withSort={true}
-      >
+      <FilterBar>
         <ul>
           <Link to="#" onClick={() => handleFilterClick("")}>
             <li
               onClick={() => {
-                // const updatedFilters = { ...filters };
-                // delete updatedFilters["commandStatus"];
-                dispatch(setReservationsFilter({
-                  ...filters,
-                  commandStatus: { in: ["Pending", "Canceled_by_partner", "Canceled_by_client"] },
-                }));
+                dispatch(
+                  setReservationsFilter({
+                    ...filters,
+                    commandStatus: {
+                      in: [
+                        "Pending",
+                        "Canceled_by_partner",
+                        "Canceled_by_client",
+                      ],
+                    },
+                  })
+                );
               }}
               className={activeFilter === "" ? "slected_filter_status_bg" : ""}
             >
@@ -173,10 +170,9 @@ function Project({ match }) {
                 activeFilter === "Pending" ? "slected_filter_status_bg" : ""
               }
             >
-              En attend
+              En attente
             </li>
           </Link>
-
           <Link
             to="#"
             onClick={() => {
@@ -184,7 +180,9 @@ function Project({ match }) {
               dispatch(
                 setReservationsFilter({
                   ...filters,
-                  commandStatus: { in: ["Canceled_by_partner", "Canceled_by_client"] },
+                  commandStatus: {
+                    in: ["Canceled_by_partner", "Canceled_by_client"],
+                  },
                 })
               );
             }}
@@ -203,38 +201,42 @@ function Project({ match }) {
       <Main>
         <Row gutter={25}>
           <Col xs={24}>
-            <div>
-              <List
-                textFilter={textFilter}
-                filterStatus={filterStatus}
-                dateFilter={dateFilter}
-                dateSortBy={dateSortBy}
-                shouldPrint={shouldPrint}
-                setShouldPrint={setShouldPrint}
-                setShouldExportPdf={setShouldExportPdf}
-                shouldExportPdf={shouldExportPdf}
-                setShouldExportExcel={setShouldExportExcel}
-                shouldExportExcel={shouldExportExcel}
-                setPing={setPing}
-                ping={ping}
-                trashView={trashView}
-                reservations={reservations}
-                filters={filters}
-              />
-            </div>
-          </Col>
-        </Row>
-        {visible ? (
-          <>
-            {" "}
-            <CreateReservation
-              onCancel={onCancel}
-              visible={visible}
+            <List
+              textFilter={textFilter}
+              filterStatus={filterStatus}
+              dateFilter={dateFilter}
+              dateSortBy={dateSortBy}
+              shouldPrint={shouldPrint}
+              setShouldPrint={setShouldPrint}
+              shouldExportPdf={shouldExportPdf}
+              setShouldExportPdf={setShouldExportPdf}
+              shouldExportExcel={shouldExportExcel}
+              setShouldExportExcel={setShouldExportExcel}
               setPing={setPing}
               ping={ping}
+              trashView={trashView}
+              reservations={reservations}
+              filters={filters}
+              onHandleChange={onPageChange}
+              onShowSizeChange={onPageChange}
+              page={page}
+              pageSize={pageSize}
+              total={meta?.pagination?.total}
             />
-          </>
-        ) : null}
+          </Col>
+        </Row>
+
+       
+
+        {/* Create Reservation Modal
+        {visible && (
+          <CreateReservation
+            onCancel={onCancel}
+            visible={visible}
+            setPing={setPing}
+            ping={ping}
+          />
+        )} */}
       </Main>
     </>
   );

@@ -26,29 +26,25 @@ const Historique = () => {
       current: state.user.currentUser,
     };
   });
-
+  console.log(historique, "============");
   const dataSource = historique
     ?.filter((el) =>
       current.user_role === ("owner" || "admin")
         ? el
         : el?.sender?.data?.id === current.id ||
           el?.reciever?.data?.id === current.id
-    ).map((el) => {
+    )
+    .map((el) => {
       return {
-        type:
-          el?.transactionType === "incomes"
-            ? "Revenus"
-            : "Payement",
+        type: el?.transactionType === "incomes" ? "Revenus" : "Payement",
         sender:
           el?.sender?.data?.user_role === "owner"
             ? "Tawsilet"
-            : el?.sender?.data?.accountOverview[0]
-                ?.name,
+            : el?.sender?.data?.accountOverview[0]?.name,
         reciever:
           el?.reciever?.data?.user_role === "owner"
             ? "Tawsilet"
-            : el?.reciever?.data?.accountOverview[0]
-                ?.name,
+            : el?.reciever?.data?.accountOverview[0]?.name,
         Montant: `${el?.sold} TND`,
         methode: el?.payType,
         delete:

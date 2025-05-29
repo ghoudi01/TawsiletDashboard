@@ -265,7 +265,7 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
                 size={20}
                 activeColor="#ffd700"
               />
-              <span>({Reviews.length} avis)</span>
+              <span>({Reviews?.length} avis)</span>
             </div>
           </div>
           <div className="driver-actions">
@@ -350,12 +350,12 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
         </div>
 
         <Divider orientation="left" className="section-divider">
-          <StarOutlined /> Avis ({Reviews.length})
+          <StarOutlined /> Avis ({Reviews?.length})
         </Divider>
 
         <div className="reviews-section">
-          {Reviews.length > 0 ? (
-            Reviews.map(renderReview)
+          {Reviews?.length > 0 ? (
+            Reviews?.map(renderReview)
           ) : (
             <div className="no-reviews">
               <p>Aucun avis disponible pour ce chauffeur</p>
@@ -363,21 +363,21 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
           )}
         </div>
         <Divider orientation="left" className="section-divider">
-          {driver.sub_drivers.length} Sub Drivers
+          {driver?.sub_drivers?.length} Sub Drivers
         </Divider>
         <div className="sub-driver-grid">
           {driver?.sub_drivers?.length > 0 ? (
             driver.sub_drivers.map((subDriver) => (
-              <div key={subDriver.id} className="sub-driver-card">
+              <div key={subDriver?.id} className="sub-driver-card">
                 <h4 className="sub-driver-name">
-                  {subDriver.firstName} {subDriver.lastName}
+                  {subDriver?.firstName} {subDriver?.lastName}
                 </h4>
-                <p className="sub-driver-info">📞 {subDriver.phoneNumber}</p>
+                <p className="sub-driver-info">📞 {subDriver?.phoneNumber}</p>
                 <p className="sub-driver-info">
                   🌍 Lat:{" "}
-                  {subDriver.latitude ? subDriver.latitude : "not available"},
+                  {subDriver?.latitude ? subDriver?.latitude : "not available"},
                   Lng:{" "}
-                  {subDriver.longitude ? subDriver.longitude : "not available"}
+                  {subDriver?.longitude ? subDriver?.longitude : "not available"}
                 </p>
               </div>
             ))
@@ -388,24 +388,24 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
           )}
         </div>
         <Divider orientation="left" className="section-divider">
-          {driver.vehicules.length} Cars
+          {driver?.vehicules?.length} Cars
         </Divider>
         <div className="sub-driver-grid">
           {driver?.vehicules?.length > 0 ? (
             driver.vehicules.map((car) => (
-              <div key={car.id} className="sub-driver-card">
+              <div key={car?.id} className="sub-driver-card">
                 <h4 className="sub-driver-name">
-                  {car.mark} {car.model}
+                  {car?.mark} {car?.model}
                 </h4>
                 <p className="sub-driver-info">
-                  Matriculation: {car.matriculation}
+                  Matriculation: {car?.matriculation}
                 </p>
-                <p className="sub-driver-info">Color: {car.color}</p>
+                <p className="sub-driver-info">Color: {car?.color}</p>
                 <p className="sub-driver-info">
-                  Assurance Date: {car.assuranceDate}
+                  Assurance Date: {car?.assuranceDate}
                 </p>
                 <p className="sub-driver-info">
-                  Vin Number: {car.vinNumber ? car.vinNumber : "not available"}
+                  Vin Number: {car?.vinNumber ? car?.vinNumber : "not available"}
                 </p>
               </div>
             ))

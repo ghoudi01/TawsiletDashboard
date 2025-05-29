@@ -11,23 +11,112 @@ import {
   DELETE_RESERVATION,
   UPDATE_RESERVATION,
 } from "./mutations";
+import axios from "axios";
 
 // get one by id
+
 export const getReservationById = createAsyncThunk(
   "reservation/get",
   async (id, { rejectWithValue }) => {
     try {
-      const { data } = await client.query({
-        query: GET_RESERVATION_BY_ID,
-        variables: { id },
-      });
-      return data.reservation;
+      const { data } = await axios.get(
+        `${process.env.REACT_APP_BACKUP_URL}commands/${id}?pLevel=1`
+      );
+      return data;
     } catch (error) {
-      return rejectWithValue(error.message);
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+export const getReservations = createAsyncThunk(
+  "reservations/all",
+  async (params, { rejectWithValue }) => {
+    const { page = 1, pageSize = 10, text = "" } = params || {};
+    try {
+      const jwt = localStorage.getItem("token");
+
+      const response = await axios.get(
+        `${process.env.REACT_APP_BACKUP_URL}commands`,
+        {
+          params: {
+            pLevel: 1,
+            "pagination[page]": page,
+            "pagination[pageSize]": pageSize,
+            ...(text && {
+              "filters[$or][0][clientFullName][$containsi]": text,
+              "filters[$or][1][departureCity][$containsi]": text,
+              "filters[$or][2][arrivalCity][$containsi]": text,
+            }),
+          },
+          headers: {
+            Authorization: `Bearer ${jwt}`,
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
     }
   }
 );
 
+
+export const getReservationsCount = createAsyncThunk(
+  "reservations/count",
+  async ({ filters } = {}, { rejectWithValue }) => {
+    try {
+      const params = new URLSearchParams();
+
+      Object.entries(filters || {}).forEach(([key, value]) => {
+        if (typeof value === "object" && value !== null) {
+          Object.entries(value).forEach(([subKey, subVal]) => {
+            params.append(`filters[${key}][${subKey}]`, subVal);
+          });
+        } else {
+          params.append(`filters[${key}]`, value);
+        }
+      });
+
+      const { data } = await axios.get(
+        `${process.env.REACT_APP_BACKUP_URL}commands/count?${params.toString()}`
+      );
+
+      return { count: data };
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+export const deleteReservation = createAsyncThunk(
+  "reservation/delete",
+  async (id, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.delete(
+        `${process.env.REACT_APP_BACKUP_URL}commands/${id}`
+      );
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+export const updateReservation = createAsyncThunk(
+  "reservation/update",
+  async ({ id, data }, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(
+        `${process.env.REACT_APP_BACKUP_URL}commands/${id}`,
+        data
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
 export const getCommandDetailsById = createAsyncThunk(
   "commandDetailsById/get",
   async (id, { rejectWithValue }) => {
@@ -43,49 +132,20 @@ export const getCommandDetailsById = createAsyncThunk(
     }
   }
 );
-
-export const getReservations = createAsyncThunk(
-  "reservations/all",
-  async (
-    {
-      filters = {
-        commandStatus: {
-          in: ["Pending", "Canceled_by_partner", "Canceled_by_client"],
-        },
-      },
-      pagination,
-      sort = "createdAt:desc",
-    },
-    { rejectWithValue }
-  ) => {
+export const createNewReservation = createAsyncThunk(
+  "reservation/newreservation",
+  async (reservation, { rejectWithValue }) => {
     try {
-      const { data } = await client.query({
-        query: GET_RESERVATIONS,
-        variables: {
-          filters: {
-            ...filters,
-            driver: {
-              documentId: {
-                null: true,
-              },
-            },
-            departDate: {
-              notNull: true
-            }
-            
-          },
-          pagination,
-          sort,
-        },
-        fetchPolicy: "network-only",
+      const { data } = await client.mutate({
+        mutation: CREATE_RESERVATION,
+        variables: { input: reservation },
       });
-      return data.commands_connection;
+      return data.createReservation.reservation;
     } catch (error) {
       return rejectWithValue(error.message);
     }
   }
 );
-
 export const getCommands = createAsyncThunk(
   "getCommands/all",
   async (
@@ -137,81 +197,6 @@ export const getCommands = createAsyncThunk(
     }
   }
 );
-
-export const getReservationsCount = createAsyncThunk(
-  "reservations/count",
-  async (params) => {
-    const { filters } = params || {};
-
-    try {
-      const { data } = await client.query({
-        query: GET_RESERVATIONS_COUNT,
-        variables: {
-          filters,
-        },
-        fetchPolicy: "network-only", // Ensures fresh data is fetched
-      });
-
-      return {
-        count: data.commands_connection.pageInfo.total,
-        // etat: free,
-      };
-    } catch (error) {
-      console.error("Error fetching reservations count:", error);
-      throw error;
-    }
-  }
-);
-// ======================================================================================>
-
-// create reservation
-export const createNewReservation = createAsyncThunk(
-  "reservation/newreservation",
-  async (reservation, { rejectWithValue }) => {
-    try {
-      const { data } = await client.mutate({
-        mutation: CREATE_RESERVATION,
-        variables: { input: reservation },
-      });
-      return data.createReservation.reservation;
-    } catch (error) {
-      return rejectWithValue(error.message);
-    }
-  }
-);
-
-// delete reservation
-export const deleteReservation = createAsyncThunk(
-  "reservation/delete",
-  async (id, { rejectWithValue }) => {
-    try {
-      const { data } = await client.mutate({
-        mutation: DELETE_RESERVATION,
-        variables: { id },
-      });
-      return data.deleteReservation;
-    } catch (error) {
-      return rejectWithValue(error.message);
-    }
-  }
-);
-
-// update reservation
-export const updateReservation = createAsyncThunk(
-  "reservation/update",
-  async ({ id, data }, { rejectWithValue }) => {
-    try {
-      const { data: result } = await client.mutate({
-        mutation: UPDATE_RESERVATION,
-        variables: { documentId: id, data },
-      });
-      return result.updateCommand;
-    } catch (error) {
-      return rejectWithValue(error.message);
-    }
-  }
-);
-
 const initialState = {
   reservationsFilters: null,
   reservations: [],

@@ -27,6 +27,11 @@ const Reservations = ({
   ping,
   trashView,
   reservations,
+  onHandleChange,
+  onShowSizeChange,
+  page,
+  pageSize,
+  total,
 }) => {
   console.log("🚀 ~ reservations:", reservations);
 
@@ -141,7 +146,6 @@ const Reservations = ({
     };
   };
 
- 
   const handleSelectRow = (checked, id) => {
     if (checked) {
       setSelectedRows((prevSelectedRows) => [...prevSelectedRows, id]);
@@ -236,31 +240,31 @@ const Reservations = ({
     }
   }, [dispatch, reservations]);
 
-  const onShowSizeChange = (current, pageSize) => {
-    setState((prevState) => ({
-      ...prevState,
-      current,
-      pageSize,
-    }));
-  };
+  // const onShowSizeChange = (current, pageSize) => {
+  //   setState((prevState) => ({
+  //     ...prevState,
+  //     current,
+  //     pageSize,
+  //   }));
+  // };
 
-  const onHandleChange = (pagination) => {
-    dispatch(
-      //on change Pagination Number
-      getReservations({
-        pagination: {
-          page: pagination?.current,
-          pageSize: pagination?.pageSize,
-        },
-        filters,
-      })
-    );
-    setState((prevState) => ({
-      ...prevState,
-      current: pagination.current,
-      pageSize: pagination.pageSize,
-    }));
-  };
+  // const onHandleChange = (pagination) => {
+  //   dispatch(
+  //     //on change Pagination Number
+  //     getReservations({
+  //       pagination: {
+  //         page: pagination?.current,
+  //         pageSize: pagination?.pageSize,
+  //       },
+  //       filters,
+  //     })
+  //   );
+  //   setState((prevState) => ({
+  //     ...prevState,
+  //     current: pagination.current,
+  //     pageSize: pagination.pageSize,
+  //   }));
+  // };
 
   return (
     <>
@@ -272,15 +276,21 @@ const Reservations = ({
               <Table
                 className="table-striped-rows"
                 pagination={{
-                  current: meta?.page,
-                  pageSize: meta?.pageSize,
-                  total: meta?.total,
+                  current: page,
+                  pageSize: pageSize,
+                  total: total,
                   showSizeChanger: true,
-                  onShowSizeChange: onShowSizeChange,
+                  showQuickJumper: true,
+                  pageSizeOptions: ["10", "25", "50", "100"],
                 }}
                 dataSource={dataSource}
                 columns={columns}
-                onChange={onHandleChange}
+                onChange={(pagination, filters, sorter) => {
+                  const { current, pageSize } = pagination;
+                  // Call your handler or directly update states here
+                  onShowSizeChange(current, pageSize);
+                  // If you have sorting/filter logic, handle sorter and filters here
+                }}
                 onRow={handleRowClick}
                 rowClassName={() => "clickable-row"}
                 // loading={isLoading}

@@ -273,15 +273,26 @@ export const getAdmins = createAsyncThunk("admins/all", async (params) => {
   try {
     const jwt = localStorage.getItem("token");
 
-    const response = await axios.post(
-      `${process.env.REACT_APP_BACKUP_URL}usersbyrole/admin`,
-      { page: page, pageSize: pageSize, text: text },
+    const response = await axios.get(
+      `${process.env.REACT_APP_BACKUP_URL}users`,
       {
+        params: {
+          "filters[user_role][$eq]": "admin",
+          "pagination[page]": page,
+          "pagination[pageSize]": pageSize,
+          ...(text && {
+            // Add name, email, or any other field filter dynamically
+            "filters[$or][0][firstName][$containsi]": text,
+            "filters[$or][1][lastName][$containsi]": text,
+            "filters[$or][2][email][$containsi]": text,
+          }),
+        },
         headers: {
           Authorization: `Bearer ${jwt}`,
         },
       }
     );
+
     return response.data;
   } catch (error) {
     throw error;
@@ -289,19 +300,30 @@ export const getAdmins = createAsyncThunk("admins/all", async (params) => {
 });
 
 export const getAgent = createAsyncThunk("agent/all", async (params) => {
-  let { page = 1, pageSize = 10, text = "" } = params;
+  const { page = 1, pageSize = 10, text = "" } = params;
   try {
     const jwt = localStorage.getItem("token");
 
-    const response = await axios.post(
-      `${process.env.REACT_APP_BACKUP_URL}usersbyrole/agent`,
-      { page: page, pageSize: pageSize, text: text },
+    const response = await axios.get(
+      `${process.env.REACT_APP_BACKUP_URL}users`,
       {
+        params: {
+          "filters[user_role][$startsWith]": "agent",
+          "pagination[page]": page,
+          "pagination[pageSize]": pageSize,
+          ...(text && {
+            // Add name, email, or any other field filter dynamically
+            "filters[$or][0][firstName][$containsi]": text,
+            "filters[$or][1][lastName][$containsi]": text,
+            "filters[$or][2][email][$containsi]": text,
+          }),
+        },
         headers: {
           Authorization: `Bearer ${jwt}`,
         },
       }
     );
+
     return response.data;
   } catch (error) {
     throw error;
@@ -817,7 +839,7 @@ export const registerAdmin = createAsyncThunk(
       const jwt = localStorage.getItem("token");
 
       const response = await axios.post(
-        `${process.env.REACT_APP_BACKUP_URL}register/admin`,
+        `${process.env.REACT_APP_BACKUP_URL}register/driver`,
         credentials,
         {
           headers: {
@@ -825,13 +847,6 @@ export const registerAdmin = createAsyncThunk(
           },
         }
       );
-      // console.log(response)
-      // if (response.data.user.user_role === "admin") {
-      //   window.location.href = "/admin/dashboard";
-      // } else {
-      //   window.location.href = "/clientprofile/details";
-      // }
-
       return response.data.user;
     } catch (error) {
       console.error("Login error:", error);

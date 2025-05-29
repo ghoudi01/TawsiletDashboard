@@ -31,7 +31,7 @@ import Loader from "../../../components/loaderLine/Loader";
 const Admin = ({ text }) => {
   const dispatch = useDispatch();
 
-  const users = useSelector((state) => state?.user?.admins?.results);
+  const users = useSelector((state) => state?.user?.admins);
   const meta = useSelector((state) => state?.user?.admins?.pagination);
 
   const owner = users?.user_role === "owner";
@@ -43,9 +43,7 @@ const Admin = ({ text }) => {
   const isLoading = useSelector((state) => state?.user?.isLoading);
   const [loader, setLoader] = useState(isLoading);
   //  const currentId = useSelector((state) => state?.user?.currentUser?.id);
-  const currentname = useSelector(
-    (state) => state?.user?.currentUser.name
-  );
+  const currentname = useSelector((state) => state?.user?.currentUser.name);
 
   const [open, setOpen] = useState(false);
   const [openD, setOpenD] = useState(false);
@@ -225,8 +223,7 @@ const Admin = ({ text }) => {
       firstName: value?.firstName,
       lastName: value?.lastName,
       company:
-        value?.length !== 0 &&
-        value?.company_id !== null
+        value?.length !== 0 && value?.company_id !== null
           ? value?.company_id?.name
           : null,
 

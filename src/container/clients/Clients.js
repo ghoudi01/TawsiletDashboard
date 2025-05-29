@@ -95,51 +95,7 @@ function Clients({ match }) {
       <Main>
         <Row gutter={25}>
           <Col xs={24}>
-            {/* <ProjectSorting>
-              <div className="project-sort-bar">
-                {/* <div className="project-sort-nav">
-                  <nav>
-                    <ul>
-                      <li className="active">
-                        <Link to="#">All</Link>
-                      </li>
-                      <li className="active">
-                        <Link to="#">In Progress</Link>
-                      </li>
-                      <li className="active">
-                        <Link to="#">Complete</Link>
-                      </li>
-                      <li className="active">
-                        <Link to="#">Late</Link>
-                      </li>
-                      <li className="active">
-                        <Link to="#">Early</Link>
-                      </li>
-                    </ul>
-                  </nav>
-                </div> */}
-
-            {/* <div className="project-sort-group">
-                  <div className="sort-group">
-                    <span>Sort By:</span>
-                    <Select defaultValue="category">
-                      <Select.Option value="category">
-                        Project Category
-                      </Select.Option>
-                      <Select.Option value="rate">Top Rated</Select.Option>
-                      <Select.Option value="popular">Popular</Select.Option>
-                      <Select.Option value="time">Newest</Select.Option>
-                      <Select.Option value="price">Price</Select.Option>
-                    </Select>
-                    <div className="layout-style">
-                      <NavLink to={`${path}/list`}>
-                        <FeatherIcon icon="list" size={16} />
-                      </NavLink>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </ProjectSorting>  */}
+           
             <div>
               <List
                 text={text}

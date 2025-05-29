@@ -1,33 +1,9 @@
 import React, { useEffect, useState } from "react";
-import {
-  Row,
-  Col,
-  Form,
-  Input,
-  Select,
-  DatePicker,
-  Radio,
-  Upload,
-  Spin,
-  Modal,
-} from "antd";
-import { Link } from "react-router-dom";
+import { Row, Col, Form, Input, Select, Modal, message } from "antd";
 import propTypes from "prop-types";
 import { useSelector, useDispatch } from "react-redux";
-import FeatherIcon from "feather-icons-react";
-import { RecordFormWrapper } from "../../container/crud/axios/Style";
-import { PageHeader } from "../../components/page-headers/page-headers";
-import { Cards } from "../../components/cards/frame/cards-frame";
 import { Button } from "../../components/buttons/buttons";
 import { Main, BasicFormWrapper, ImportStyleWrap } from "../styled";
-import {
-  axiosDataSubmit,
-  axiosFileUploder,
-  axiosFileClear,
-} from "../../redux/crud/axios/actionCreator";
-import Heading from "../../components/heading/heading";
-import images from "../../static/img/Media.png";
-import Dragger from "antd/lib/upload/Dragger";
 import {
   getUserById,
   loginUserTodash,
@@ -40,9 +16,7 @@ const { Option } = Select;
 const dateFormat = "YYYY/MM/DD";
 
 const Updateagent = ({ visible, onCancel, match, modalId }) => {
-
   const dispatch = useDispatch();
-
 
   const agentUpdate = useSelector((state) => state.user.getted);
   // console.log("Loading", agentUpdate);
@@ -51,98 +25,70 @@ const Updateagent = ({ visible, onCancel, match, modalId }) => {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [modalText, setModalText] = useState("Content of the modal");
   const [updateagent, setupdateAgent] = useState({
-  
     phoneNumber: "",
-    user_role: "agent",
     password: "",
-    accountOverview: [
-      {
-        __component: "section.client",
-        company_id: currentId,
-        firstName: "",
-        lastName: "",
-        adress: "",
-
-      },
-    ],
-
+    firstName: "",
+    lastName: "",
+    blocked: false,
   });
   useEffect(() => {
     setupdateAgent({
       phoneNumber: modalId?.phoneNumber,
       password: modalId?.password,
-      user_role: "agent",
-...modalId,
-      accountOverview: [
-        {
-          __component: "section.client",
-
-          firstName: modalId ? modalId?.firstName : null,
-          lastName: modalId ? modalId?.lastName : null,
-          adress: modalId ? modalId?.adress : null,
-        },
-      ],
+      ...modalId,
     });
   }, [modalId]);
 
+  // validation
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [Inputerrors, setInputErrors] = useState({});
+  const isInputValid = () => {
+    const errors = {};
 
-// validation
-const [confirmPassword, setConfirmPassword] = useState("");
-const [Inputerrors, setInputErrors] = useState({});
-const isInputValid = () => {
-  const errors = {};
+    if (!updateagent?.phoneNumber) {
+      errors.phoneNumber = "Veuillez saisir votre N° téléphone.";
+    }
 
-  if (!updateagent?.phoneNumber) {
-    errors.phoneNumber = "Veuillez saisir votre N° téléphone.";
-  }
+    if (!updateagent?.firstName) {
+      errors.firstName = "Veuillez saisir votre nom.";
+    }
+    if (!updateagent?.lastName) {
+      errors.lastName = "Veuillez saisir votre prénom.";
+    }
+    return Object.keys(errors).length === 0 ? true : errors;
+  };
 
-  if (!updateagent?.firstName) {
-    errors.firstName = "Veuillez saisir votre nom.";
-  }
-  if (!updateagent?.lastName) {
-    errors.lastName = "Veuillez saisir votre prénom.";
-  }
-  if (!updateagent?.adress) {
-    errors.adress = "Veuillez saisir votre adresse.";
-  }
+  const next = () => {
+    const errors = isInputValid();
+    console.log(errors);
+    if (errors === true) {
+      Modal.confirm({
+        title: "Confirmation des modifications",
+        content:
+          "Êtes-vous sûr de vouloir modifier les coordonnées de cet agent ?",
+        okText: "Oui",
+        okType: "danger",
+        cancelText: "Annuler",
+        onOk() {
+          dispatch(updateUser({ id: modalId?.id, user: updateagent }))
+            .then(() => {
+              dispatch(getusers());
+              message.success("Modifications enregistrées !");
+              handleCancel();
+            })
+            .catch(() => {
+              message.error("Erreur lors de la mise à jour.");
+            });
+        },
+      });
 
-  return Object.keys(errors).length === 0 ? true : errors;
-};
-
-
-const next = () => {
-  const errors = isInputValid();
-  if (errors === true) {
-    Modal.confirm({
-      title: "Confirmation des modifications",
-      content:
-        "Etes vous sure de vouloir Modifier les coordonnées de cet Agent?",
-      okText: "Oui",
-      okType: "danger",
-      cancelText: "Annuler",
-      onOk() {
-        dispatch(
-          updateUser({ id: modalId?.id, user: updateagent })
-        ).then(() => dispatch(getusers()));
-        handleCancel();
-      },
-      onCancel() {
-        dispatch(getusers());
-      },
-    });
-    setInputErrors({});
-  } else {
-    setInputErrors(errors);
-  }
-};
-
-
-
-
+      setInputErrors({});
+    } else {
+      setInputErrors(errors);
+    }
+  };
   const [form] = Form.useForm();
-
   const [options, setOptions] = useState([]);
-
   const [state, setState] = useState({
     join: "",
     visible,
@@ -170,193 +116,145 @@ const next = () => {
     onCancel();
   };
 
-
   const onChange = (date, dateString) => {
     setState({ join: dateString });
   };
-  
+
   return (
     <>
       <Modal
         type={state.modalType}
         title={`Modifier l'agent N°${modalId?.id}`}
         visible={state.visible}
-        className="ModalagentAdd "
-     
+        className="ModalagentAdd"
         footer={null}
         onCancel={handleCancel}
       >
-       
-       <>
-          <BasicFormWrapper className="mb-25 ">
-            <p className="ModalagentAdd">Information de l'agent</p>
-            <Form name="multi-form" layout="horizontal">
-              <Row gutter={30}>
-                <Col sm={12} xs={24} className="mb-25">
-                  <Form.Item
-                    name="sDash_f-name"
-                    label="Nom d'agent"
-                    validateStatus={Inputerrors.firstName ? "error" : ""}
-                    help={Inputerrors.firstName}
-                  >
-                    <Input
-                      placeholder={
-                        updateagent
-                          ? updateagent?.firstName
-                          : null
-                      }
-                      value={
-                        updateagent
-                          ? updateagent?.firstName
-                          : null
-                      }
-                      onChange={(e) => {
-                        setupdateAgent({
-                          ...updateagent,
-                          accountOverview: [
-                            {
-                              ...updateagent?.accountOverview[0],
-                              firstName: e.target.value,
-                            },
-                          ],
-                        });
-                      }}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col sm={12} xs={24} className="mb-25">
-                  <Form.Item
-                    name="sDash_l-name"
-                    label="Prénom d'agent"
-                    validateStatus={Inputerrors.lastName ? "error" : ""}
-                    help={Inputerrors.lastName}
-                  >
-                    <Input
-                      placeholder={
-                        updateagent
-                          ? updateagent?.lastName
-                          : null
-                      }
-                      value={
-                        updateagent
-                          ? updateagent?.lastName
-                          : null
-                      }
-                      onChange={(e) => {
-                        setupdateAgent({
-                          ...updateagent,
-                          accountOverview: [
-                            {
-                              ...updateagent?.accountOverview[0],
-                              lastName: e.target.value,
-                            },
-                          ],
-                        });
-                      }}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col sm={12} xs={24} className="mb-25">
-                  <Form.Item
-                    name="sDash_city"
-                    label="Numéro de téléphone"
-                    validateStatus={Inputerrors.phoneNumber ? "error" : ""}
-                    help={Inputerrors.phoneNumber}
-                  >
-                    <Input
-                      placeholder={updateagent?.phoneNumber}
-                      value={updateagent?.phoneNumber}
-                      onChange={(e) => {
-                        setupdateAgent({
-                          ...updateagent,
-                          phoneNumber: e.target.value,
-                        });
-                      }}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col sm={12} xs={24} className="mb-25">
-                  <Form.Item
-                    name="sDash_email"
-                    label="Adresse d'agent"
-                    validateStatus={Inputerrors.adress ? "error" : ""}
-                    help={Inputerrors.adress}
-                  >
-                    <Input
-                      placeholder={
-                        updateagent
-                          ? updateagent?.adress
-                          : null
-                      }
-                      value={
-                        updateagent
-                          ? updateagent?.adress
-                          : null
-                      }
-                      onChange={(e) => {
-                        setupdateAgent({
-                          ...updateagent,
-                          accountOverview: [
-                            {
-                              ...updateagent?.accountOverview[0],
-                              adress: e.target.value,
-                            },
-                          ],
-                        });
-                      }}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col sm={12} xs={24} className="mb-25">
-                  <Form.Item name="sDash_country" label="Adresse e-mail">
-                    <Input
-                      placeholder={modalId?.email}
-                      disabled
-                      value={modalId?.email}
-                      // onChange={(e) => {
-                      //   setupdateAgent({
-                      //     ...updateagent,
-                      //     email: e.target.value,
-                      //     username: e.target.value,
-                      //   });
-                      // }}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col sm={12} xs={24} className="mb-25">
-                  <Form.Item name="password" label="Mot de passe">
-                    <Input.Password
-                      style={{ color: "red" }}
-                      placeholder={updateagent?.password || "***************"}
-                      disabled
-                      value={updateagent?.password || "***************"}
-                      // onChange={(e) => {
-                      //   setupdateAgent({
-                      //     ...updateagent,
-                      //     password: e.target.value,
-                      //   });
-                      // }}
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-            </Form>
-          </BasicFormWrapper>
-          <div style={{ marginTop: 24, display: "flex", gap: "20px" }}>
-       
-       <div className="Horizontal_btn">
-          <Button
+        <BasicFormWrapper className="mb-25">
+          <p className="ModalagentAdd">Information de l'agent</p>
+          <Form name="multi-form" layout="horizontal">
+            <Row gutter={30}>
+              <Col sm={12} xs={24} className="mb-25">
+                <Form.Item
+                  label="Nom d'agent"
+                  validateStatus={Inputerrors.firstName ? "error" : ""}
+                  help={Inputerrors.firstName}
+                >
+                  <Input
+                    placeholder="Nom d'agent"
+                    value={updateagent.firstName}
+                    onChange={(e) =>
+                      setupdateAgent((prev) => ({
+                        ...prev,
+                        firstName: e.target.value,
+                      }))
+                    }
+                  />
+                </Form.Item>
+              </Col>
+
+              <Col sm={12} xs={24} className="mb-25">
+                <Form.Item
+                  label="Prénom d'agent"
+                  validateStatus={Inputerrors.lastName ? "error" : ""}
+                  help={Inputerrors.lastName}
+                >
+                  <Input
+                    placeholder="Prénom d'agent"
+                    value={updateagent.lastName}
+                    onChange={(e) =>
+                      setupdateAgent((prev) => ({
+                        ...prev,
+                        lastName: e.target.value,
+                      }))
+                    }
+                  />
+                </Form.Item>
+              </Col>
+
+              <Col sm={12} xs={24} className="mb-25">
+                <Form.Item
+                  label="Numéro de téléphone"
+                  validateStatus={Inputerrors.phoneNumber ? "error" : ""}
+                  help={Inputerrors.phoneNumber}
+                >
+                  <Input
+                    placeholder="Numéro de téléphone"
+                    value={updateagent.phoneNumber}
+                    onChange={(e) =>
+                      setupdateAgent((prev) => ({
+                        ...prev,
+                        phoneNumber: e.target.value,
+                      }))
+                    }
+                  />
+                </Form.Item>
+              </Col>
+
+              <Col sm={12} xs={24} className="mb-25">
+                <Form.Item
+                  label="Bloqué"
+                  validateStatus={Inputerrors.blocked ? "error" : ""}
+                  help={Inputerrors.blocked}
+                >
+                  <Select
+                    placeholder="Choisir si bloqué"
+                    value={updateagent.blocked}
+                    onChange={(value) =>
+                      setupdateAgent((prev) => ({
+                        ...prev,
+                        blocked: value,
+                      }))
+                    }
+                    options={[
+                      { label: "Oui", value: true },
+                      { label: "Non", value: false },
+                    ]}
+                  />
+                </Form.Item>
+              </Col>
+
+              <Col sm={12} xs={24} className="mb-25">
+                <Form.Item label="Adresse e-mail">
+                  <Input
+                    placeholder="Adresse e-mail"
+                    value={modalId?.email}
+                    disabled
+                  />
+                </Form.Item>
+              </Col>
+
+              <Col sm={12} xs={24} className="mb-25">
+                <Form.Item label="Mot de passe">
+                  <Input.Password
+                    placeholder={modalId?.password}
+                    value={modalId?.password}
+                    onChange={(e) =>
+                      setupdateAgent((prev) => ({
+                        ...prev,
+                        password: e.target.value,
+                      }))
+                    }
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form>
+        </BasicFormWrapper>
+
+        <div style={{ marginTop: 24, display: "flex", gap: "20px" }}>
+          <div className="Horizontal_btn">
+            <Button
               className="btn_Suivant"
               type="primary"
               onClick={() => {
-                next()
+                next();
               }}
             >
               Modifier
             </Button>
-            </div>
-     </div>
-        </>
+          </div>
+        </div>
       </Modal>
     </>
   );

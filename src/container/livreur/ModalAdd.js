@@ -1,7 +1,5 @@
 import React, { useState } from "react";
 import {
-  Form,
-  Input,
   Button,
   Modal,
   Steps,
@@ -12,10 +10,9 @@ import {
   Card,
   Row,
   Col,
-  Descriptions,
   Image,
-  Space,
   Alert,
+  Input,
 } from "antd";
 import {
   UploadOutlined,
@@ -25,39 +22,43 @@ import {
   UserOutlined,
   PhoneOutlined,
   MailOutlined,
-  HomeOutlined,
-  FileImageOutlined,
   ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import { useDispatch } from "react-redux";
-import {
-  registerDriver,
-  getDriver,
-} from "../../redux/User/userSlice";
+import { registerDriver, getDriver } from "../../redux/User/userSlice";
 import axios from "axios";
-import propTypes from "prop-types";
-import styled from "styled-components";
+import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 const { Step } = Steps;
 
 function ModalAdd({ visible, onCancel }) {
   const dispatch = useDispatch();
-  const [form] = Form.useForm();
- const currentId =0
-  //  useSelector(
-  //   (state) => state?.user?.currentUser?.companies[0]?.id
-  // );
-  const [currentStep, setCurrentStep] = useState(0);
+
+  // Form data state (replacing useForm)
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    password: "",
+  });
+
   const [fileList, setFileList] = useState({
     cinFront: [],
     cinBack: [],
-    license: [],
+    licenceFront: [],
+    licenceBack: [],
   });
+
+  const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
   const [error, setError] = useState(null);
+
+  // Store confirmed form data when moving to confirmation step
+  const [confirmedValues, setConfirmedValues] = useState(null);
 
   const handlePreview = async (file) => {
     if (!file.url && !file.preview) {
@@ -72,11 +73,141 @@ function ModalAdd({ visible, onCancel }) {
     setPreviewVisible(true);
   };
 
+  const getBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+
+  const uploadFile = async (file) => {
+    const formData = new FormData();
+    formData.append("files", file);
+
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_BACKUP_URL}upload`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      return response.data[0];
+    } catch (error) {
+      message.error(
+        `Upload failed: ${error.response?.data?.message || error.message}`
+      );
+      throw error;
+    }
+  };
+
+  const validateStep = (step) => {
+    if (step === 0) {
+      // Validate personal info fields
+      const { firstName, lastName, email, phone, password } = formData;
+      if (!firstName.trim()) return "First name is required";
+      if (!lastName.trim()) return "Last name is required";
+      if (!email.trim()) return "Email is required";
+      // Basic email regex
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) return "Email is invalid";
+      if (!phone.trim()) return "Phone number is required";
+      if (!password) return "Password is required";
+      if (password.length < 6) return "Password must be at least 6 characters";
+    }
+    if (step === 1) {
+      // Validate files uploaded
+      if (
+        !fileList.cinFront[0] ||
+        !fileList.cinBack[0] ||
+        !fileList.licenceFront[0] ||
+        !fileList.licenceBack[0]
+      ) {
+        return "Please upload all required documents";
+      }
+    }
+    return null; // no error
+  };
+
+  const next = () => {
+    const errorMsg = validateStep(currentStep);
+    if (errorMsg) {
+      setError(errorMsg);
+      return;
+    }
+    setError(null);
+
+    if (currentStep === 1) {
+      // When moving from documents step to confirmation, save confirmed values
+      setConfirmedValues(formData);
+    }
+
+    setCurrentStep(currentStep + 1);
+  };
+
+  const prev = () => {
+    setError(null);
+    setCurrentStep(currentStep - 1);
+  };
+
+  const onFinish = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Validate all data before submitting
+      let errorMsg = validateStep(0);
+      if (errorMsg) throw new Error(errorMsg);
+      errorMsg = validateStep(1);
+      if (errorMsg) throw new Error(errorMsg);
+
+      // Upload files
+      const [cinFront, cinBack, licenceFront, licenceBack] = await Promise.all([
+        uploadFile(fileList.cinFront[0].originFileObj),
+        uploadFile(fileList.cinBack[0].originFileObj),
+        uploadFile(fileList.licenceFront[0].originFileObj),
+        uploadFile(fileList.licenceBack[0].originFileObj),
+      ]);
+
+      const driverData = {
+        ...formData,
+        user_role: "driver",
+        validation: {
+          description: null,
+          validation_state: "waiting",
+        },
+        cinFront,
+        cinBack,
+        licenceFront,
+        licenceBack,
+        username: formData.email,
+        confirmed: true,
+        username:formData.lastName+" "+ formData.firstName,
+      };
+
+      await dispatch(registerDriver(driverData)).unwrap();
+      await dispatch(getDriver({}));
+
+      message.success("Driver created successfully");
+      handleCancel();
+    } catch (error) {
+      setError(error.message || "An error occurred while creating the driver");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
   const steps = [
     {
       title: "Informations",
       icon: <SolutionOutlined />,
-      content: <PersonalInfoForm form={form} />,
+      content: (
+        <PersonalInfoForm data={formData} onChange={handleInputChange} />
+      ),
     },
     {
       title: "Documents",
@@ -92,149 +223,43 @@ function ModalAdd({ visible, onCancel }) {
     {
       title: "Confirmation",
       icon: <CheckCircleOutlined />,
-      content: <ConfirmationStep form={form} fileList={fileList} />,
+      content: (
+        <ConfirmationStep values={confirmedValues} fileList={fileList} />
+      ),
     },
   ];
 
   const handleCancel = () => {
-    form.resetFields();
+    setFormData({
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      password: "",
+    });
     setFileList({
       cinFront: [],
       cinBack: [],
-      license: [],
+      licenceFront: [],
+      licenceBack: [],
     });
     setCurrentStep(0);
     setError(null);
+    setConfirmedValues(null);
     onCancel();
-  };
-
-  const getBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
-  };
-
-  const uploadFile = async (file, fieldName) => {
-    const formData = new FormData();
-    formData.append("files", file);
-
-    try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_BACKUP_URL}upload`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-      return response.data[0];
-    } catch (error) {
-      message.error(
-        `Upload failed: ${error.response?.data?.message || error.message}`
-      );
-      throw error;
-    }
-  };
-
-  const onFinish = async (values) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const values=form.getFieldValue() 
-      // Check if all documents are uploaded
-      if (
-        !fileList.cinFront[0] ||
-        !fileList.cinBack[0] ||
-        !fileList.license[0]
-      ) {
-        throw new Error("Please upload all required documents");
-      }
-
-      // Upload all files
-      const [cinFront, cinBack, license] = await Promise.all([
-        uploadFile(fileList.cinFront[0].originFileObj, "cinFront"),
-        uploadFile(fileList.cinBack[0].originFileObj, "cinBack"),
-        uploadFile(fileList.license[0].originFileObj, "license"),
-      ]);
-
-      const driverData = {
-        ...values,
-        user_role: "driver",
-        driver_company: currentId,
-        firstName: values.firstName,
-        lastName: values.lastName,
-        adress: values.adress,
-        email: values.email,
-        phoneNumber: values.phoneNumber,
-        password: values.password,
-        cin: values.cin,
-        licenceNumber: values.licenceNumber,
-        licenceClass: values.licenceClass,
-        validation: {
-          description: null,
-          validation_state: "waiting",
-        },
-        cinPictureFront: cinFront,
-        cinPictureBack: cinBack,
-        licencePicture: license,
-        username: values.email,
-      };
-
-
-      await dispatch(registerDriver(driverData)).unwrap();
-      await dispatch(getDriver({})); 
-
-      message.success("Driver created successfully");
-      handleCancel();
-    } catch (error) {
-      console.error("Error:", error);
-      setError(error.message || "An error occurred while creating the driver");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const next = async () => {
-    try {
-      await form.validateFields();
-      setError(null);
-      setCurrentStep(currentStep + 1);
-    } catch (err) {
-      setError("Please fill in all required fields correctly");
-    }
-  };
-
-  const prev = () => {
-    setError(null);
-    setCurrentStep(currentStep - 1);
   };
 
   return (
     <Modal
-      title={
-        <Title level={3} style={{ margin: "0" }}>
-          Create New Driver
-        </Title>
-      }
+      title={<Title level={3}>Create New Driver</Title>}
       open={visible}
       onCancel={handleCancel}
       footer={null}
       width={800}
-      // centered
       destroyOnClose
       style={{ top: 20 }}
     >
-      {/* <Divider style={{ margin: '16px 0' }} /> */}
-
-      <Steps
-        current={currentStep}
-        style={{ margin: "auto", paddingBottom: 24 }}
-      >
+      <Steps current={currentStep} style={{ marginBottom: 24 }}>
         {steps.map((item) => (
           <Step key={item.title} title={item.title} icon={item.icon} />
         ))}
@@ -250,50 +275,40 @@ function ModalAdd({ visible, onCancel }) {
         />
       )}
 
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={onFinish}
-        autoComplete="off"
-      >
-        <div style={{ minHeight: 400 }}>{steps[currentStep].content}</div>
+      <div style={{ minHeight: 400 }}>{steps[currentStep].content}</div>
 
-        <Divider style={{ margin: "24px 0" }} />
-
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          {currentStep > 0 && (
-            <Button onClick={prev} style={{ width: 120 }}>
-              Back
-            </Button>
-          )}
-
-          {currentStep < steps.length - 1 ? (
-            <Button
-              type="primary"
-              onClick={next}
-              style={{ width: 120, marginLeft: "auto" }}
-            >
-              Next
-            </Button>
-          ) : (
-            <Button
-              type="primary"
-              onClick={onFinish}
-              loading={loading}
-              style={{ width: 120, marginLeft: "auto" }}
-            >
-              Confirm
-            </Button>
-          )}
-        </div>
-      </Form>
+      <Divider />
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        {currentStep > 0 && (
+          <Button onClick={prev} style={{ width: 120 }}>
+            Back
+          </Button>
+        )}
+        {currentStep < steps.length - 1 ? (
+          <Button
+            type="primary"
+            onClick={next}
+            style={{ width: 120, marginLeft: "auto" }}
+          >
+            Next
+          </Button>
+        ) : (
+          <Button
+            type="primary"
+            onClick={onFinish}
+            loading={loading}
+            style={{ width: 120, marginLeft: "auto" }}
+          >
+            Confirm
+          </Button>
+        )}
+      </div>
 
       <Modal
         open={previewVisible}
         title="Image Preview"
         footer={null}
         onCancel={() => setPreviewVisible(false)}
-        // centered
         width="75%"
       >
         <Image alt="Preview" style={{ width: "100%" }} src={previewImage} />
@@ -302,148 +317,65 @@ function ModalAdd({ visible, onCancel }) {
   );
 }
 
-// Sub-components for each step
-const PersonalInfoForm = ({ form }) => {
+function PersonalInfoForm({ data, onChange }) {
   return (
     <>
-      <Title level={5} style={{ marginBottom: 24 }}>
-        Personal Information
-      </Title>
-
-      <Row gutter={16}>
-        <Col span={12}>
-          <Form.Item
-            name="firstName"
-            label="First Name"
-            rules={[{ required: true, message: "Please enter first name" }]}
-          >
-            <Input
-              placeholder="Driver's first name"
-              prefix={<UserOutlined />}
-            />
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            name="lastName"
-            label="Last Name"
-            rules={[{ required: true, message: "Please enter last name" }]}
-          >
-            <Input placeholder="Driver's last name" prefix={<UserOutlined />} />
-          </Form.Item>
-        </Col>
-      </Row>
-
-      <Row gutter={16}>
-        <Col span={12}>
-          <Form.Item
-            name="phoneNumber"
-            label="Phone Number"
-            rules={[
-              { required: true, message: "Please enter phone number" },
-              { pattern: /^[0-9]+$/, message: "Invalid number" },
-            ]}
-          >
-            <FormInput
-              placeholder="Phone number"
-              // prefix={<PhoneOutlined  className="reg_icon" />}
-            />
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            name="email"
-            label="Email"
-            rules={[
-              { required: true, message: "Please enter email" },
-              { type: "email", message: "Invalid email" },
-            ]}
-          >
-            <Input placeholder="Email address" prefix={<MailOutlined />} />
-          </Form.Item>
-        </Col>
-      </Row>
-
-      <Row gutter={16}>
-        <Col span={12}>
-          <Form.Item
-            name="cin"
-            label="ID Number"
-            rules={[{ required: true, message: "Please enter ID number" }]}
-          >
-            <Input placeholder="ID number" prefix={<IdcardOutlined />} />
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            name="licenceNumber"
-            label="License Number"
-            rules={[{ required: true, message: "Please enter license number" }]}
-          >
-            <Input placeholder="License number" prefix={<IdcardOutlined />} />
-          </Form.Item>
-        </Col>
-      </Row>
-
-      <Row gutter={16}>
-        <Col span={12}>
-          <Form.Item
-            name="licenceClass"
-            label="License Class"
-            rules={[{ required: true, message: "Please enter license class" }]}
-          >
-            <Input placeholder="License class" prefix={<IdcardOutlined />} />
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            name="password"
-            label="Password"
-            rules={[
-              { required: true, message: "Please enter password" },
-              { min: 6, message: "Minimum 6 characters" },
-            ]}
-          >
-            <Input.Password placeholder="Password" />
-          </Form.Item>
-        </Col>
-      </Row>
-
-      <Form.Item
-        name="adress"
-        label="Address"
-        rules={[{ required: true, message: "Please enter address" }]}
-      >
-        <Input.TextArea rows={2} placeholder="Full address" />
-      </Form.Item>
+      <InputWithLabel
+        label="First Name"
+        name="firstName"
+        value={data.firstName}
+        onChange={onChange}
+        placeholder="First Name"
+        prefix={<UserOutlined />}
+      />
+      <InputWithLabel
+        label="Last Name"
+        name="lastName"
+        value={data.lastName}
+        onChange={onChange}
+        placeholder="Last Name"
+        prefix={<UserOutlined />}
+      />
+      <InputWithLabel
+        label="Email"
+        name="email"
+        value={data.email}
+        onChange={onChange}
+        placeholder="Email"
+        prefix={<MailOutlined />}
+        type="email"
+      />
+      <InputWithLabel
+        label="Phone Number"
+        name="phone"
+        value={data.phone}
+        onChange={onChange}
+        placeholder="Phone Number"
+        prefix={<PhoneOutlined />}
+      />
+      <InputWithLabel
+        label="Password"
+        name="password"
+        value={data.password}
+        onChange={onChange}
+        placeholder="Password"
+        type="password"
+      />
     </>
   );
-};
-const DocumentUpload = ({ fileList, setFileList, handlePreview }) => {
+}
+
+function DocumentUpload({ fileList, setFileList, handlePreview }) {
   const uploadProps = (field) => ({
-    accept: "image/*",
-    fileList: fileList[field],
     listType: "picture-card",
+    fileList: fileList[field],
+    onPreview: handlePreview,
     beforeUpload: (file) => {
-      if (file.size > 5 * 1024 * 1024) {
-        message.error("Image must be smaller than 5MB!");
-        return Upload.LIST_IGNORE;
-      }
-      if (file.type.indexOf("image/") === -1) {
-        message.error("You can only upload images!");
-        return Upload.LIST_IGNORE;
-      }
-      return false;
-    },
-    onChange: (info) => {
-      if (info.file.status === "error") {
-        message.error(`${info.file.name} file upload failed.`);
-        return;
-      }
       setFileList((prev) => ({
         ...prev,
-        [field]: info.fileList.slice(-1), // Only keep the last uploaded file
+        [field]: [{ ...file, originFileObj: file }],
       }));
+      return false; // disable auto upload
     },
     onRemove: () => {
       setFileList((prev) => ({
@@ -451,204 +383,141 @@ const DocumentUpload = ({ fileList, setFileList, handlePreview }) => {
         [field]: [],
       }));
     },
-    onPreview: handlePreview,
   });
 
   return (
-    <>
-      <Title level={5} style={{ marginBottom: 24 }}>
-        Required Documents
-      </Title>
-      <Text type="secondary" style={{ display: "block", marginBottom: 16 }}>
-        Please upload clear images of the following documents (Max 5MB each)
-      </Text>
-
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} md={8}>
-          <Card
-            title="ID Card (Front)"
-            bordered={false}
-            size="small"
-            headStyle={{ backgroundColor: "#fafafa" }}
-          >
-            <Upload {...uploadProps("cinFront")}>
-              {fileList.cinFront.length === 0 && (
-                <div style={{ padding: "16px 0" }}>
-                  <UploadOutlined style={{ fontSize: 32, color: "#1890ff" }} />
-                  <div style={{ marginTop: 8 }}>Click to Upload</div>
-                </div>
-              )}
-            </Upload>
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={12} md={8}>
-          <Card
-            title="ID Card (Back)"
-            bordered={false}
-            size="small"
-            headStyle={{ backgroundColor: "#fafafa" }}
-          >
-            <Upload {...uploadProps("cinBack")}>
-              {fileList.cinBack.length === 0 && (
-                <div style={{ padding: "16px 0" }}>
-                  <UploadOutlined style={{ fontSize: 32, color: "#1890ff" }} />
-                  <div style={{ marginTop: 8 }}>Click to Upload</div>
-                </div>
-              )}
-            </Upload>
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={12} md={8}>
-          <Card
-            title="Driver License"
-            bordered={false}
-            size="small"
-            headStyle={{ backgroundColor: "#fafafa" }}
-          >
-            <Upload {...uploadProps("license")}>
-              {fileList.license.length === 0 && (
-                <div style={{ padding: "16px 0" }}>
-                  <UploadOutlined style={{ fontSize: 32, color: "#1890ff" }} />
-                  <div style={{ marginTop: 8 }}>Click to Upload</div>
-                </div>
-              )}
-            </Upload>
-          </Card>
-        </Col>
-      </Row>
-
-      <div style={{ marginTop: 16 }}>
-        <Text type="secondary">
-          Note: Upload clear images where all details are readable. Supported
-          formats: JPG, PNG.
-        </Text>
-      </div>
-    </>
+    <Row gutter={16}>
+      <Col span={12}>
+        <Card title="CIN Front" bordered={false}>
+          <Upload {...uploadProps("cinFront")}>
+            {fileList.cinFront.length === 0 && <UploadOutlined />}
+          </Upload>
+        </Card>
+      </Col>
+      <Col span={12}>
+        <Card title="CIN Back" bordered={false}>
+          <Upload {...uploadProps("cinBack")}>
+            {fileList.cinBack.length === 0 && <UploadOutlined />}
+          </Upload>
+        </Card>
+      </Col>
+      <Col span={12} style={{ marginTop: 16 }}>
+        <Card title="Licence Front" bordered={false}>
+          <Upload {...uploadProps("licenceFront")}>
+            {fileList.licenceFront.length === 0 && <UploadOutlined />}
+          </Upload>
+        </Card>
+      </Col>
+      <Col span={12} style={{ marginTop: 16 }}>
+        <Card title="Licence Back" bordered={false}>
+          <Upload {...uploadProps("licenceBack")}>
+            {fileList.licenceBack.length === 0 && <UploadOutlined />}
+          </Upload>
+        </Card>
+      </Col>
+    </Row>
   );
-};
+}
 
-const ConfirmationStep = ({ form, fileList }) => {
-  const formValues = form.getFieldValue();
+function ConfirmationStep({ values, fileList }) {
+  if (!values) {
+    return <Text type="secondary">No data to display yet.</Text>;
+  }
+
   return (
-    <div style={{ padding: "16px 0" }}>
-      <Title level={5} style={{ marginBottom: 24, textAlign: "center" }}>
-        Please confirm the information below
-      </Title>
-
-      <Card bordered={false} style={{ marginBottom: 24 }}>
-        <Descriptions bordered column={1} size="small">
-          <Descriptions.Item label="Full Name">
-            <Text strong>
-              {formValues?.firstName} {formValues?.lastName}
-            </Text>
-          </Descriptions.Item>
-          <Descriptions.Item label="Phone Number">
-            <Text strong>{formValues?.phoneNumber}</Text>
-          </Descriptions.Item>
-          <Descriptions.Item label="Email">
-            <Text strong>{formValues?.email}</Text>
-          </Descriptions.Item>
-          <Descriptions.Item label="ID Number">
-            <Text strong>{formValues?.cin}</Text>
-          </Descriptions.Item>
-          <Descriptions.Item label="License Number">
-            <Text strong>{formValues?.licenceNumber}</Text>
-          </Descriptions.Item>
-          <Descriptions.Item label="License Class">
-            <Text strong>{formValues?.licenceClass}</Text>
-          </Descriptions.Item>
-          <Descriptions.Item label="Address">
-            <Text strong>{formValues?.adress}</Text>
-          </Descriptions.Item>
-        </Descriptions>
-      </Card>
-
-      <Title level={5} style={{ margin: "24px 0 16px", textAlign: "center" }}>
-        Uploaded Documents Preview
-      </Title>
-
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} md={8}>
-          <Card
-            title="ID Front"
-            size="small"
-            headStyle={{ backgroundColor: "#fafafa" }}
-          >
-            {fileList.cinFront[0] ? (
-              <Image
-                src={URL.createObjectURL(fileList.cinFront[0].originFileObj)}
-                alt="ID Front"
-                style={{ width: "100%", borderRadius: 4 }}
-                preview={false}
-              />
-            ) : (
-              <div style={{ textAlign: "center", padding: 16 }}>
-                <FileImageOutlined style={{ fontSize: 32, color: "#ff4d4f" }} />
-                <div style={{ color: "#ff4d4f" }}>No image uploaded</div>
-              </div>
-            )}
-          </Card>
+    <div>
+      <Title level={4}>Please confirm your information</Title>
+      <p>
+        <strong>Name:</strong> {values.firstName} {values.lastName}
+      </p>
+      <p>
+        <strong>Email:</strong> {values.email}
+      </p>
+      <p>
+        <strong>Phone:</strong> {values.phone}
+      </p>
+      <Divider />
+      <Title level={5}>Documents</Title>
+      <Row gutter={16}>
+        <Col span={12}>
+          <Text>CIN Front:</Text>
+          {fileList.cinFront[0] && (
+            <Image
+              width={100}
+              src={fileList.cinFront[0].thumbUrl || ""}
+              alt="CIN Front"
+              style={{ marginTop: 8 }}
+            />
+          )}
         </Col>
-        <Col xs={24} sm={12} md={8}>
-          <Card
-            title="ID Back"
-            size="small"
-            headStyle={{ backgroundColor: "#fafafa" }}
-          >
-            {fileList.cinBack[0] ? (
-              <Image
-                src={URL.createObjectURL(fileList.cinBack[0].originFileObj)}
-                alt="ID Back"
-                style={{ width: "100%", borderRadius: 4 }}
-                preview={false}
-              />
-            ) : (
-              <div style={{ textAlign: "center", padding: 16 }}>
-                <FileImageOutlined style={{ fontSize: 32, color: "#ff4d4f" }} />
-                <div style={{ color: "#ff4d4f" }}>No image uploaded</div>
-              </div>
-            )}
-          </Card>
+        <Col span={12}>
+          <Text>CIN Back:</Text>
+          {fileList.cinBack[0] && (
+            <Image
+              width={100}
+              src={fileList.cinBack[0].thumbUrl || ""}
+              alt="CIN Back"
+              style={{ marginTop: 8 }}
+            />
+          )}
         </Col>
-        <Col xs={24} sm={12} md={8}>
-          <Card
-            title="Driver License"
-            size="small"
-            headStyle={{ backgroundColor: "#fafafa" }}
-          >
-            {fileList.license[0] ? (
-              <Image
-                src={URL.createObjectURL(fileList.license[0].originFileObj)}
-                alt="License"
-                style={{ width: "100%", borderRadius: 4 }}
-                preview={false}
-              />
-            ) : (
-              <div style={{ textAlign: "center", padding: 16 }}>
-                <FileImageOutlined style={{ fontSize: 32, color: "#ff4d4f" }} />
-                <div style={{ color: "#ff4d4f" }}>No image uploaded</div>
-              </div>
-            )}
-          </Card>
+        <Col span={12} style={{ marginTop: 16 }}>
+          <Text>Licence Front:</Text>
+          {fileList.licenceFront[0] && (
+            <Image
+              width={100}
+              src={fileList.licenceFront[0].thumbUrl || ""}
+              alt="Licence Front"
+              style={{ marginTop: 8 }}
+            />
+          )}
+        </Col>
+        <Col span={12} style={{ marginTop: 16 }}>
+          <Text>Licence Back:</Text>
+          {fileList.licenceBack[0] && (
+            <Image
+              width={100}
+              src={fileList.licenceBack[0].thumbUrl || ""}
+              alt="Licence Back"
+              style={{ marginTop: 8 }}
+            />
+          )}
         </Col>
       </Row>
     </div>
   );
-};
+}
+function InputWithLabel({ label, name, value, onChange, placeholder, prefix, type = "text" }) {
+  const isPassword = type === "password";
 
-ModalAdd.propTypes = {
-  visible: propTypes.bool.isRequired,
-  onCancel: propTypes.func.isRequired,
-};
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <label htmlFor={name} style={{ display: "block", marginBottom: 4, fontWeight: "bold" }}>
+        {label}
+      </label>
+      {isPassword ? (
+        <Input.Password
+          id={name}
+          name={name}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          prefix={prefix}
+          iconRender={visible => (visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />)}
+        />
+      ) : (
+        <Input
+          id={name}
+          name={name}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          prefix={prefix}
+          type={type}
+        />
+      )}
+    </div>
+  );
+}
 
 export default ModalAdd;
-
-const FormInput = styled(Input)`
-  .reg_icon {
-    svg {
-      font-size: 10px !important;
-    }
-  }
-`;

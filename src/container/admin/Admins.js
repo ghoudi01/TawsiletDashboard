@@ -43,17 +43,14 @@ const List = lazy(() => import("./overview/List"));
 function Admins({ match }) {
   const [text, settext] = useState("");
   const dispatch = useDispatch();
-  const users = useSelector((state) => state.user.users);
-
+  const users = useSelector((state) => state.user.admins);
   const adminsCount = useSelector(
     (state) => state?.user?.admins?.pagination?.total
   );
   // const owner = users?.filter((user) => user?.user_role === "owner");
-  // console.log("admins", admins);
+  console.log("admins", users);
   const currentId = useSelector((state) => state?.user?.currentUser?.id);
-  const currentname = useSelector(
-    (state) => state?.user?.currentUser?.name
-  );
+  const currentname = useSelector((state) => state?.user?.currentUser?.name);
   const userRole = useSelector((state) => state?.user?.currentUser?.user_role);
   const { path } = match;
   const [open, setOpen] = useState(false);
@@ -112,11 +109,9 @@ function Admins({ match }) {
       );
     }
   };
-
   // useEffect(() => {
-  //   dispatch(getusers()); // Dispatch the action to get users
-  //   // console.log("admin");
-  // }, [dispatch,ping]);
+  //   dispatch(getAdmins());
+  // }, [dispatch]);
 
   const handleDelete = (id) => {
     setmodalId(id);
@@ -312,7 +307,6 @@ function Admins({ match }) {
                   />
                 </div>
               </div>{" "}
-              
             </div>
           }
           buttons={[
