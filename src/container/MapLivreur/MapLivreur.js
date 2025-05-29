@@ -65,7 +65,6 @@ const MapLivreur = () => {
                 (d) => d.documentId === fbDriver.id && d.user_role === "driver"
               );
               if (!reduxDriver) return null;
-              console.log(reduxDriver,"========>");
               return {
                 ...fbDriver,
                 vehicule: reduxDriver?.vehicule,
@@ -78,6 +77,7 @@ const MapLivreur = () => {
                 isFree: reduxDriver?.isFree,
                 rating: reduxDriver?.rating,
                 region: reduxDriver?.region,
+                type: reduxDriver?.vehicule?.type?.id,
               };
             })
             .filter((d) => d !== null); // Remove unmatched entries
@@ -128,6 +128,7 @@ const MapLivreur = () => {
             mapContainerStyle={{ width: "100%", height: "100%" }}
           >
             {driversList.map((el, i) => {
+              console.log(el,'================el===========')
               return el?.latitude !== null && el?.longitude !== null ? (
                 <Marker
                   key={i}

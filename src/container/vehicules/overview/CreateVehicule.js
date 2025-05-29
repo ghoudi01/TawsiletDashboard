@@ -28,10 +28,13 @@ import { AddProductForm } from "../../livreur/style";
 import { Cards } from "../../../components/cards/frame/cards-frame";
 import propTypes from "prop-types";
 import axios from "axios";
-import face1 from "../../../static/img/face1.png";
-import face2 from "../../../static/img/face2.png";
-import face3 from "../../../static/img/face3.png";
-import face4 from "../../../static/img/face4.png";
+import face1 from "../../../static/img/left.png";
+import face2 from "../../../static/img/front.png";
+import face3 from "../../../static/img/right.png";
+import face4 from "../../../static/img/back.png";
+import assurancePictures1 from "../../../static/img/assurancePictures.png";
+import grayCardPictures from "../../../static/img/grayCardPictures.jpeg";
+import grayCardPicturesBack from "../../../static/img/grayCardPicturesBack.jpg";
 import moment from "moment";
 
 const CreateVehicule = ({ visible, onCancel }) => {
@@ -78,6 +81,7 @@ const CreateVehicule = ({ visible, onCancel }) => {
   const fileListvehiculePictureface4 = [];
   const fileListassurancePictures = [];
   const fileListgrayCardPictures = [];
+  const fileListgrayCardPicturesBack = [];
   const [image, setimage] = useState();
 
   // upload file vehiculePictureface1
@@ -474,6 +478,71 @@ const CreateVehicule = ({ visible, onCancel }) => {
       removeIcon: <FeatherIcon icon="trash-2" />,
     },
   };
+  const handleFileSelect4 = async (e) => {
+    const file = e;
+    // .target.files[0];
+
+    const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
+
+    // console.log("file", file);
+    const formData = new FormData();
+
+    formData.append("files", file);
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_BACKUP_URL}upload`,
+        formData
+      );
+      if ([200, 201].includes(response.status)) {
+        const imageUrl = response.data[0];
+        delete imageUrl.documentId;
+        setaddvehicule((prevState) => ({
+          ...prevState,
+          data: {
+            ...prevState.data,
+            grayCardPicturesBack: imageUrl,
+          },
+        }));
+
+        message.success("Fichier téléchargé avec succès.");
+      } else {
+        message.error("Le téléchargement du fichier a échoué.");
+      }
+    } catch (error) {
+      console.log(error)
+      message.error("Le téléchargement du fichier a échoué.");
+    }
+  };
+
+  const fileUploadProps4 = {
+    name: "files",
+    multiple: false,
+    beforeUpload: (file) => {
+      handleFileSelect4(file);
+      return false;
+    },
+
+    onChange(info) {
+      const { status } = info.file;
+
+      if (status !== "uploading") {
+        setimage({ ...image, file: info.file, list: info.fileList });
+      }
+      if (status === "done") {
+        message.success(`${info.file.name} Fichier téléchargé avec succès.`);
+      } else if (status === "error") {
+        message.error(
+          `${info.file.name} "Le téléchargement du fichier a échoué.`
+        );
+      }
+    },
+    listType: "picture",
+    defaultFileList: fileListgrayCardPicturesBack,
+    showUploadList: {
+      showRemoveIcon: true,
+      removeIcon: <FeatherIcon icon="trash-2" />,
+    },
+  };
 
   /////////////////////////////////////////////////////////////
   const [addvehicule, setaddvehicule] = useState({
@@ -591,18 +660,13 @@ const CreateVehicule = ({ visible, onCancel }) => {
         message.success("Ajouter avec succès !");
       });
       onCancel();
+      setCurrent(0);
       setPicturesErrors({});
       setAssurancePictures("");
     } else {
       setPicturesErrors(validationResult);
     }
   };
-  // validation pictures
-  //
-  // useEffect(() => {
-  //   getCurrentUser();
-  // });
-
   const [current, setCurrent] = useState(0);
 
   const next = () => {
@@ -640,9 +704,6 @@ const CreateVehicule = ({ visible, onCancel }) => {
           <BasicFormWrapper>
             <p className="ModalagentAdd">Information de Vehicule</p>
             <form className="formUpdate">
-             
-              
-
               <Form.Item
                 className="form_item_update_company"
                 name="model"
@@ -972,14 +1033,21 @@ const CreateVehicule = ({ visible, onCancel }) => {
                     <div className="add-product-content">
                       <Cards title="Assurance">
                         <Dragger {...fileUploadProps2}>
-                          <p className="ant-upload-drag-icon">
-                            <FeatherIcon icon="upload" size={50} />
-                          </p>
-                          <Heading as="h4" className="ant-upload-text">
-                            Déposer vos fichiers ici
-                          </Heading>
-                          <p className="ant-upload-hint">
-                            Parcourir les fichiers de votre ordinateur
+                          <p
+                            className="ant-upload-drag-icon"
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "20px",
+                            }}
+                          >
+                            <h3 className="company_details_main_title">
+                              assurance Pictures
+                            </h3>
+                            <img src={assurancePictures1} width={"30%"} />
+                            <FeatherIcon icon="upload" size={50} />{" "}
                           </p>
                         </Dragger>
                         {PicturesErrors.assurancePictures && (
@@ -1004,14 +1072,21 @@ const CreateVehicule = ({ visible, onCancel }) => {
                     <div className="add-product-content">
                       <Cards title="Carte Grise">
                         <Dragger {...fileUploadProps3}>
-                          <p className="ant-upload-drag-icon">
-                            <FeatherIcon icon="upload" size={50} />
-                          </p>
-                          <Heading as="h4" className="ant-upload-text">
-                            Déposer vos fichiers ici
-                          </Heading>
-                          <p className="ant-upload-hint">
-                            Parcourir les fichiers de votre ordinateur
+                          <p
+                            className="ant-upload-drag-icon"
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "20px",
+                            }}
+                          >
+                            <h3 className="company_details_main_title">
+                              grayCard Pictures
+                            </h3>
+                            <img src={grayCardPictures} width={"30%"} />
+                            <FeatherIcon icon="upload" size={50} />{" "}
                           </p>
                         </Dragger>
                         {PicturesErrors.grayCardPictures && (
@@ -1020,6 +1095,44 @@ const CreateVehicule = ({ visible, onCancel }) => {
                             style={{ color: "red" }}
                           >
                             {PicturesErrors.grayCardPictures}
+                          </p>
+                        )}
+                      </Cards>
+                    </div>
+                  </Col>
+                </Row>
+              </div>
+            </AddProductForm>
+            <AddProductForm>
+              <div className="add-product-block">
+                <Row gutter={15}>
+                  <Col xs={24}>
+                    <div className="add-product-content">
+                      <Cards title="Carte Grise Back">
+                        <Dragger {...fileUploadProps4}>
+                          <p
+                            className="ant-upload-drag-icon"
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "20px",
+                            }}
+                          >
+                            <h3 className="company_details_main_title">
+                              grayCard Pictures Back
+                            </h3>
+                            <img src={grayCardPicturesBack} width={"30%"} />
+                            <FeatherIcon icon="upload" size={50} />{" "}
+                          </p>
+                        </Dragger>
+                        {PicturesErrors.grayCardPicturesBack && (
+                          <p
+                            className="error__message"
+                            style={{ color: "red" }}
+                          >
+                            {PicturesErrors.grayCardPicturesBack}
                           </p>
                         )}
                       </Cards>

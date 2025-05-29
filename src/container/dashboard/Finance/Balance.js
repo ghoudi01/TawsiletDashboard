@@ -1,153 +1,210 @@
-import React, { useEffect, useState } from "react";
-import { Row, Col, InputNumber, Button, notification } from "antd";
-import { PageHeader } from "../../../components/page-headers/page-headers";
-import { Main } from "../../styled";
+import React, { lazy, Suspense, useEffect, useState } from "react";
+import { Row, Col, Skeleton } from "antd";
+import { CardBarChart2, OverviewSalesCard } from "../style";
 import { Cards } from "../../../components/cards/frame/cards-frame";
-import Counter from "../Counter";
-import styled from "styled-components";
-import DollarSign from "../../../static/img/DollarSign.svg";
-import { useSelector } from "react-redux";
-import { useDispatch } from "react-redux";
-import { getCommands } from "../../../redux/User/userSlice";
-import { Bar } from "react-chartjs-2";
-import "./Style.css";
+import { Main } from "../../styled";
+import TopLandingPages from "../overview/performance/TopLandingPages";
+import DailyOverview from "../overview/performance/DailyOverview";
+import { useSelector, useDispatch } from "react-redux";
+import { getPrices } from "../../../redux/pricing/settingSlice";
+import { getCommandCount } from "../../../redux/chartContent/chartSlice";
+import { fetchBalanceData } from "../../../redux/balance/balanceSlice";
 
-// Registering the necessary Chart.js components
+const AverageSalesRevenue = lazy(() =>
+  import("../overview/sales/AverageSalesRevenue")
+);
+
 const Balance = () => {
-  const { commandsCount, pagination, commands } = useSelector(
-    (state) => state.user
-  );
-  const [money, setMoney] = useState(0);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(100);
-  const [allCommands, setAllCommands] = useState([]);
   const dispatch = useDispatch();
-  useEffect(() => {
-    const completedTotal = allCommands
-      ?.filter((command) => command.commandStatus === "Completed")
-      .reduce((acc, curr) => acc + (curr.totalPrice || 0), 0);
+  const [taille, settaille] = useState(24);
+  const [sharedData, setsharedData] = useState();
+  const [periodeFilter, setperiodeFilter] = useState("all");
+  const reservationsMeta = useSelector(
+    (state) => state?.reservations?.reservations?.meta
+  );
+  // Fetch balance data from Redux store
+  const {
+    data: balanceData,
+    loading,
+    error,
+  } = useSelector((state) => state.balance);
+  const { current, commision } = useSelector((state) => ({
+    current: state.user.currentUser,
+    commision: state.setting.prices.data?.[0]?.commission,
+  }));
 
-    setMoney(completedTotal);
-  }, [allCommands]);
-
+  // Fetch balance data when periodeFilter changes
   useEffect(() => {
-    dispatch(getCommands({ page, pageSize }));
-    if (page < pagination.pagination.pageCount) {
-      setPage((prevPage) => prevPage + 1);
-    }
-  }, [page, pageSize, dispatch, pagination.pagination.pageCount]);
-  useEffect(() => {
-    if (commands && commands.length > 0) {
-      setAllCommands((prevCommands) => {
-        // Use a Set to avoid duplicate commands based on the unique identifier (e.g., command.id)
-        const existingIds = new Set(prevCommands.map((command) => command.id));
-        // Filter out any commands that are already in the previous commands
-        const newCommands = commands.filter(
-          (command) => !existingIds.has(command.id)
-        );
-        // Combine the old and new commands without duplicates
-        return [...prevCommands, ...newCommands];
-      });
-    }
-  }, [commands]);
-  const chartData = {
-    labels: ["Completed", "Pending", "Canceled by Client", "Other"], // Categories
-    datasets: [
-      {
-        label: `Total Money (DT)`,
-        data: [
-          allCommands
-            ?.filter((command) => command.commandStatus === "Completed")
-            .reduce((acc, curr) => acc + (curr.totalPrice || 0), 0) || 0, // Completed money
-          allCommands
-            ?.filter((command) => command.commandStatus === "Pending")
-            .reduce((acc, curr) => acc + (curr.totalPrice || 0), 0) || 0, // Pending money
-          allCommands
-            ?.filter(
-              (command) => command.commandStatus === "Canceled_by_client"
-            )
-            .reduce((acc, curr) => acc + (curr.totalPrice || 0), 0) || 0, // Canceled by client money
-          allCommands
-            ?.filter(
-              (command) =>
-                command.commandStatus !== "Completed" &&
-                command.commandStatus !== "Pending" &&
-                command.commandStatus !== "Canceled_by_client"
-            )
-            .reduce((acc, curr) => acc + (curr.totalPrice || 0), 0) || 0, // Money from other statuses
-        ],
-        backgroundColor: [
-          "#53B483", // Green for Completed
-          "#F3935D", // Orange for Pending
-          "#F44336", // Red for Canceled by Client
-          "#36A2EB", // Blue for Other statuses
-        ],
-        borderColor: [
-          "#36A2EB", // Border color for Completed (same as the bar's color)
-          "#FFCE56", // Border color for Pending
-          "#FF6384", // Border color for Canceled by Client
-          "#FF9800", // Border color for Other statuses
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
+    dispatch(fetchBalanceData(periodeFilter));
+  }, [periodeFilter, dispatch]);
 
-  const chartOptions = {
-    responsive: true,
-    scales: {
-      y: {
-        beginAtZero: true,
-      },
-    },
-  };
+  // Fetch prices and command count
+  useEffect(() => {
+    dispatch(getPrices());
+    dispatch(getCommandCount({ companyId: null }));
+  }, [dispatch]);
+
+  if (loading) {
+    return (
+      <div style={{ padding: "40px 10px" }}>
+        <Skeleton active />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: "40px 10px" }}>
+        <p>Error: {error.message || "Failed to fetch data."}</p>
+      </div>
+    );
+  }
+
+  if (!balanceData) {
+    return (
+      <div style={{ padding: "40px 10px" }}>
+        <p>No data available.</p>
+      </div>
+    );
+  }
+
+  const { companies, totals } = balanceData;
+
   return (
-    <>
-      <PageHeader
-        title="Balance"
-        buttons={[<div key="1" className="page-header-actions"></div>]}
-      />
-
-      <Main>
-        <div>
-          <ChartHeaderItem>
-            <img src={DollarSign} alt="Money" />
-            <div>
-              <CounterContainer>{money.toFixed(2)} DT</CounterContainer>
-            </div>
-          </ChartHeaderItem>
-        </div>
+    <div style={{ padding: "40px 10px" }}>
+      <Main className="grid-boxed">
         <Row gutter={25}>
-          <Col sm={24} xs={24}>
+          <Col lg={8} xs={24}>
             <Cards headless>
-              <div style={{ height: "60%" }}>
-                <Col sm={24} xs={24}>
-                  {/* Pie Chart */}
-                  <section style={{ height: "60%" }}>
-                    <Bar data={chartData} options={chartOptions} height={200} />
-                  </section>
-                </Col>
-              </div>
+              <OverviewSalesCard>
+                <div className="icon-box box-secondary">
+                  <img
+                    src={
+                      require("../../../static/img/icon/New Customer.svg")
+                        .default
+                    }
+                    alt=""
+                  />
+                </div>
+                <div className="card-chunk">
+                  <CardBarChart2>
+                    <h2>
+                      {companies?.reduce(
+                        (sum, company) =>
+                          sum +
+                          company.details.nbrCredit +
+                          company.details.nbrLivraison,
+                        0
+                      )}
+                    </h2>
+                    <span>Nombre de commande</span>
+                  </CardBarChart2>
+                </div>
+              </OverviewSalesCard>
+            </Cards>
+
+            <Cards headless>
+              <OverviewSalesCard>
+                <div className="icon-box box-primary">
+                  <img
+                    src={
+                      require("../../../static/img/icon/SalesRevenue.svg")
+                        .default
+                    }
+                    alt=""
+                  />
+                </div>
+                <div className="card-chunk">
+                  <CardBarChart2>
+                    <h2>{`${totals.totalRevenusDesVentes.toFixed(2)} TND`}</h2>
+                    <span>Revenus des ventes</span>
+                  </CardBarChart2>
+                </div>
+              </OverviewSalesCard>
+            </Cards>
+
+            <Cards headless>
+              <OverviewSalesCard>
+                <div className="icon-box box-success">
+                  <img
+                    src={require("../../../static/img/icon/Profit.svg").default}
+                    alt=""
+                  />
+                </div>
+                <div className="card-chunk">
+                  <CardBarChart2>
+                    <h2>
+                      {current.user_role === "owner"
+                        ? `${(
+                            totals.totalRevenusDesVentes -
+                            totals.totalBeneficeNet
+                          ).toFixed(2)} TND`
+                        : `${(
+                            totals.totalBeneficeNet *
+                            (1 - commision / 100)
+                          ).toFixed(2)} TND`}
+                    </h2>
+                    <span>Bénéfice Net</span>
+                  </CardBarChart2>
+                </div>
+              </OverviewSalesCard>
             </Cards>
           </Col>
+          <Col lg={16} xs={24}>
+            <Suspense
+              fallback={
+                <Cards headless>
+                  <Skeleton active />
+                </Cards>
+              }
+            >
+              <AverageSalesRevenue data={companies} />
+            </Suspense>
+          </Col>
+
+          {current?.user_role === "owner" ? (
+            <>
+              <Col md={taille} lg={taille} xs={24}>
+                <Suspense
+                  fallback={
+                    <Cards headless>
+                      <Skeleton active />
+                    </Cards>
+                  }
+                >
+                  <TopLandingPages
+                    periodeFilter={periodeFilter}
+                    setperiodeFilter={setperiodeFilter}
+                    taille={taille}
+                    settaille={settaille}
+                    setsharedData={setsharedData}
+                  />
+                </Suspense>
+              </Col>
+              {taille === 12 ? (
+                <Col lg={12} xs={24}>
+                  <Suspense
+                    fallback={
+                      <Cards headless>
+                        <Skeleton active />
+                      </Cards>
+                    }
+                  >
+                    <DailyOverview
+                      periodeFilter={periodeFilter}
+                      sharedData={sharedData}
+                      settaille={settaille}
+                      commision={commision}
+                    />
+                  </Suspense>
+                </Col>
+              ) : null}
+            </>
+          ) : null}
         </Row>
       </Main>
-    </>
+    </div>
   );
 };
 
 export default Balance;
-const ChartHeaderItem = styled.div`
-  width: auto;
-  height: 100px;
-  /* background-color: brown; */
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  align-items: center;
-  line-height: 16px;
-`;
-const CounterContainer = styled.div`
-  font: 800 24px system-ui;
-  color: green;
-`;
