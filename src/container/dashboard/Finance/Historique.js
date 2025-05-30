@@ -26,7 +26,6 @@ const Historique = () => {
       current: state.user.currentUser,
     };
   });
-  console.log(historique, "============");
   const dataSource = historique
     ?.filter((el) =>
       current.user_role === ("owner" || "admin")
@@ -35,6 +34,7 @@ const Historique = () => {
           el?.reciever?.data?.id === current.id
     )
     .map((el) => {
+      console.log(el,"=============")
       return {
         type: el?.transactionType === "incomes" ? "Revenus" : "Payement",
         sender:
@@ -48,7 +48,7 @@ const Historique = () => {
         Montant: `${el?.sold} TND`,
         methode: el?.payType,
         delete:
-          current.user_role === ("owner" || "admin") ? (
+          current.user_role === ("owner") ? (
             <FeatherIcon
               style={{ color: "red", cursor: "pointer" }}
               icon="trash"
@@ -62,7 +62,7 @@ const Historique = () => {
                   okType: "danger",
                   cancelText: "Annuler",
                   onOk() {
-                    dispatch(deleteHistorique(el.id)).then((res) =>
+                    dispatch(deleteHistorique(el?.documentId)).then((res) =>
                       dispatch(getHistorique())
                     );
                   },

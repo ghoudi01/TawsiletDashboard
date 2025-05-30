@@ -32,7 +32,7 @@ function AddHistorique({ visible, onCancel }) {
   // Prepare options for AutoComplete
   const driverOptions = drivers.map((driver) => ({
     value: driver.id,
-    label: `${driver.name} (${driver.email})`,
+    label: `${driver.lastName} ${driver.firstName} (${driver.email})`,
   }));
 
   const handleSearch = (value) => {
@@ -78,7 +78,7 @@ function AddHistorique({ visible, onCancel }) {
       footer={null}
       title="Nouvelle Transaction"
     >
-      <Button onClick={() => setType(!type)}>
+      <Button onClick={() => setType(!type)} disabled>
         {type ? "Passer à Dépense" : "Passer à Revenus"}
       </Button>
 

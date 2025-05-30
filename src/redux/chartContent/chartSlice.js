@@ -160,14 +160,13 @@ export const deleteHistorique = createAsyncThunk(
   async (id) => {
     try {
       const response = await axios.delete(
-        `${process.env.REACT_APP_BACKUP_URL}/transactions/${id}`,
+        `${process.env.REACT_APP_BACKUP_URL}transactions/${id}`,
         {
           headers: {
             Authorization: `Bearer ${jwt}`,
           },
         }
       );
-      getHistorique();
       return response.data;
     } catch (error) {
       console.log(error);
