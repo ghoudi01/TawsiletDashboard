@@ -79,7 +79,7 @@ const FinanceDashboardOverview = ({
           </Row>
         )}
 
-        {activeTab === "trends" && (
+        {/* {activeTab === "trends" && (
           <Row gutter={[24, 24]} style={{ marginTop: 24 }}>
             <Col lg={12} xs={24}>
               <Cards title="Profit Distribution">
@@ -151,7 +151,7 @@ const FinanceDashboardOverview = ({
               </Col>
             )}
           </Row>
-        )}
+        )} */}
       </Suspense>
     </ErrorBoundary>
   );

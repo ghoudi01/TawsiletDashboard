@@ -43,32 +43,9 @@ const Header = ({ balanceLoading, totalCommands }) => {
             </Space>
           }
           size="default"
-          // extra={
-          //   <Space>
-          //     <Button
-          //       icon={<DownloadOutlined />}
-          //       onClick={handleExport}
-          //       type="text"
-          //     >
-          //       Export Report
-          //     </Button>
-          //     <Select
-          //       value={periodeFilter}
-          //       style={{ width: 180 }}
-          //       onChange={handlePeriodChange}
-          //       loading={balanceLoading}
-          //       bordered={false}
-          //     >
-          //       <Option value="all">All Time</Option>
-          //       <Option value="year">This Year</Option>
-          //       <Option value="month">This Month</Option>
-          //       <Option value="week">This Week</Option>
-          //       <Option value="day">Today</Option>
-          //     </Select>
-          //   </Space>
-          // }
+          
         >
-          {/* Key Metrics */}
+         
           <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
             <Col xs={24} sm={12} md={6}>
               <StatCard

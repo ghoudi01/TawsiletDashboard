@@ -7,7 +7,7 @@ export const fetchBalanceData = createAsyncThunk(
   async (periodeFilter, { rejectWithValue }) => {
     const jwt = localStorage.getItem("token");
     try {
-      const response = await axios.post(`${process.env.REACT_APP_BACKUP_URL}balance`,
+      const response = await axios.get(`${process.env.REACT_APP_BACKUP_URL}drivers/financial-summary`,
         {
           periodeFilter: periodeFilter,
         },

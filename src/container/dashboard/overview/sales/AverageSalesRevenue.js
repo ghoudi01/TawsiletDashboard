@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Spin } from "antd";
-import { NavLink, Link } from "react-router-dom";
-import FeatherIcon from "feather-icons-react";
-import { useDispatch, useSelector } from "react-redux";
+import {  Link } from "react-router-dom";
+ import { useDispatch, useSelector } from "react-redux";
 import { PerformanceChartWrapper, Pstates } from "../../style";
 import { Cards } from "../../../../components/cards/frame/cards-frame";
 import Heading from "../../../../components/heading/heading";
@@ -18,32 +17,9 @@ import {
 } from "../../../../redux/chartContent/actionCreator";
 import { getBalance } from "../../../../redux/chartContent/chartSlice";
 
-const moreContent = (
-  <>
-    <NavLink to="#">
-      <FeatherIcon size={16} icon="printer" />
-      <span>imprimer</span>
-    </NavLink>
-    <NavLink to="#">
-      <FeatherIcon size={16} icon="book-open" />
-      <span>PDF</span>
-    </NavLink>
-    <NavLink to="#">
-      <FeatherIcon size={16} icon="file-text" />
-      <span>Google Sheets</span>
-    </NavLink>
-    <NavLink to="#">
-      <FeatherIcon size={16} icon="x" />
-      <span>Excel (XLSX)</span>
-    </NavLink>
-    <NavLink to="#">
-      <FeatherIcon size={16} icon="file" />
-      <span>CSV</span>
-    </NavLink>
-  </>
-);
+ 
 
-function AverageSalesRevenue() {
+function  AverageSalesRevenue() {
   const dispatch = useDispatch();
   const { performanceState, preIsLoading, current } = useSelector((state) => {
     return {
@@ -60,20 +36,7 @@ function AverageSalesRevenue() {
 
   const { performance, performanceTab } = state;
 
-  useEffect(() => {
-    dispatch(getBalance({}));
-    if (performanceGetData) {
-      dispatch(
-        performanceGetData(
-          ["owner", "admin"].includes(current?.user_role)
-            ? null
-            : ["agent"].includes(current?.user_role)
-            ? current?.company_id?.id
-            : current?.id
-        )
-      );
-    }
-  }, [dispatch]);
+ 
 
   const [titleValue, settitleValue] = useState("year");
 
@@ -187,7 +150,7 @@ function AverageSalesRevenue() {
           title="Chiffre d'affaires moyen"
           size="large"
         >
-          <Pstates>
+           <Pstates>
             <div
               onClick={() => onPerformanceTab("users")}
               className={`growth-upward ${
@@ -230,8 +193,8 @@ function AverageSalesRevenue() {
                 {`${performanceState.totals.totalBeneficeNet.toFixed(2)} TND`}
               </Heading>
             </div>
-          </Pstates>
-          <div className="performance-lineChart">
+          </Pstates>  
+     <div className="performance-lineChart">
             <ChartjsAreaChart
               id="performance"
               labels={labels}
@@ -318,7 +281,7 @@ function AverageSalesRevenue() {
                 </li>
               ))}
             </ul>
-          </div>
+          </div>  
         </Cards>
       )}
     </PerformanceChartWrapper>

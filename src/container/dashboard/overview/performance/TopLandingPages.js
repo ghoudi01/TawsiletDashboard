@@ -64,7 +64,7 @@ function TopLandingPages({ setperiodeFilter, settaille, setsharedData, periodeFi
     setSelectedCompanyId(company?.companyId?.id);
   }, [settaille, setsharedData]);
 
-  // Table columns
+  // Table columns for main data
   const landingColumns = [
     {
       title: "Nom de l'entreprise",
@@ -82,65 +82,84 @@ function TopLandingPages({ setperiodeFilter, settaille, setsharedData, periodeFi
       key: "priceTotal",
     },
     {
-      title: "En ligne",
-      dataIndex: "nbrCredit",
-      key: "nbrCredit",
+      title: "Taux d'acceptaion",
+      dataIndex: "acceptingRate",
+      key: "acceptingRate",
     },
     {
-      title: "Prix en ligne",
-      dataIndex: "totalCredit",
-      key: "totalCredit",
-    },
-    {
-      title: "Livraison",
-      dataIndex: "nbrLivraison",
-      key: "nbrLivraison",
-    },
-    {
-      title: "Prix a la livraison",
-      dataIndex: "totalLivraison",
-      key: "totalLivraison",
+      title: "Taux d'annnulation",
+      dataIndex: "rejeectionRate",
+      key: "rejeectionRate",
     },
   ];
 
-  // Table data
-  const landingData = balanceData?.companies?.map((company) => ({
+  // Table columns for subDrivers
+  const subDriverColumns = [
+    {
+      title: "Nom du chauffeur",
+      dataIndex: "name",
+      key: "name",
+    },
+    {
+      title: "Nbr Commandes",
+      dataIndex: "nbrTotal",
+      key: "nbrTotal",
+    },
+    {
+      title: "Prix Totale",
+      dataIndex: "priceTotal",
+      key: "priceTotal",
+    },
+    {
+      title: "Taux d'acceptaion",
+      dataIndex: "acceptingRate",
+      key: "acceptingRate",
+    },
+    {
+      title: "Taux d'annnulation",
+      dataIndex: "rejeectionRate",
+      key: "rejeectionRate",
+    },
+  ];
+
+  // Table data with expandable rows
+  const landingData = balanceData?.data?.driverSummaries?.map((company) => ({
     key: company?.companyId?.id,
     name: (
       <Link to="#" className="page-title" onClick={() => handleRowClick(company)}>
-        {company?.companyId?.name}
+        {company?.driver?.firstName+" "+company?.driver?.lastName}
       </Link>
     ),
     nbrTotal: (
       <span style={{ cursor: "pointer", width: "100%" }} onClick={() => handleRowClick(company)}>
-        {company?.commandes?.filter(Boolean).length}
+        {company?.totalCommands}
       </span>
     ),
     priceTotal: (
       <span style={{ cursor: "pointer", width: "100%", whiteSpace: "nowrap" }} onClick={() => handleRowClick(company)}>
-        {`${company?.details?.totalbalance.toFixed(2)} TND`}
+        {`${company?.totalRevenue?.toFixed(2)} TND`}
       </span>
     ),
-    nbrCredit: (
+    acceptingRate: (
       <span style={{ cursor: "pointer", width: "100%" }} onClick={() => handleRowClick(company)}>
-        {company?.details?.nbrCredit}
+        {company?.acceptingRate?.toFixed(2)+"%"}
       </span>
     ),
-    totalCredit: (
+    rejeectionRate: (
       <span style={{ cursor: "pointer", width: "100%", whiteSpace: "nowrap" }} onClick={() => handleRowClick(company)}>
-        {`${company?.details?.totalCredit.toFixed(2)} TND`}
+        {company?.rejectionRate?.toFixed(2)+"%"}
       </span>
     ),
-    totalLivraison: (
-      <span style={{ cursor: "pointer", width: "100%", whiteSpace: "nowrap" }} onClick={() => handleRowClick(company)}>
-        {`${company?.details?.totalLivraison.toFixed(2)} TND`}
-      </span>
-    ),
-    nbrLivraison: (
-      <span style={{ cursor: "pointer", width: "100%" }} onClick={() => handleRowClick(company)}>
-        {company?.details?.nbrLivraison}
-      </span>
-    ),
+    children: company?.subDrivers?.length > 0 ? company.subDrivers.map((subDriver) => {
+      
+      return ({
+      key: `${subDriver?.driver?.id}`,
+      name: subDriver?.driver?.firstName + " " + subDriver?.driver?.lastName,
+      nbrTotal: subDriver?.totalCommands || 0,
+      priceTotal: `${(subDriver?.totalRevenue || 0).toFixed(2)} TND`,
+      acceptingRate: `${(subDriver?.acceptingRate || 0).toFixed(2)}%`,
+      rejeectionRate: `${(subDriver?.rejectionRate || 0).toFixed(2)}%`,
+    })}) : null,
   }));
 
   return (
@@ -168,7 +187,7 @@ function TopLandingPages({ setperiodeFilter, settaille, setsharedData, periodeFi
       >
         <LadingPages>
           <div className="table-bordered table-responsive">
-            {loading ? (
+           {loading ? (
               <Skeleton active />
             ) : error ? (
               <p>Error: {error.message || "Failed to fetch data."}</p>
@@ -178,8 +197,12 @@ function TopLandingPages({ setperiodeFilter, settaille, setsharedData, periodeFi
                 dataSource={landingData}
                 pagination={false}
                 size="small"
+                expandable={{
+                  defaultExpandAllRows: false,
+                  expandRowByClick: true,
+                }}
               />
-            )}
+            )}  
           </div>
         </LadingPages>
       </Cards>

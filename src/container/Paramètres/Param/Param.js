@@ -1,10 +1,13 @@
 import React, { useState } from "react";
-import { Row, Col, InputNumber, Button, notification } from "antd";
+import { Row, Col, InputNumber, Button, notification, Card, Typography, Space } from "antd";
 import { PageHeader } from "../../../components/page-headers/page-headers";
 import { Main } from "../../styled";
 import { Cards } from "../../../components/cards/frame/cards-frame";
 import axios from "axios";
 import { useEffect } from "react";
+
+const { Title, Text } = Typography;
+
 function Param() {
   const [params, setParams] = useState({
     WAITING_TIME_CHARGE: 0.3,
@@ -90,66 +93,67 @@ function Param() {
   return (
     <>
       <PageHeader
-        title="Param"
+        title="Paramètres"
         buttons={[<div key="1" className="page-header-actions"></div>]}
       />
       <Main>
-        <Row gutter={25}>
-          <Col sm={24} xs={24}>
+        <Row gutter={[25, 25]}>
+          <Col xs={24}>
             <Cards headless>
-              <div>
-                <h1 style={{ fontSize: "1.1rem" }}>
-                  Mode de maintenance website
-                </h1>
+              <Card>
+                <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                  
 
-                <h3 style={{ fontSize: "0.875rem", lineHeight: "1.5rem" }}>
-                  Vous avez la possibilité de mettre l'ensemble du site en mode
-                  maintenance .
-                </h3>
+                  <div>
+                    <Title level={5}>Configuration des paramètres</Title>
+                    
+                    <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                      <div>
+                        <Text strong>Prix de Temps d'attente </Text>
+                        <InputNumber
+                          min={0}
+                          step={0.1}
+                          value={params.WAITING_TIME_CHARGE}
+                          onChange={(val) => handleChange("WAITING_TIME_CHARGE", val)}
+                          style={{ width: '100%', marginTop: 8 }}
+                          size="large"
+                        />
+                      </div>
 
-                <Col sm={24} xs={24}>
-                  <h1 style={{ fontSize: "1rem", paddingTop: "1rem" }}>Mode</h1>
-                </Col>
-                <Col sm={24} xs={24}>
-                  <h3 style={{ marginTop: "1rem" }}>WAITING_TIME_CHARGE</h3>
-                  <InputNumber
-                    min={0}
-                    step={0.1}
-                    value={params.WAITING_TIME_CHARGE}
-                    onChange={(val) => handleChange("WAITING_TIME_CHARGE", val)}
-                  />
+                      <div>
+                        <Text strong>Période de grâce d'attente</Text>
+                        <InputNumber
+                          min={0}
+                          value={params.WAITING_TIME_GRACE_PERIOD}
+                          onChange={(val) => handleChange("WAITING_TIME_GRACE_PERIOD", val)}
+                          style={{ width: '100%', marginTop: 8 }}
+                          size="large"
+                        />
+                      </div>
 
-                  <h3 style={{ marginTop: "1rem" }}>
-                    WAITING_TIME_GRACE_PERIOD
-                  </h3>
-                  <InputNumber
-                    min={0}
-                    value={params.WAITING_TIME_GRACE_PERIOD}
-                    onChange={(val) =>
-                      handleChange("WAITING_TIME_GRACE_PERIOD", val)
-                    }
-                  />
-
-                  <h3 style={{ marginTop: "1rem" }}>
-                    START_CHARGE_AFTERT_TIME
-                  </h3>
-                  <InputNumber
-                    min={0}
-                    value={params.START_CHARGE_AFTERT_TIME}
-                    onChange={(val) =>
-                      handleChange("START_CHARGE_AFTERT_TIME", val)
-                    }
-                  />
+                      <div>
+                        <Text strong>Temps d'attente Gratuit</Text>
+                        <InputNumber
+                          min={0}
+                          value={params.START_CHARGE_AFTERT_TIME}
+                          onChange={(val) => handleChange("START_CHARGE_AFTERT_TIME", val)}
+                          style={{ width: '100%', marginTop: 8 }}
+                          size="large"
+                        />
+                      </div>
+                    </Space>
+                  </div>
 
                   <Button
                     type="primary"
-                    style={{ marginTop: "1.5rem" }}
+                    size="large"
                     onClick={handleSubmit}
+                    style={{ width: '100%' }}
                   >
-                    Mettre à jour
+                    Mettre à jour les paramètres
                   </Button>
-                </Col>
-              </div>
+                </Space>
+              </Card>
             </Cards>
           </Col>
         </Row>

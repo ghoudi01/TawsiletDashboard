@@ -6,6 +6,7 @@ import DragIcon from "../../static/img/icon/drag.svg";
 import { LoadingOutlined } from "@ant-design/icons";
 import { Spin } from "antd";
 import { useSelector } from "react-redux";
+import DriverItem from "./DriverItem";
 
 const antIcon = (
   <LoadingOutlined
@@ -34,13 +35,12 @@ const DriverList = ({
   filterText,
   setFilterText,
 }) => {
-  console.log("🚀 ~ driversList:", driversList);
+ 
   const onSearch = (e) => setFilterText(e.target.value);
   const isLoading = useSelector((store) => store.user.isLoading);
   const [asideActive, setAsideActive] = useState(true);
   return (
     <DriverListParent>
-      {" "}
       <OpenClose onClick={() => setAsideActive(!asideActive)}>
         <img src={DragIcon} alt="drag" />
       </OpenClose>
@@ -57,7 +57,6 @@ const DriverList = ({
             <Search
               placeholder="Nom , Télephone , ..."
               allowClear
-              // onSearch={onSearch}
               size="small"
               style={{
                 padding: 4,
@@ -75,83 +74,19 @@ const DriverList = ({
             ) : (
               <img src={ReloadIcon} alt="reload" className="reload-icon" />
             )}
-          </ReloadContainer>{" "}
+          </ReloadContainer>
         </div>
         <div className="divWithScrollbar">
-          {(() => {
-            // 1. Group drivers by region (default: 'Inconnue')
-            const groupedDrivers = driversList.reduce((acc, driver) => {
-              const region = driver?.region?.trim() || "Inconnue";
-              if (
-                driver?.firstName
-                  ?.toLowerCase()
-                  .includes(filterText?.toLowerCase()) ||
-                driver?.phoneNumber
-                  ?.toLowerCase()
-                  .includes(filterText?.toLowerCase())
-              ) {
-                if (!acc[region]) acc[region] = [];
-                acc[region].push(driver);
-              }
-              return acc;
-            }, {});
-
-            // 2. Render grouped regions
-            return Object.entries(groupedDrivers).map(
-              ([regionName, drivers]) => (
-                <div key={regionName}>
-                  <h3 style={{ margin: "10px 0", fontWeight: "bold" }}>
-                    {regionName}
-                  </h3>
-                  {drivers.map((el, i) => (
-                    <DriverCard
-                      key={i}
-                      onClick={() => {
-                        setCenterSelected({
-                          lat: el?.latitude,
-                          lng: el?.longitude,
-                        });
-                        setSelectedDriver(el);
-                        setZoomSelected(12);
-                      }}
-                      disabled={!el?.location}
-                      disablecard={el?.longitude}
-                      style={{
-                        backgroundColor: el?.longitude
-                          ? "none"
-                          : "rgba(200,200,200,0.3)",
-                        pointerEvents: !el?.location && "none",
-                      }}
-                    >
-                      {el?.profilePicture ? (
-                        <img
-                          alt="driver profile"
-                          src={el?.profilePicture.url}
-                          style={{ height: "100px" }}
-                        />
-                      ) : (
-                        <img
-                          alt="driver avatar"
-                          src="https://static.vecteezy.com/system/resources/previews/026/175/074/original/driver-avatar-round-flat-icon-vector.jpg"
-                          style={{ height: "100px" }}
-                        />
-                      )}
-                      {asideActive && (
-                        <>
-                          <h1>
-                            {el?.firstName} {el?.lastName}
-                          </h1>
-                          <Bulle
-                            driverstatus={el?.isFree ? "#0BDA51" : "red"}
-                          />
-                        </>
-                      )}
-                    </DriverCard>
-                  ))}
-                </div>
-              )
-            );
-          })()}
+        {driversList.map((driver, i) => (
+                  <DriverItem
+                    key={i}
+                    driver={driver}
+                    setCenterSelected={setCenterSelected}
+                    setSelectedDriver={setSelectedDriver}
+                    setZoomSelected={setZoomSelected}
+                    asideActive={asideActive}
+                  />
+                ))}
         </div>
       </DriverListContainer>
     </DriverListParent>
