@@ -9,13 +9,7 @@ import {
   Avatar,
   Card,
 } from "antd";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  getDriver,
-  getDriverById,
-  getReviews,
-  updateUser,
-} from "../../redux/User/userSlice";
+import axios from "axios";
 import SelectGmVehicule from "../../selectGm/SelectGmVehicule";
 import ReactStars from "react-rating-stars-component";
 import { thumbnailPlugin } from "@react-pdf-viewer/thumbnail";
@@ -29,28 +23,65 @@ import {
   CarOutlined,
   StarOutlined,
 } from "@ant-design/icons";
+import ViewVehicule from "../vehicules/overview/ViewVehicule";
 
 import "./../livreur/overview/viewCompany.css";
 import { capitalize } from "../../utility/utility";
 
 const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
-  const dispatch = useDispatch();
-  const driver = useSelector((store) => store.user?.selectedDriver);
   const thumbnailPluginInstance = thumbnailPlugin();
-  console.log(driver, "==================================123=============");
   const [pdfViewer, setPdfViewer] = useState(false);
   const [pdfUrl, setPdfUrl] = useState("");
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [refusText, setRefusText] = useState("");
+  const [driver, setDriver] = useState(null);
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [vehiculeModalOpen, setVehiculeModalOpen] = useState(false);
+  const [selectedVehicule, setSelectedVehicule] = useState(null);
 
   const selectOptions = [
     { value: "valid", label: "Valider" },
     { value: "invalid", label: "Réfuser" },
   ];
 
-  const Reviews = useSelector((state) =>
-    state?.user?.reviews.filter((el) => el?.driver?.id === driver?.id)
-  );
+  // Fetch driver details and reviews
+  useEffect(() => {
+    const fetchDriverAndReviews = async () => {
+      if (!open || !driverDetais?.id) return;
+      setLoading(true);
+      try {
+        const jwt = localStorage.getItem("token");
+        // Fetch driver details with populate
+        const driverRes = await axios.get(
+          `${process.env.REACT_APP_BACKUP_URL}users/${driverDetais.id}?populate[0]=vehicules&populate[1]=vehicules.validation&populate[2]=cinFront&populate[3]=cinBack&populate[4]=licenceFront&populate[5]=profilePicture&populate[6]=validation&populate[7]=licenceBack&populate[8]=sub_drivers`,
+          {
+            headers: { Authorization: `Bearer ${jwt}` },
+          }
+        );
+        setDriver(driverRes.data);
+        // Fetch all reviews
+        const reviewsRes = await axios.get(
+          `${process.env.REACT_APP_BACKUP_URL}reviews?pLevel=3`,
+          {
+            headers: { Authorization: `Bearer ${jwt}` },
+          }
+        );
+        // Filter reviews for this driver
+        setReviews(
+          (reviewsRes.data?.data || []).filter(
+            (el) => el?.driver?.id === driverRes.data?.id
+          )
+        );
+      } catch (error) {
+        message.error("Erreur lors du chargement des données du chauffeur.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDriverAndReviews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, driverDetais?.id]);
 
   // Handlers
   const handleOk = () => {
@@ -78,6 +109,8 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
   };
 
   const confirmValidation = () => {
+    // Check for at least one valid  car
+    
     Modal.confirm({
       title: "Confirmer la validation",
       content: "Êtes-vous sûr de vouloir valider ce chauffeur?",
@@ -88,7 +121,7 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
         updateDriverStatus("valid");
       },
       onCancel() {
-        dispatch(getDriver({}));
+        if (driver) fetchDriver();
       },
     });
   };
@@ -113,28 +146,53 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
         updateDriverStatus("invalid");
       },
       onCancel() {
-        dispatch(getDriver({}));
+        if (driver) fetchDriver();
       },
     });
   };
 
-  const updateDriverStatus = (status) => {
-    dispatch(
-      updateUser({
-        id: driver.id,
-        user: {
+  // Update driver validation status
+  const updateDriverStatus = async (status) => {
+    if (!driver) return;
+    try {
+      const jwt = localStorage.getItem("token");
+      await axios.put(
+        `${process.env.REACT_APP_BACKUP_URL}driver/${driver.id}/validation`,
+        {
           validation: {
             validation_state: status,
             ...(status === "invalid" && { description: refusText }),
           },
         },
-      })
-    ).then(() => {
-      dispatch(getDriver({}));
-      setPing(!ping);
+        {
+          headers: { Authorization: `Bearer ${jwt}` },
+        }
+      );
+      setPing((prev) => !prev);
       message.success("Statut mis à jour avec succès!");
       handleCancel();
-    });
+      // Refresh driver details
+      fetchDriver();
+    } catch (error) {
+      message.error("Erreur lors de la mise à jour du statut du chauffeur.");
+    }
+  };
+
+  // Refetch driver details only
+  const fetchDriver = async () => {
+    if (!driverDetais?.id) return;
+    try {
+      const jwt = localStorage.getItem("token");
+      const driverRes = await axios.get(
+        `${process.env.REACT_APP_BACKUP_URL}users/${driverDetais.id}?populate[0]=vehicules&populate[1]=vehicules.validation&populate[2]=cinFront&populate[3]=cinBack&populate[4]=licenceFront&populate[5]=profilePicture&populate[6]=validation&populate[7]=licenceBack`,
+        {
+          headers: { Authorization: `Bearer ${jwt}` },
+        }
+      );
+      setDriver(driverRes.data);
+    } catch (error) {
+      // silent
+    }
   };
 
   const renderDocumentPreview = (document, title, isLicense = false) => {
@@ -163,50 +221,45 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
           </div>
         }
       >
-        <Card.Meta
-          title={title}
-          // description={isPDF ? "Cliquez pour voir le PDF" : "Cliquez pour agrandir"}
-        />
+        <Card.Meta title={title} />
       </Card>
     );
   };
 
-  const renderReview = (review) => (
-    <div className="review-card" key={review.id}>
-      <div className="review-header">
-        <Avatar
-          size={48}
-          src={`${driver?.profilePicture?.url}`}
-          icon={<UserOutlined />}
-        />
-        <div className="review-rating">
-          <ReactStars
-            count={5}
-            edit={false}
-            isHalf={true}
-            value={review?.note}
-            size={24}
-            activeColor="#ffd700"
-          />
-          <span className="review-date">
-            {new Date(review.createdAt).toLocaleDateString()}
-          </span>
+  const renderReview = (review) => {
+    return (
+      <div className="review-card" key={review.id}>
+        <div className="review-header">
+          <div className="review-client">
+            <Avatar icon={<UserOutlined />} />
+            <span className="client-name">
+              {capitalize(review?.client?.firstName)}
+              <br />
+              {capitalize(review?.client?.lastName)}
+            </span>
+          </div>
+          <div className="review-rating">
+            <ReactStars
+              count={5}
+              edit={false}
+              isHalf={true}
+              value={review?.score}
+              size={24}
+              activeColor="#ffd700"
+            />
+            <span className="review-date">
+              {new Date(review.createdAt).toLocaleDateString()}
+            </span>
+          </div>
+        </div>
+        <div className="review-content">
+          <p>{review?.note}</p>
         </div>
       </div>
-      <div className="review-content">
-        <p>{review?.message}</p>
-      </div>
-    </div>
-  );
+    );
+  };
 
-  // Effects
-  useEffect(() => {
-    if (open) {
-      dispatch(getDriverById({ id: driverDetais?.id })).then(() =>
-        dispatch(getReviews())
-      );
-    }
-  }, [dispatch, open, driverDetais?.id]);
+ 
 
   const getStatusTag = () => {
     const status = driver?.validation?.validation_state;
@@ -220,8 +273,7 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
         : "En attente";
     return <Tag color={color}>{text}</Tag>;
   };
-
-  return (
+   return (
     <>
       <Modal
         title={
@@ -238,183 +290,215 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
         footer={null}
         className="driver-modal"
       >
-        <div className="driver-header">
-          <Image
-            width={75}
-            height={75}
-            src={`${driver?.profilePicture?.url}`}
-            alt={"driver avatar"}
-            preview={true}
-            // onClick={() => isPDF && (setPdfUrl(url), setPdfViewer(true))}
-            style={{
-              cursor: "default",
-              borderRadius: "50%",
-              objectFit: "cover",
-            }}
-          />
-          <div className="driver-info">
-            <h2>
-              {capitalize(driver?.firstName)} {capitalize(driver?.lastName)}
-            </h2>
-            <div className="driver-rating">
-              <ReactStars
-                count={5}
-                edit={false}
-                isHalf={true}
-                value={driver?.rating}
-                size={20}
-                activeColor="#ffd700"
-              />
-              <span>({Reviews?.length} avis)</span>
-            </div>
-          </div>
-          <div className="driver-actions">
-            <SelectGmVehicule
-              options={selectOptions}
-              cssClass="vehiculeSelect"
-              placeholder={
-                driver?.validation?.validation_state === "valid"
-                  ? "Valider"
-                  : "Refuser"
-              }
-              onSelect={handleValidationChange}
-              active={driver?.validation?.validation_state}
-            />
-          </div>
-        </div>
-
-        <Divider orientation="left" className="section-divider">
-          <IdcardOutlined /> Informations personnelles
-        </Divider>
-
-        <div className="info-grid">
-          <div className="info-item">
-            <div className="info-icon">
-              <UserOutlined />
-            </div>
-            <div className="info-content">
-              <div className="info-label">Nom complet</div>
-              <div className="info-value">
-                {capitalize(driver?.firstName)} {capitalize(driver?.lastName)}
+        {loading ? (
+          <div style={{ textAlign: "center", padding: 40 }}>Chargement...</div>
+        ) : (
+          driver && (
+            <>
+              <div className="driver-header">
+                <Image
+                  width={75}
+                  height={75}
+                  src={`${driver?.profilePicture?.url}`}
+                  alt={"driver avatar"}
+                  preview={true}
+                  style={{
+                    cursor: "default",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                  }}
+                />
+                <div className="driver-info">
+                  <h2>
+                    {capitalize(driver?.firstName)} {capitalize(driver?.lastName)}
+                    {driver?.region && (
+                      <span style={{ fontWeight: 400, fontSize: 18, color: '#888', marginLeft: 8 }}>
+                        - {capitalize(driver.region)}
+                      </span>
+                    )}
+                  </h2>
+                  <div className="driver-rating">
+                    <ReactStars
+                      count={5}
+                      edit={false}
+                      isHalf={true}
+                      value={driver?.rating}
+                      size={20}
+                      activeColor="#ffd700"
+                    />
+                    <span>({reviews?.length} avis)</span>
+                  </div>
+                </div>
+                <div className="driver-actions">
+                  <SelectGmVehicule
+                    options={selectOptions}
+                    cssClass="vehiculeSelect"
+                    placeholder={
+                      driver?.validation?.validation_state === "valid"
+                        ? "Valider"
+                        : "Refuser"
+                    }
+                    onSelect={handleValidationChange}
+                    active={driver?.validation?.validation_state}
+                  />
+                </div>
               </div>
-            </div>
-          </div>
 
-          <div className="info-item">
-            <div className="info-icon">
-              <PhoneOutlined />
-            </div>
-            <div className="info-content">
-              <div className="info-label">Téléphone</div>
-              <div className="info-value">
-                +{driver?.phoneNumber || "Non renseigné"}
+              <Divider orientation="left" className="section-divider">
+                <IdcardOutlined /> Informations personnelles
+              </Divider>
+
+              <div className="info-grid">
+                <div className="info-item">
+                  <div className="info-icon">
+                    <UserOutlined />
+                  </div>
+                  <div className="info-content">
+                    <div className="info-label">Nom complet</div>
+                    <div className="info-value">
+                      {capitalize(driver?.firstName)} {capitalize(driver?.lastName)}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="info-item">
+                  <div className="info-icon">
+                    <PhoneOutlined />
+                  </div>
+                  <div className="info-content">
+                    <div className="info-label">Téléphone</div>
+                    <div className="info-value">
+                      +{driver?.phoneNumber || "Non renseigné"}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="info-item">
+                  <div className="info-icon">
+                    <MailOutlined />
+                  </div>
+                  <div className="info-content">
+                    <div className="info-label">Email</div>
+                    <div className="info-value">{driver?.email}</div>
+                  </div>
+                </div>
+
+                <div className="info-item">
+                  <div className="info-icon">
+                    <EnvironmentOutlined />
+                  </div>
+                  <div className="info-content">
+                    <div className="info-label">Adresse</div>
+                    <div className="info-value">12 Rue de la Liberté</div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          <div className="info-item">
-            <div className="info-icon">
-              <MailOutlined />
-            </div>
-            <div className="info-content">
-              <div className="info-label">Email</div>
-              <div className="info-value">{driver?.email}</div>
-            </div>
-          </div>
+              <Divider orientation="left" className="section-divider">
+                <IdcardOutlined /> Documents
+              </Divider>
 
-          <div className="info-item">
-            <div className="info-icon">
-              <EnvironmentOutlined />
-            </div>
-            <div className="info-content">
-              <div className="info-label">Adresse</div>
-              <div className="info-value">12 Rue de la Liberté</div>
-            </div>
-          </div>
-        </div>
-
-        <Divider orientation="left" className="section-divider">
-          <IdcardOutlined /> Documents
-        </Divider>
-
-        <div className="documents-section">
-          <div className="documents-row">
-            {renderDocumentPreview(driver?.cinPictureFront, "CIN Recto")}
-            {renderDocumentPreview(driver?.cinPictureBack, "CIN Verso")}
-            {renderDocumentPreview(
-              driver?.licencePicture,
-              "Permis de conduire",
-              true
-            )}
-          </div>
-        </div>
-
-        <Divider orientation="left" className="section-divider">
-          <StarOutlined /> Avis ({Reviews?.length})
-        </Divider>
-
-        <div className="reviews-section">
-          {Reviews?.length > 0 ? (
-            Reviews?.map(renderReview)
-          ) : (
-            <div className="no-reviews">
-              <p>Aucun avis disponible pour ce chauffeur</p>
-            </div>
-          )}
-        </div>
-        <Divider orientation="left" className="section-divider">
-          {driver?.sub_drivers?.length} Sub Drivers
-        </Divider>
-        <div className="sub-driver-grid">
-          {driver?.sub_drivers?.length > 0 ? (
-            driver.sub_drivers.map((subDriver) => (
-              <div key={subDriver?.id} className="sub-driver-card">
-                <h4 className="sub-driver-name">
-                  {subDriver?.firstName} {subDriver?.lastName}
-                </h4>
-                <p className="sub-driver-info">📞 {subDriver?.phoneNumber}</p>
-                <p className="sub-driver-info">
-                  🌍 Lat:{" "}
-                  {subDriver?.latitude ? subDriver?.latitude : "not available"},
-                  Lng:{" "}
-                  {subDriver?.longitude ? subDriver?.longitude : "not available"}
-                </p>
+              <div className="documents-section">
+                <div className="documents-row">
+                  {renderDocumentPreview(driver?.cinFront, "CIN Recto")}
+                  {renderDocumentPreview(driver?.cinBack, "CIN Verso")}
+                  {renderDocumentPreview(
+                    driver?.licenceFront,
+                    "Permis de conduire",
+                    true
+                  )}
+                    {renderDocumentPreview(
+                    driver?.licenceBack,
+                    "Permis de conduire Verso",
+                    true
+                  )}
+                </div>
               </div>
-            ))
-          ) : (
-            <div className="no-sub-drivers">
-              Aucun sous-chauffeur disponible pour ce chauffeur
-            </div>
-          )}
-        </div>
-        <Divider orientation="left" className="section-divider">
-          {driver?.vehicules?.length} Cars
-        </Divider>
-        <div className="sub-driver-grid">
-          {driver?.vehicules?.length > 0 ? (
-            driver.vehicules.map((car) => (
-              <div key={car?.id} className="sub-driver-card">
-                <h4 className="sub-driver-name">
-                  {car?.mark} {car?.model}
-                </h4>
-                <p className="sub-driver-info">
-                  Matriculation: {car?.matriculation}
-                </p>
-                <p className="sub-driver-info">Color: {car?.color}</p>
-                <p className="sub-driver-info">
-                  Assurance Date: {car?.assuranceDate}
-                </p>
-                <p className="sub-driver-info">
-                  Vin Number: {car?.vinNumber ? car?.vinNumber : "not available"}
-                </p>
+
+              <Divider orientation="left" className="section-divider">
+                <StarOutlined /> Avis ({reviews?.length})
+              </Divider>
+
+              <div className="reviews-section">
+                {reviews?.length > 0 ? (
+                  reviews?.map(renderReview)
+                ) : (
+                  <div className="no-reviews">
+                    <p>Aucun avis disponible pour ce chauffeur</p>
+                  </div>
+                )}
               </div>
-            ))
-          ) : (
-            <div className="no-sub-drivers">
-              Aucun vehicules disponible pour ce chauffeur
-            </div>
-          )}
-        </div>
+              <Divider orientation="left" className="section-divider">
+                {driver?.sub_drivers?.length} Sub Drivers
+              </Divider>
+              <div className="sub-driver-grid">
+                {driver?.sub_drivers?.length > 0 ? (
+                  driver.sub_drivers.map((subDriver) => (
+                    <div key={subDriver?.id} className="sub-driver-card">
+                      <h4 className="sub-driver-name">
+                        {subDriver?.firstName} {subDriver?.lastName}
+                      </h4>
+                      <p className="sub-driver-info">📞 {subDriver?.phoneNumber}</p>
+                      <p className="sub-driver-info">✉️ {subDriver?.email}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="no-sub-drivers">
+                    Aucun sous-chauffeur disponible pour ce chauffeur
+                  </div>
+                )}
+              </div>
+              <Divider orientation="left" className="section-divider">
+                {driver?.vehicules?.length} Cars
+              </Divider>
+              <div className="sub-driver-grid">
+                {driver?.vehicules?.length > 0 ? (
+                  driver.vehicules.map((car) => {
+                    let status = car?.validation?.validation_state;
+                    let color =
+                      status === "valid"
+                        ? "green"
+                        : status === "invalid"
+                        ? "red"
+                        : "orange";
+                    let text =
+                      status === "valid"
+                        ? "Validé"
+                        : status === "invalid"
+                        ? "Refusé"
+                        : "En attente";
+                    return (
+                      <div
+                        key={car?.id}
+                        className="sub-driver-card"
+                        style={{ cursor: "pointer" }}
+                        onClick={() => {
+                          setSelectedVehicule(car);
+                          setVehiculeModalOpen(true);
+                        }}
+                      >
+                        <h4 className="sub-driver-name">
+                          {car?.mark} {car?.model} <Tag color={color}>{text}</Tag>
+                        </h4>
+                        <p className="sub-driver-info">
+                          Matriculation: {car?.matriculation}
+                        </p>
+                        <p className="sub-driver-info">Color: {car?.color}</p>
+                        <p className="sub-driver-info">
+                          Assurance Date: {car?.assuranceDate}
+                        </p>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="no-sub-drivers">
+                    Aucun vehicules disponible pour ce chauffeur
+                  </div>
+                )}
+              </div>
+            </>
+          )
+        )}
       </Modal>
 
       <PdfViewer
@@ -423,6 +507,20 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
         handleCancelPdf={handleCancelPdf}
         thumbnailPluginInstance={thumbnailPluginInstance}
       />
+
+      {selectedVehicule && (
+        <ViewVehicule
+          visible={vehiculeModalOpen}
+          onCancel={() => {
+            setVehiculeModalOpen(false);
+            setSelectedVehicule(null);
+            fetchDriver();
+          }}
+          record={selectedVehicule?.id}
+          recorddata={selectedVehicule}
+          userRole={"admin"}
+        />
+      )}
 
       <style jsx>{`
         .modal-title {
@@ -522,14 +620,27 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
         .review-header {
           display: flex;
           align-items: center;
+          justify-content: space-between;
           gap: 16px;
           margin-bottom: 12px;
+        }
+
+        .review-client {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .client-name {
+          font-weight: 500;
+          color: #333;
         }
 
         .review-rating {
           display: flex;
           flex-direction: column;
           gap: 4px;
+          align-items: flex-end;
         }
 
         .review-date {

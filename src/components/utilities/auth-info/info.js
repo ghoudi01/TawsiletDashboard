@@ -38,7 +38,6 @@ import { Dropdown } from "../../dropdown/dropdown";
 
 function AuthInfo() {
   const currentUser = useSelector((state) => state?.user?.currentUser);
-  // console.log("currentUser",currentUser)
   const [showDétailes, setShowDétailes] = useState(true);
   const [showSetting, setShowSetting] = useState(false);
   const [showSettingPassword, setShowSettingPassword] = useState(false);
@@ -250,9 +249,9 @@ function AuthInfo() {
   };
 
   const next = () => {
-    console.log("update");
+  
     const errors = isInputValid();
-    console.log(errors);
+   
     if (errors === true) {
       dispatch(updateUser({ id: currentUser?.id, user: updatesociete }));
       message.success("Votre donnée a été modifiée avec succès.");
@@ -918,8 +917,7 @@ function AuthInfo() {
           <form
             style={{ width: "100%" }}
             onSubmit={handleSubmit((data) => {
-              // setLoading(true);
-              console.log(data);
+           
               myPromise({
                 currentPassword: data.currentPassword,
                 password: data.password,
@@ -931,7 +929,7 @@ function AuthInfo() {
                   // window.location.replace("/clientProfile/details");
                 })
                 .catch((error) => {
-                  // console.log(error);
+                  
                   // setLoading(false),
                   alert(error?.response?.data?.error?.message);
                 });
@@ -987,7 +985,7 @@ function AuthInfo() {
                       const { password } = getValues();
                       return (
                         password === value ||
-                        "Les mots de passe doivent correspondre !"
+                        "Les mots de passe doivent correspondre !"
                       );
                     },
                   })}

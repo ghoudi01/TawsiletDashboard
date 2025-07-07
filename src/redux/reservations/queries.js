@@ -28,65 +28,66 @@ export const GET_RESERVATION_BY_ID = gql`
   }
 `;
 
-export const GET_RESERVATIONS = gql`
-  query Commands_connection(
-    $filters: CommandFiltersInput
-    $pagination: PaginationArg
-    $sort: [String]
-  ) {
-    commands_connection(filters: $filters, pagination: $pagination, sort: $sort) {
-      nodes {
-        createdAt
-        updatedAt
-        documentId
-        refNumber
-        payType
-       
-        dropOfAddress {
-          Address
-        }
-        pickUpAddress {
-          Address
-          coordonne {
-            latitude
-            longitude
-          }
-        }
-        duration
-        distance
-
-        totalPrice
-        commandStatus
-        departDate
-        deparTime
-        driver {
+  export const GET_RESERVATIONS = gql`
+    query Commands_connection(
+      $filters: CommandFiltersInput
+      $pagination: PaginationArg
+      $sort: [String]
+    ) {
+      commands_connection(filters: $filters, pagination: $pagination, sort: $sort) {
+        nodes {
+          createdAt
+          updatedAt
           documentId
-          firstName
-          lastName
-        }
-        client {
-          documentId
-          username
-          firstName
-          lastName
-          email
-          phoneNumber
-          profilePicture {
-            url
+          refNumber
+          payType
+        
+          dropOfAddress {
+            Address
           }
+          pickUpAddress {
+            Address
+            coordonne {
+              latitude
+              longitude
+            }
+          }
+          duration
+          distance
+          
+          totalPrice
+          commandStatus
+          departDate
+          deparTime
+          driver {
+            documentId
+            firstName
+            lastName
+          
+          }
+          client {
+            documentId
+            username
+            firstName
+            lastName
+            email
+            phoneNumber
+            profilePicture {
+              url
+            }
+          }
+          isAccepted
+          publishedAt
         }
-        isAccepted
-        publishedAt
-      }
-      pageInfo {
-        total
-        page
-        pageSize
-        pageCount
+        pageInfo {
+          total
+          page
+          pageSize
+          pageCount
+        }
       }
     }
-  }
-`;
+  `;
 
 export const GET_RESERVATIONS_COUNT = gql`
   query Commands_connection($filters: CommandFiltersInput) {
@@ -144,12 +145,7 @@ export const GET_COMMAND_DETAILS_BY_ID = gql`
     }
     driver {
       documentId
-      location {
-        address
-        latitude
-        longitude
-        updatedAt
-      }
+       
       email
       firstName
       lastName

@@ -1,4 +1,4 @@
-import React, { lazy, useState } from "react";
+import React, { lazy, useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Row, Col } from "antd";
 import FeatherIcon from "feather-icons-react";
@@ -10,6 +10,9 @@ import { Main } from "../styled";
 import { PageHeader } from "../../components/page-headers/page-headers";
 import ModalAdd from "./ModalAdd";
 import { ExportButtonPageHeader } from "../../components/buttons/export-button/export-button";
+import FilterBar from "./utils/filtersBar/FilterBar";
+import { Link } from "react-router-dom";
+import { getDriver } from "../../redux/User/userSlice";
 
 const List = lazy(() => import("./overview/List"));
 
@@ -25,6 +28,10 @@ function Livreur({ match, usersList }) {
     (el) => el.company_id?.id === current
   );
   const { path } = match;
+  const dispatch = useDispatch();
+  const [activeFilter, setActiveFilter] = useState("");
+  const [text, settext] = useState("");
+
   //------------------------------ modal add user ------------------------------------------------------------------
   const [shouldPrint, setShouldPrint] = useState(false);
   const [shouldExportPdf, setShouldExportPdf] = useState(false);
@@ -49,11 +56,18 @@ function Livreur({ match, usersList }) {
   const currentId = useSelector((state) => state?.user?.currentUser?.id);
   const currentuser = useSelector((state) => state?.user?.currentUser);
   const meta = useSelector((state) => state?.vehicules?.meta);
-  const dispatch = useDispatch();
   const currentRole = useSelector(
     (state) => state?.user?.currentUser?.user_role
   );
-  const [text, settext] = useState("");
+
+  useEffect(() => {
+    dispatch(getDriver({ page: 1, pageSize: 10, status: activeFilter, text }));
+  }, [dispatch, activeFilter, text]);
+
+  const handleFilterClick = (filter) => {
+    setActiveFilter(filter);
+  };
+
   return (
     <>
       <ProjectHeader>
@@ -69,7 +83,6 @@ function Livreur({ match, usersList }) {
                 <input
                   className="data_search_input"
                   onChange={(e) => settext(e.target.value)}
-                  // dataSource={notData}
                   placeholder="Rechercher ..."
                   patterns
                 />
@@ -96,6 +109,53 @@ function Livreur({ match, usersList }) {
           ]}
         />
       </ProjectHeader>
+      <FilterBar>
+        <ul>
+          <Link to="#" onClick={() => handleFilterClick("")}>
+            <li
+              className={!activeFilter ? "slected_filter_status_bg" : ""}
+            >
+              Tous
+            </li>
+          </Link>
+          <Link
+            to="#"
+            onClick={() => handleFilterClick("valid")}
+          >
+            <li
+              className={
+                activeFilter === "valid" ? "slected_filter_status_bg" : ""
+              }
+            >
+              Valide
+            </li>
+          </Link>
+          <Link
+            to="#"
+            onClick={() => handleFilterClick("invalid")}
+          >
+            <li
+              className={
+                activeFilter === "invalid" ? "slected_filter_status_bg" : ""
+              }
+            >
+              désactiver
+            </li>
+          </Link>
+          <Link
+            to="#"
+            onClick={() => handleFilterClick("waiting")}
+          >
+            <li
+              className={
+                activeFilter === "waiting" ? "slected_filter_status_bg" : ""
+              }
+            >
+              En attente
+            </li>
+          </Link>
+        </ul>
+      </FilterBar>
       <Main>
         <Row gutter={25}>
           <Col xs={24}>

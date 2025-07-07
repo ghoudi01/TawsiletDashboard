@@ -22,7 +22,7 @@ const Addagent = ({ visible, onCancel }) => {
     password: "",
     firstName: "",
     lastName: "",
-    address: "",
+    region: "",
   });
 
   useEffect(() => {
@@ -30,7 +30,7 @@ const Addagent = ({ visible, onCancel }) => {
   }, [visible]);
 
   const isInputValid = () => {
-    const { email, phoneNumber, password } = addagent;
+    const { email, phoneNumber, password, user_role, region } = addagent;
     const errors = {};
 
     if (!email) errors.email = "Veuillez saisir votre e-mail.";
@@ -39,8 +39,10 @@ const Addagent = ({ visible, onCancel }) => {
     if (!password) errors.password = "Veuillez saisir un mot de passe.";
     if (!addagent?.firstName) errors.firstName = "Veuillez saisir votre nom.";
     if (!addagent?.lastName) errors.lastName = "Veuillez saisir votre prénom.";
-    if (!addagent?.address) errors.address = "Veuillez saisir votre adresse.";
-
+    if ((user_role === "agent_collect" || user_role === "agent_verification") && !region) {
+      errors.region = "Veuillez sélectionner une région.";
+    }
+    
     return Object.keys(errors).length === 0 ? true : errors;
   };
 
@@ -96,8 +98,39 @@ const FormFields = ({ addagent, Inputerrors, setaddAgent, setInputErrors }) => {
     { label: "agent dispatch", value: "agent_dispatch" },
     { label: "agent chef", value: "agent_chef" },
     { label: "agent finance", value: "agent_finance" },
-    { label: "agent collect", value: "agent_collect" },
+    { label: "agent collect $", value: "agent_collect" },
+    { label: "agent verification", value: "agent_verification" },
   ];
+
+  const tunisiaRegions = [
+    { label: "Global", value: "global" },
+    { label: "Ariana", value: "Ariana" },
+    { label: "Beja", value: "Beja" },
+    { label: "Ben Arous", value: "Ben Arous" },
+    { label: "Bizerte", value: "Bizerte" },
+    { label: "Gabes", value: "Gabes" },
+    { label: "Gafsa", value: "Gafsa" },
+    { label: "Jendouba", value: "Jendouba" },
+    { label: "Kairouan", value: "Kairouan" },
+    { label: "Kasserine", value: "Kasserine" },
+    { label: "Kebili", value: "Kebili" },
+    { label: "Kef", value: "Kef" },
+    { label: "Mahdia", value: "Mahdia" },
+    { label: "Manouba", value: "Manouba" },
+    { label: "Medenine", value: "Medenine" },
+    { label: "Monastir", value: "Monastir" },
+    { label: "Nabeul", value: "Nabeul" },
+    { label: "Sfax", value: "Sfax" },
+    { label: "Sidi Bouzid", value: "Sidi Bouzid" },
+    { label: "Siliana", value: "Siliana" },
+    { label: "Sousse", value: "Sousse" },
+    { label: "Tataouine", value: "Tataouine" },
+    { label: "Tozeur", value: "Tozeur" },
+    { label: "Tunis", value: "Tunis" },
+    { label: "Zaghouan", value: "Zaghouan" }
+  ];
+
+  const showRegionField = addagent?.user_role === "agent_collect" || addagent?.user_role === "agent_verification";
 
   return (
     <>
@@ -160,24 +193,29 @@ const FormFields = ({ addagent, Inputerrors, setaddAgent, setInputErrors }) => {
         </Form.Item>
       </Col>
 
-      <Col sm={12} xs={24} className="mb-25">
-        <Form.Item
-          label="Adresse d'agent"
-          validateStatus={Inputerrors.address ? "error" : ""}
-          help={Inputerrors.address}
-        >
-          <Input
-            placeholder="Adresse d'agent"
-            value={addagent?.address}
-            onChange={(e) =>
-              setaddAgent((prev) => ({
-                ...prev,
-                address: e.target.value,
-              }))
-            }
-          />
-        </Form.Item>
-      </Col>
+      {showRegionField && (
+        <Col sm={12} xs={24} className="mb-25">
+          <Form.Item
+            label="Région"
+            validateStatus={Inputerrors.region ? "error" : ""}
+            help={Inputerrors.region}
+            required={showRegionField}
+          >
+            <Select
+              placeholder="Sélectionnez une région"
+              value={addagent?.region}
+              onChange={(value) => {
+                setInputErrors((prev) => ({ ...prev, region: null }));
+                setaddAgent((prev) => ({
+                  ...prev,
+                  region: value,
+                }));
+              }}
+              options={tunisiaRegions}
+            />
+          </Form.Item>
+        </Col>
+      )}
 
       <Col sm={12} xs={24} className="mb-25">
         <Form.Item
@@ -232,6 +270,8 @@ const FormFields = ({ addagent, Inputerrors, setaddAgent, setInputErrors }) => {
               setaddAgent((prev) => ({
                 ...prev,
                 user_role: value,
+                // Clear region when role changes
+                region: value === "agent_collect" || value === "agent_verification" ? prev.region : "",
               }));
             }}
             options={role}

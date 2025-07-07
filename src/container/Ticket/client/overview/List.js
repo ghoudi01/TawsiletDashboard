@@ -198,40 +198,7 @@ const Client = ({
         </ProjectListTitle>
       ),
     },
-    // {
-    //   id: "attachment",
-    //   title: "Attachment",
-    //   dataIndex: "attachment",
-    //   render: (text, record) => {
-    //     const attachment = record?.attachment;
-    //     if (!attachment) {
-    //       return <span>No attachment</span>;
-    //     }
-
-    //     // Check if the attachment is an image or video
-    //     const isImage = attachment.type?.startsWith("image");
-    //     const isVideo = attachment.type?.startsWith("video");
-
-    //     if (isImage) {
-    //       return (
-    //         <img
-    //           src={attachment.url}
-    //           alt="Attachment"
-    //           style={{ width: "100px", height: "auto" }}
-    //         />
-    //       );
-    //     } else if (isVideo) {
-    //       return (
-    //         <video controls style={{ width: "100px", height: "auto" }}>
-    //           <source src={attachment.url} type={attachment.type} />
-    //           Your browser does not support the video tag.
-    //         </video>
-    //       );
-    //     } else {
-    //       return <span>Unsupported attachment type</span>;
-    //     }
-    //   },
-    // },
+   
     {
       id: "client",
       title: "Client",
@@ -239,10 +206,10 @@ const Client = ({
       render: (text, record) => (
         <ProjectListTitle>
           <span className="date-finished">
-            {record?.user?.firstName || "N/A"}
+            {record?.client?.firstName || "N/A"}
           </span>{" "}
           <span className="date-finished">
-            {record?.user?.lastName || "N/A"}
+            {record?.client?.lastName || "N/A"}
           </span>
         </ProjectListTitle>
       ),
@@ -253,7 +220,7 @@ const Client = ({
       dataIndex: "Numéro de téléphone",
       render: (text, record) => (
         <ProjectListTitle>
-          <span className="date-finished">{record?.user?.phoneNumber}</span>
+          <span className="date-finished">{record?.client?.phoneNumber}</span>
         </ProjectListTitle>
       ),
     },

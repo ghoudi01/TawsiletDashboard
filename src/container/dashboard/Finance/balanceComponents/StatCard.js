@@ -2,13 +2,15 @@ import { ArrowDownOutlined, ArrowUpOutlined } from "@ant-design/icons";
 import { Card, Space, Typography } from "antd";
 import React from "react";
 import formatNumberWithCommas from "./utils";
-  const { Title, Text } = Typography;
+const { Title, Text } = Typography;
+
 const TrendIndicator = ({ value, direction }) => (
   <Text type={direction === "up" ? "success" : "danger"}>
     {direction === "up" ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
     {value}%
   </Text>
 );
+
 export const StatCard = ({
   title,
   value,
@@ -18,6 +20,7 @@ export const StatCard = ({
   loading,
   suffix,
   plainText,
+  extraData,
 }) => (
   <Card
     loading={loading}
@@ -55,6 +58,17 @@ export const StatCard = ({
         </Title>
         {suffix && <Text type="secondary">{suffix}</Text>}
       </Space>
+
+      {extraData && extraData.length > 0 && (
+        <Space direction="vertical" size={4} style={{ width: "100%", marginTop: 8 }}>
+          {extraData.map((item, index) => (
+            <Space key={index} style={{ justifyContent: "space-between", width: "100%" }}>
+              <Text type="secondary">{item.title}</Text>
+              <Text strong>{formatNumberWithCommas(item.value)}</Text>
+            </Space>
+          ))}
+        </Space>
+      )}
 
       {trend && (
         <div style={{ marginTop: 4 }}>

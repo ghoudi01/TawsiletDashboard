@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Spin } from "antd";
-import {  Link } from "react-router-dom";
- import { useDispatch, useSelector } from "react-redux";
+import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { PerformanceChartWrapper, Pstates } from "../../style";
 import { Cards } from "../../../../components/cards/frame/cards-frame";
 import Heading from "../../../../components/heading/heading";
@@ -10,69 +10,40 @@ import {
   chartLinearGradient,
   customTooltips,
 } from "../../../../components/utilities/utilities";
-import {
-  performanceFilterData,
-  performanceGetData,
-  setIsLoading,
-} from "../../../../redux/chartContent/actionCreator";
-import { getBalance } from "../../../../redux/chartContent/chartSlice";
+import axios from "axios";
 
- 
+function AverageSalesRevenue() {
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(null);
+  const [period, setPeriod] = useState("year");
 
-function  AverageSalesRevenue() {
-  const dispatch = useDispatch();
-  const { performanceState, preIsLoading, current } = useSelector((state) => {
-    return {
-      performanceState: state.balance.data,
-      preIsLoading: state.balance.loading,
-      current: state.user.currentUser,
-    };
-  });
+  useEffect(() => {
+    fetchData();
+  }, [period]);
 
-  const [state, setState] = useState({
-    performance: "year",
-    performanceTab: "users",
-  });
-
-  const { performance, performanceTab } = state;
-
- 
-
-  const [titleValue, settitleValue] = useState("year");
-
-  const handleActiveChangePerformance = (value) => {
-    setState({
-      ...state,
-      performance: value,
-    });
-    settitleValue(value);
-    dispatch(
-      performanceFilterData({
-        value: value,
-        id: ["owner", "admin"].includes(current?.user_role)
-          ? null
-          : ["agent"].includes(current?.user_role)
-          ? current?.company_id?.id
-          : current?.id,
-      })
-    );
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${process.env.REACT_APP_BACKUP_URL}dashboard?period=${period}`);
+      setData(response.data.data.revenue_overview);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const onPerformanceTab = (value) => {
-    setState({
-      ...state,
-      performanceTab: value,
-    });
-    return dispatch(setIsLoading());
+  const handleActiveChangePerformance = (value) => {
+    setPeriod(value);
   };
 
   // Transform data for the chart
-  const labels = performanceState?.companies?.map((company) => company.companyId.name) || [];
-  const datasets = performanceState
+  const labels = data?.revenue_chart_data?.map((item) => item.label) || [];
+  const datasets = data
     ? [
         {
           label: "Revenus des ventes",
-          data: performanceState.companies.map((company) => company.details.revenusDesVentes),
+          data: data.revenue_chart_data.map((item) => item.revenue),
           borderColor: "#5F63F2",
           borderWidth: 4,
           fill: true,
@@ -90,7 +61,7 @@ function  AverageSalesRevenue() {
         },
         {
           label: "Bénéfice Net",
-          data: performanceState.companies.map((company) => company.details.beneficeNet),
+          data: data.revenue_chart_data.map((item) => item.profit_margin),
           borderColor: "#ff173780",
           borderWidth: 4,
           fill: false,
@@ -103,44 +74,29 @@ function  AverageSalesRevenue() {
 
   return (
     <PerformanceChartWrapper>
-      {preIsLoading ? (
+      {loading ? (
         <div className="sd-spin">
           <Spin />
         </div>
-      ) : !performanceState ? (
+      ) : !data ? (
         <p>No data available.</p>
       ) : (
         <Cards
           isbutton={
             <div className="card-nav">
               <ul>
-                <li
-                  className={performance === "week" ? "active" : "deactivate"}
-                >
-                  <Link
-                    onClick={() => handleActiveChangePerformance("week")}
-                    to="#"
-                  >
+                <li className={period === "week" ? "active" : "deactivate"}>
+                  <Link onClick={() => handleActiveChangePerformance("week")} to="#">
                     Semaines
                   </Link>
                 </li>
-                <li
-                  className={performance === "month" ? "active" : "deactivate"}
-                >
-                  <Link
-                    onClick={() => handleActiveChangePerformance("month")}
-                    to="#"
-                  >
+                <li className={period === "month" ? "active" : "deactivate"}>
+                  <Link onClick={() => handleActiveChangePerformance("month")} to="#">
                     Mois
                   </Link>
                 </li>
-                <li
-                  className={performance === "year" ? "active" : "deactivate"}
-                >
-                  <Link
-                    onClick={() => handleActiveChangePerformance("year")}
-                    to="#"
-                  >
+                <li className={period === "year" ? "active" : "deactivate"}>
+                  <Link onClick={() => handleActiveChangePerformance("year")} to="#">
                     Années
                   </Link>
                 </li>
@@ -150,51 +106,35 @@ function  AverageSalesRevenue() {
           title="Chiffre d'affaires moyen"
           size="large"
         >
-           <Pstates>
-            <div
-              onClick={() => onPerformanceTab("users")}
-              className={`growth-upward ${
-                performanceTab === "users" && "active"
-              }`}
-              role="button"
-              onKeyPress={() => {}}
-              tabIndex="0"
-            >
+          <Pstates>
+            <div className="growth-upward active">
               <p>
                 Revenus de{" "}
-                {titleValue === "year"
+                {period === "year"
                   ? "cette année"
-                  : titleValue === "week"
+                  : period === "week"
                   ? "cette semaine"
                   : "ce mois"}
               </p>
               <Heading as="h1">
-                {`${performanceState.totals.totalRevenusDesVentes.toFixed(2)} TND`}
+                {`${data.current_week_revenue.toFixed(2)} TND`}
               </Heading>
             </div>
-            <div
-              onClick={() => onPerformanceTab("sessions")}
-              className={`growth-upward ${
-                performanceTab === "sessions" && "active"
-              }`}
-              role="button"
-              onKeyPress={() => {}}
-              tabIndex="0"
-            >
+            <div className="growth-upward active">
               <p>
-              Revenus de{" "}
-                {titleValue === "year"
+                Revenus de{" "}
+                {period === "year"
                   ? "de l'année derniére"
-                  : titleValue === "week"
+                  : period === "week"
                   ? "de la semaine derniére"
                   : "du mois dernier"}
               </p>
               <Heading as="h1">
-                {`${performanceState.totals.totalBeneficeNet.toFixed(2)} TND`}
+                {`${data.last_week_profit.toFixed(2)} TND`}
               </Heading>
             </div>
-          </Pstates>  
-     <div className="performance-lineChart">
+          </Pstates>
+          <div className="performance-lineChart">
             <ChartjsAreaChart
               id="performance"
               labels={labels}
@@ -281,7 +221,7 @@ function  AverageSalesRevenue() {
                 </li>
               ))}
             </ul>
-          </div>  
+          </div>
         </Cards>
       )}
     </PerformanceChartWrapper>

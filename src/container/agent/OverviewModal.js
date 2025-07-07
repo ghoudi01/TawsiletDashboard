@@ -20,7 +20,7 @@ const OverviewModal = ({ open, setOpen, modalId }) => {
     name: modalId ? `${modalId.firstName} ${modalId.lastName}` : "Nom inconnu",
     phone: modalId?.phoneNumber || "Non renseigné",
     email: modalId?.email || "Non renseigné",
-    address: modalId?.address || "Adresse non disponible",
+    region: modalId?.region || " region non disponible",
     status: "active",
   };
 
@@ -70,7 +70,7 @@ const OverviewModal = ({ open, setOpen, modalId }) => {
           </div>
           <DetailItem
             icon={<EnvironmentOutlined />}
-            title="Adresse"
+            title="region"
             value={agentInfo.address}
             fullWidth
           />
@@ -131,6 +131,7 @@ const DetailItemContainer = styled.div`
       font-size: 13px;
       line-height: 1.3;
       margin-bottom: 2px;
+      margin-right:10px
     }
     
     .detail-value {

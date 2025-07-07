@@ -20,8 +20,7 @@ function ChangeCompany({ visible, onCancel, record }) {
       company: record?.company_id?.data?.documentId,
     },
   });
-  console.log("🚀 ~ ChangeCompany ~ record:", record);
-
+ 
   useEffect(() => {
     if (visible) {
       dispatch(getCompanyList());

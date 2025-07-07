@@ -38,14 +38,7 @@ function Agents({ match }) {
 
   const filtereAgents = agents?.filter((el) => el.company_id?.id === companyID);
 
-  // console.log(agents?.length,"admin")
-  // console.log(current,"hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
-  // const dispatch = useDispatch();
-  //   useEffect(() => {
-  //     dispatch(getReservations());
-  //   }, []);
-
-  // const searchData = useSelector((state) => state.headerSearchData);
+ 
   const { path } = match;
 
   const [state, setState] = useState({

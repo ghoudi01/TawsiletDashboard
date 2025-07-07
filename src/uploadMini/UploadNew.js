@@ -47,8 +47,7 @@ const UploadNew = ({ dataToShow, setFunction }) => {
     // .target.files[0];
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
-
-    // console.log("file", file);
+ 
     const formData = new FormData();
 
     formData.append("files", file);

@@ -9,8 +9,7 @@ function SelectGmVehicule({ active, options, onSelect, ...props }) {
     setShow(false);
     onSelect(option);
   };
-  console.log(active, "active");
-  return (
+   return (
     <div
       tabIndex={1}
       className="sl-container"

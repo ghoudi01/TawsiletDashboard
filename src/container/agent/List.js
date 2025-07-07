@@ -54,7 +54,7 @@ const ListDrivers = ({ text, data }) => {
     setOpenU(true);
   };
   const [selectedRows, setSelectedRows] = useState([]);
-  // console.log(selectedRows);
+ 
   const handleSelectAll = (checked) => {
     if (checked) {
       const allIds = users.map((value) => value.id);
@@ -75,7 +75,7 @@ const ListDrivers = ({ text, data }) => {
   };
 
   useEffect(() => {
-    dispatch(getAdmins({ page: 1, pageSize: 10, text: text })); // Dispatch the action to get users
+    dispatch(getAgent({ page: 1, pageSize: 10, text: text })); // Dispatch the action to get users
   }, [dispatch, text]);
 
   const columns = [

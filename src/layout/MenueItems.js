@@ -212,14 +212,14 @@ const MenuItems = ({ darkMode, toggleCollapsed, topMenu }) => {
                     Logistique
                   </NavLink>
                 </Menu.Item>
-                <Menu.Item key="newDriver">
+                {/* <Menu.Item key="newDriver">
                   <NavLink
                     onClick={toggleCollapsed}
                     to={`${path}/newDriver/view`}
                   >
                     New Driver
                   </NavLink>
-                </Menu.Item>
+                </Menu.Item> */}
               </SubMenu>
             )}
             <SubMenu
@@ -303,7 +303,7 @@ const MenuItems = ({ darkMode, toggleCollapsed, topMenu }) => {
                         onClick={toggleCollapsed}
                         to={`${path}/param/view`}
                       >
-                        param
+                        Calcule de temps d’attente
                       </NavLink>
                     </Menu.Item>
                     <Menu.Item key="views">
@@ -311,7 +311,7 @@ const MenuItems = ({ darkMode, toggleCollapsed, topMenu }) => {
                         onClick={toggleCollapsed}
                         to={`${path}/Calcule/view`}
                       >
-                        Calcule
+                        Calcul des prix
                       </NavLink>
                     </Menu.Item>
                   </>

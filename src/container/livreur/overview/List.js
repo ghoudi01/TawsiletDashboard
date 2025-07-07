@@ -16,6 +16,8 @@ import FeatherIcon from "feather-icons-react";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import * as XLSX from "xlsx";
+import { database } from '../../../config/firebase';
+import { ref, remove } from 'firebase/database';
 
 import { Dropdown } from "../../../components/dropdown/dropdown";
 import { ProjectListTitle } from "../style";
@@ -27,12 +29,15 @@ import ChangeDriverInfo from "../../commandes/overview/ChangeDriverInfo";
 import AssigneVehicule from "./AssigneVehicule";
 import ChangeCompany from "./ChangeCompany";
 import Loader from "../../../components/loaderLine/Loader";
+import AssignParentDriver from "./AssignParentDriver";
 
 import valid from "../../../static/img/Glyph.svg";
 import invalid from "../../../static/img/refuse.svg";
 import wait from "../../../static/img/wait.svg";
-import { DivIcon } from "leaflet";
-
+import {
+  
+  updateVehicule,
+} from "../../../redux/vehicule/vehiculeSlice";
 const Livreur = ({
   text,
   shouldPrint,
@@ -48,12 +53,13 @@ const Livreur = ({
    const userRole = useSelector((state) => state?.user?.currentUser?.user_role);
   const current = useSelector((state) => state?.user?.currentUser);
   const isLoading = useSelector((state) => state?.user?.isLoading);
-  console.log(users, "users==========123");
+ 
   const [selectedRows, setSelectedRows] = useState([]);
   const [open, setOpen] = useState(false);
   const [openUpdate, setOpenUpdate] = useState(false);
   const [openAdd, setOpenAdd] = useState(false);
   const [openChangeCompany, setOpenChangeCompany] = useState(false);
+  const [openAssignParent, setOpenAssignParent] = useState(false);
   const [modalId, setmodalId] = useState();
   const [driverDetais, setDriverDetais] = useState();
   const [ping, setPing] = useState(false);
@@ -68,6 +74,57 @@ const Livreur = ({
     { value: "Activer", label: "Activer" },
     { value: "Désactiver", label: "Désactiver" },
   ];
+
+
+ const handlerUpdatePro=async(checked,record)=>{
+
+if(checked===false)
+  {
+    
+    for (const x of record.sub_drivers || []) {
+    await dispatch(
+      updateUser({
+        id: x?.id,
+        user: { vehicule: null },
+      })
+    );
+  }
+  
+  for (const x of record.vehicules || []) {
+    
+      await dispatch(
+        updateVehicule({
+          id: x?.documentId,
+          vehicule: { data:{driver: null} },
+        })
+      );
+   
+  }
+  
+  await dispatch(
+    updateUser({
+      id: record.id,
+      user: { sub_drivers: [],vehicule:null,vehicules:[] },
+    })
+    
+  )
+}
+ 
+ 
+ await dispatch(
+    updateUser({
+      id: record.id,
+      user: { pro: checked },
+    })
+    
+  )
+
+  
+
+  dispatch(getDriver({}));
+ 
+
+  }
 
   // Handlers
   const handleSelectAll = (checked) => {
@@ -84,6 +141,7 @@ const Livreur = ({
     setOpenUpdate(false);
     setOpenChangeCompany(false);
     setOpenAdd(false);
+    setOpenAssignParent(false);
   };
 
   const onShowSizeChange = (current, pageSize) => {
@@ -173,6 +231,7 @@ const Livreur = ({
       item.validation,
       item.driver_company.name,
       item.pro,
+
     ]);
     doc.autoTable({
       head: [tableColumnNames],
@@ -272,15 +331,7 @@ const Livreur = ({
         </ProjectListTitle>
       ),
     },
-    // {
-    //   id: "cin",
-    //   title: "numéro de carte d'identité",
-    //   render: (_, record) => (
-    //     <ProjectListTitle>
-    //       <p>{record.cin}</p>
-    //     </ProjectListTitle>
-    //   ),
-    // },
+ 
     {
       id: "pro",
       title: "pro",
@@ -289,15 +340,8 @@ const Livreur = ({
           <Switch
             checked={record?.pro}
             onChange={(checked) => {
-              console.log(checked, "====checked=", record.id);
-              dispatch(
-                updateUser({
-                  id: record.id,
-                  user: { pro: checked },
-                })
-              ).then(() => {
-                dispatch(getDriver({}));
-              });
+              handlerUpdatePro(checked,record)
+            
             }}
           />
         </ProjectListTitle>
@@ -315,11 +359,12 @@ const Livreur = ({
       key: "more",
     },
   ];
-  console.log(users,"========>>>>>");
+ 
   // Data source for the table
   const dataSource = users?.map((value) => ({
     key: value.id,
     id: value.id,
+    documentId:value.documentId,
     firstName: value?.firstName,
     lastName: value?.lastName,
     phoneNumber: value?.phoneNumber,
@@ -328,6 +373,9 @@ const Livreur = ({
     validation: value?.validation?.validation_state,
     company: value?.driver_company?.name,
     pro:value?.pro,
+    sub_drivers:value?.sub_drivers,
+    vehicules:value?.vehicules,
+    vehicule:value?.vehicule,
     more: (
       <Dropdown
         className="wide-dropdwon"
@@ -342,7 +390,15 @@ const Livreur = ({
             >
               Assigner Voiture
             </Link>
-           
+          {!value?.pro&&(  <Link
+              onClick={() => {
+                setOpenAssignParent(true);
+                setDriverDetais(value);
+              }}
+              to="#"
+            >
+              Assigner au parent driver
+            </Link>)}
             <Link
               onClick={() => {
                 setOpen(true);
@@ -364,17 +420,27 @@ const Livreur = ({
             {(userRole === "owner" || userRole === "admin") && (
               <Link
                 to="#"
-                onClick={(e) => {
+                onClick={async (e) => {
                   Modal.confirm({
                     title: "Confirmation D'action",
                     content: "Etes vous sure de vouloir Suprimer cet client?",
                     okText: "Oui",
                     okType: "danger",
                     cancelText: "Annuler",
-                    onOk() {
-                      dispatch(usersDel(value.id)).then(() => {
+                    async onOk() {
+                      try {
+                        // Delete from Firebase
+                        if (value.documentId) {
+                          const driverRef = ref(database, `drivers/${value.documentId}`);
+                          await remove(driverRef);
+                        }
+                        // Delete from main DB
+                        await dispatch(usersDel(value.id));
                         dispatch(getDriver({}));
-                      });
+                      } catch (err) {
+                        // Optionally handle error
+                        console.error('Error deleting driver:', err);
+                      }
                     },
                     onCancel() {
                       dispatch(getDriver({}));
@@ -394,46 +460,19 @@ const Livreur = ({
       </Dropdown>
     ),
     action: (
-      <div style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
-        <SelectGm
-          options={selectOptions}
-          placeholder={value?.blocked ? "Désactiver" : "Activer"}
-          onSelect={() => {
-            Modal.confirm({
-              title: "Confirmation D'action",
-              content: "Etes vous sure de vouloir changer le statut de cet client?",
-              okText: "Oui",
-              okType: "danger",
-              cancelText: "Annuler",
-              onOk() {
-                dispatch(
-                  updateUser({
-                    id: value.id,
-                    user: { blocked: !value.blocked },
-                  })
-                ).then(() => {
-                  dispatch(getDriver({}));
-                });
-              },
-              onCancel() {
-                dispatch(getDriver({}));
-              },
-            });
-          }}
-          active={value.blocked}
-        />
+      <div style={{ display: "flex", justifyContent: "space-between", gap: "10px", }}>
+        
         {value?.validation?.validation_state === "waiting" ? (
-          <img src={wait} style={{ width: "10%" }} alt="waiting" />
+          <img src={wait} style={{ width: "50%" }} alt="waiting" />
         ) : value?.validation?.validation_state === "valid" ? (
-          <img src={valid} style={{ width: "10%" }} alt="valid" />
+          <img src={valid} style={{ width: "50%" }} alt="valid" />
         ) : (
-          <img src={invalid} style={{ width: "10%" }} alt="invalid" />
+          <img src={wait} style={{ width: "50%" }} alt="invalid" />
         )}
       </div>
     ),
   }));
-console.log("==========================")
-console.log(dataSource);
+ 
   // Effects
   useEffect(() => {
     dispatch(
@@ -467,6 +506,8 @@ console.log(dataSource);
         {isLoading && <Loader />}
         <Cards headless>
           <div className="table-responsive">
+
+            
             <Table
               className="table-striped-rows"
               pagination={{
@@ -513,6 +554,16 @@ console.log(dataSource);
           record={modalId}
           visible={openChangeCompany}
           onCancel={onCancel}
+        />
+      )}
+
+      {openAssignParent && (
+        <AssignParentDriver
+          record={modalId}
+          visible={openAssignParent}
+          onCancel={onCancel}
+          driverDetais={driverDetais}
+          usersList={users?.filter(u => u.pro)}
         />
       )}
     </Row>

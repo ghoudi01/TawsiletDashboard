@@ -194,7 +194,7 @@ const Agent = ({ text }) => {
       pageSize: pagination.pageSize,
     }));
   };
-// console.log(users, "===============users>");
+ 
   // company
   const dataCompany =
     users
@@ -395,7 +395,7 @@ const Agent = ({ text }) => {
         </Dropdown>
       ),
     })) || [];
-  // console.log("tessssst", open);
+ 
   return (
     <>
       <Row gutter={25}>

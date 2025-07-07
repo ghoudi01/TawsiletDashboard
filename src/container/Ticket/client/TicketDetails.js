@@ -86,7 +86,7 @@ const TicketDetails = ({ match }) => {
   useEffect(() => {
     dispatch(getTicketById(id))
       .then(() => {
-        console.log("Updated ticket:", currentTicket);
+       
       })
       .catch((err) => console.log(err));
   }, [id, dispatch]);
@@ -164,11 +164,11 @@ const TicketDetails = ({ match }) => {
                 >
                   <h3 style={{ fontWeight: "600" }}>Coordonnées de Client:</h3>
                   <p>
-                    Nom: {currentTicket?.user?.firstName}{" "}
-                    {currentTicket?.user?.lastName}
+                    Nom: {currentTicket?.client?.firstName}{" "}
+                    {currentTicket?.client?.lastName}
                   </p>
-                  <p>Tel: {currentTicket?.user?.phoneNumber}</p>
-                  <p>Email: {currentTicket?.user?.email}</p>
+                  <p>Tel: {currentTicket?.client?.phoneNumber}</p>
+                  <p>Email: {currentTicket?.client?.email}</p>
                 </CardBody>
               </CardBody>
             </CardContainer>

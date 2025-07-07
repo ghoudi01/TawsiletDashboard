@@ -100,7 +100,6 @@ function ProviderConfig() {
       }
 
       try {
-        console.log("Initializing OneSignal...");
         await OneSignal.init({
           appId: "98d2fea4-c2aa-481f-8c11-052086f72209",
           safari_web_id:
@@ -110,22 +109,15 @@ function ProviderConfig() {
             enable: true,
           },
         });
-        console.log("OneSignal initialized.");
 
         // Check if the user is already subscribed
         if (OneSignal.length) {
           const isSubscribed = await OneSignal.isPushNotificationsEnabled();
-          console.log("Subscription status:", isSubscribed);
 
           if (!isSubscribed) {
             try {
-              console.log("Requesting push notification permission...");
               await OneSignal.registerForPushNotifications();
-              console.log("Push notification permission granted.");
-
-              console.log("Logging in user to OneSignal...");
               await OneSignal.login(String(currentUser?.documentId));
-              console.log("User logged in to OneSignal.");
             } catch (error) {
               console.error("Error during subscription or login:", error);
             }

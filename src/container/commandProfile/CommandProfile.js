@@ -106,15 +106,14 @@ const CommandProfile = ({ match }) => {
     const directionsService = new google.maps.DirectionsService();
     Geocode.setApiKey(process.env.REACT_APP_GOOGLE_MAPS_API_KEY);
 
-    // console.log(destinationPositionAddress);
+ 
     const results = await directionsService.route({
       origin: depart, //|| originPosition,
       destination: arrivee, // || destinationPosition ,
       // eslint-disable-next-line no-undef
       travelMode: google.maps.TravelMode.DRIVING,
     });
-    // console.log(results);
-    // newResult = results?.routes[0]?.bounds?.Oa.hi + 0.3;
+   
 
     const routeBounds = results?.routes[0]?.bounds;
 
@@ -137,8 +136,7 @@ const CommandProfile = ({ match }) => {
     }
 
     setDirectionsResponse(results);
-    // console.log(results);
-    // Update the center of the map after calculating the direction
+  
   }
 
   const dispatch = useDispatch();
@@ -195,7 +193,7 @@ const CommandProfile = ({ match }) => {
                 }}
                 onZoomChanged={() => {
                   if (map) {
-                    // console.log(map.getZoom());
+                 
                   }
                 }}
                 mapContainerClassName="mapcadre"
@@ -257,7 +255,7 @@ const CommandProfile = ({ match }) => {
                   </Status>
                 </div>
 
-                {command?.commandStatus === CommandStatus.PENDING && (
+                {command?.driver === null && (
                   <Button
                     style={{ paddingInline: 8, borderRadius: 8 }}
                     className="btn__reserver_negative"
@@ -594,11 +592,7 @@ const CommandProfile = ({ match }) => {
                 <p>Durée du voyage:</p>
                 <h4 className="grayText"> {command?.duration}</h4>
                 <p>Date de départ</p>
-                <h4 className="grayText">
-                  {command?.departDate} à {command?.deparTime.slice(0, 5)}
-                </h4>
-                {/* <p>Heure de départ</p>
-                 <h4>{command?.deparTime}</h4> */}
+            
               </CardContainer>
               <Divider />
               <CardContainer

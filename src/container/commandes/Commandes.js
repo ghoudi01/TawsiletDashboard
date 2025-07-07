@@ -34,10 +34,9 @@ function Commandes({ match }) {
     );
   }, [dispatch, filters]);
 
-  const commands = useSelector((state) => state?.reservations?.commands?.nodes);
-
-
-  const meta = useSelector((state) => state?.reservations?.commands?.pageInfo);
+  const commands = useSelector((state) => state?.reservations?.commands?.data);
+ 
+  const meta = useSelector((state) => state?.reservations?.commands?.meta?.pagination);
   // const currentId = useSelector((state) => state?.user?.currentUser?.id);
   const [dateFilter, setDateFilter] = useState({
     startDate: null,
@@ -81,48 +80,7 @@ function Commandes({ match }) {
     }
   };
 
-  //  const [state, setState] = useState({
-  //    notData: searchData,
-  //  visible: false,
-  //  categoryActive: "all",
-  // });
-
-  // const { notData, visible } = state;
-  // const handleSearch = (searchText) => {
-  //   const data = searchData.filter((item) =>
-  //     item.title.toUpperCase().startsWith(searchText.toUpperCase())
-  //   );
-  //   setState({
-  //     ...state,
-  //     notData: data,
-  //   });
-  // };
-
-  // const onSorting = (selectedItems) => {
-  //   dispatch(sortingProjectByCategory(selectedItems));
-  // };
-
-  // const onChangeCategory = (value) => {
-  //   setState({
-  //     ...state,
-  //     categoryActive: value,
-  //   });
-  //   dispatch(filterProjectByStatus(value));
-  // };
-
-  // const showModal = () => {
-  //   setState({
-  //     ...state,
-  //     visible: true,
-  //   });
-  // };
-
-  // const onCancel = () => {
-  //   setState({
-  //     ...state,
-  //     visible: false,
-  //   });
-  // };
+ 
 
   const handleFilterClick = (filter) => {
     setActiveFilter(filter);
@@ -146,10 +104,7 @@ function Commandes({ match }) {
         />
       </ProjectHeader>
       <FilterBar
-      // setFilterStatus={setFilterStatus}
-      // setTextFilter={setTextFilter}
-      // setDateSortBy={setDateSortBy}
-      // withSort={true}
+     
       >
         <ul>
           <Link to="#" onClick={() => handleFilterClick("")}>

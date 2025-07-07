@@ -129,25 +129,7 @@ const Livreur = ({
   }, [dispatch, text]);
 
   const columns = [
-    // {
-    //   title: () => (
-    //     <Checkbox
-    //       onChange={(e) => handleSelectAll(e.target.checked)}
-    //       indeterminate={
-    //         selectedRows?.length > 0 && selectedRows?.length < tickets?.length
-    //       }
-    //       checked={selectedRows?.length === tickets?.length}
-    //     />
-    //   ),
-    //   dataIndex: "refNumber",
-    //   key: "checkbox",
-    //   render: (refNumber) => (
-    //     <Checkbox
-    //       onChange={(e) => handleSelectRow(e.target.checked, refNumber)}
-    //       checked={selectedRows.includes(refNumber)}
-    //     />
-    //   ),
-    // },
+   
 
     {
       id: "refNumber",
@@ -194,45 +176,14 @@ const Livreur = ({
         </ProjectListTitle>
       ),
     },
-    // {
-    //   id: "attachment",
-    //   title: "Attachment",
-    //   dataIndex: "attachment",
-    //   render: (text, record) => {
-    //     const attachment = record?.attachment;
-    //     if (!attachment) {
-    //       return <span>No attachment</span>;
-    //     }
-
-    //     // Check if the attachment is an image or video
-    //     const isImage = attachment.type?.startsWith("image");
-    //     const isVideo = attachment.type?.startsWith("video");
-
-    //     if (isImage) {
-    //       return (
-    //         <img
-    //           src={attachment.url}
-    //           alt="Attachment"
-    //           style={{ width: "100px", height: "auto" }}
-    //         />
-    //       );
-    //     } else if (isVideo) {
-    //       return (
-    //         <video controls style={{ width: "100px", height: "auto" }}>
-    //           <source src={attachment.url} type={attachment.type} />
-    //           Your browser does not support the video tag.
-    //         </video>
-    //       );
-    //     } else {
-    //       return <span>Unsupported attachment type</span>;
-    //     }
-    //   },
-    // },
+  
     {
       id: "driver",
       title: "Livreur",
       dataIndex: "driver",
-      render: (text, record) => (
+      render: (text, record) => {
+        
+        return(
         <ProjectListTitle>
           <span className="date-finished">
             {record?.user?.firstName || "N/A"}
@@ -241,7 +192,7 @@ const Livreur = ({
             {record?.user?.lastName || "N/A"}
           </span>
         </ProjectListTitle>
-      ),
+      )},
     },
     {
       id: "Numéro de téléphone",
@@ -321,7 +272,7 @@ const Livreur = ({
       pageSize: pagination.pageSize,
     }));
   };
-
+ 
   const dataSource =
     tickets?.map((value) => ({
       key: value.id,
@@ -333,7 +284,7 @@ const Livreur = ({
       client: value.client,
       createdAt: value.createdAt,
       action: value.action,
-      user: value.user,
+      user: value.client,
     })) || [];
 
   return (

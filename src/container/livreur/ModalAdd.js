@@ -13,6 +13,7 @@ import {
   Image,
   Alert,
   Input,
+  Select,
 } from "antd";
 import {
   UploadOutlined,
@@ -42,6 +43,7 @@ function ModalAdd({ visible, onCancel }) {
     email: "",
     phone: "",
     password: "",
+    region: "",
   });
 
   const [fileList, setFileList] = useState({
@@ -103,7 +105,7 @@ function ModalAdd({ visible, onCancel }) {
   const validateStep = (step) => {
     if (step === 0) {
       // Validate personal info fields
-      const { firstName, lastName, email, phone, password } = formData;
+      const { firstName, lastName, email, phone, password, region } = formData;
       if (!firstName.trim()) return "First name is required";
       if (!lastName.trim()) return "Last name is required";
       if (!email.trim()) return "Email is required";
@@ -113,6 +115,7 @@ function ModalAdd({ visible, onCancel }) {
       if (!phone.trim()) return "Phone number is required";
       if (!password) return "Password is required";
       if (password.length < 6) return "Password must be at least 6 characters";
+      if (!region) return "Region is required";
     }
     if (step === 1) {
       // Validate files uploaded
@@ -181,7 +184,8 @@ function ModalAdd({ visible, onCancel }) {
         licenceBack,
         username: formData.email,
         confirmed: true,
-        username:formData.lastName+" "+ formData.firstName,
+        phoneNumber:formData.phone
+     //   username:formData.lastName+" "+ formData.firstName,
       };
 
       await dispatch(registerDriver(driverData)).unwrap();
@@ -236,6 +240,7 @@ function ModalAdd({ visible, onCancel }) {
       email: "",
       phone: "",
       password: "",
+      region: "",
     });
     setFileList({
       cinFront: [],
@@ -318,6 +323,37 @@ function ModalAdd({ visible, onCancel }) {
 }
 
 function PersonalInfoForm({ data, onChange }) {
+  const regions = [
+    "Ariana",
+    "Beja",
+    "Ben Arous",
+    "Bizerte",
+    "Gabes",
+    "Gafsa",
+    "Jendouba",
+    "Kairouan",
+    "Kasserine",
+    "Kebili",
+    "Kef",
+    "Mahdia",
+    "Manouba",
+    "Medenine",
+    "Monastir",
+    "Nabeul",
+    "Sfax",
+    "Sidi Bouzid",
+    "Siliana",
+    "Sousse",
+    "Tataouine",
+    "Tozeur",
+    "Tunis",
+    "Zaghouan",
+  ];
+
+  const handleSelectChange = (value) => {
+    onChange({ target: { name: "region", value } });
+  };
+
   return (
     <>
       <InputWithLabel
@@ -352,6 +388,13 @@ function PersonalInfoForm({ data, onChange }) {
         onChange={onChange}
         placeholder="Phone Number"
         prefix={<PhoneOutlined />}
+      />
+      <SelectWithLabel
+        label="Region"
+        value={data.region}
+        onChange={handleSelectChange}
+        placeholder="Select Region"
+        options={regions.map(region => ({ value: region, label: region }))}
       />
       <InputWithLabel
         label="Password"
@@ -436,6 +479,9 @@ function ConfirmationStep({ values, fileList }) {
       <p>
         <strong>Phone:</strong> {values.phone}
       </p>
+      <p>
+        <strong>Region:</strong> {values.region}
+      </p>
       <Divider />
       <Title level={5}>Documents</Title>
       <Row gutter={16}>
@@ -487,6 +533,7 @@ function ConfirmationStep({ values, fileList }) {
     </div>
   );
 }
+
 function InputWithLabel({ label, name, value, onChange, placeholder, prefix, type = "text" }) {
   const isPassword = type === "password";
 
@@ -516,6 +563,23 @@ function InputWithLabel({ label, name, value, onChange, placeholder, prefix, typ
           type={type}
         />
       )}
+    </div>
+  );
+}
+
+function SelectWithLabel({ label, value, onChange, placeholder, options }) {
+  return (
+    <div style={{ marginBottom: 16 }}>
+      <label style={{ display: "block", marginBottom: 4, fontWeight: "bold" }}>
+        {label}
+      </label>
+      <Select
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        options={options}
+        style={{ width: "100%" }}
+      />
     </div>
   );
 }

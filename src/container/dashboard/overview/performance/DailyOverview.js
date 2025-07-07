@@ -7,9 +7,11 @@ import { Cards } from "../../../../components/cards/frame/cards-frame";
 import Heading from "../../../../components/heading/heading";
 import { Button } from "../../../../components/buttons/buttons";
 import { addHistorique, getHistorique } from "../../../../redux/chartContent/chartSlice";
+import AddHistorique from "../../Finance/AddHistorique";
 
 function DailyOverview({ periodeFilter, sharedData, settaille, commision }) {
   const dispatch = useDispatch();
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   // Fetch historique data when periodeFilter or sharedData changes
   useEffect(() => {
@@ -22,15 +24,18 @@ function DailyOverview({ periodeFilter, sharedData, settaille, commision }) {
   }));
 
   const [totalH, settotalH] = useState(0);
+  console.log("historique",historique)
 
+ 
   // Calculate totalH (net balance)
   useEffect(() => {
     if (historique && sharedData) {
+   
       const payed = historique
-        ?.filter((el) => el?.sender?.data?.id === sharedData?.companyId.id)
+        ?.filter((el) => el?.sender?.id === sharedData?.companyId?.id)
         .reduce((acc, obj) => acc + obj.sold, 0);
       const recieved = historique
-        ?.filter((el) => el?.reciever?.data?.id === sharedData?.companyId.id)
+        ?.filter((el) => el?.reciever?.id === sharedData?.companyId?.id)
         .reduce((acc, obj) => acc + obj.sold, 0);
 
       settotalH(payed - recieved);
@@ -39,29 +44,7 @@ function DailyOverview({ periodeFilter, sharedData, settaille, commision }) {
 
   // Handle settling the balance
   const handleSettle = (amount) => {
-    Modal.confirm({
-      title: "Confirmation D'action",
-      content: "Êtes-vous sûr de vouloir régler ce montant ?",
-      okText: "Oui",
-      okType: "danger",
-      cancelText: "Annuler",
-      onOk() {
-        dispatch(
-          addHistorique({
-            data: {
-              sender: amount > 0 ? 227 : sharedData?.companyId?.id,
-              reciever: amount > 0 ? sharedData?.companyId?.id : 227,
-              sold: Math.abs(amount),
-              transactionType: amount > 0 ? "outcomes" : "incomes",
-              payType: "virement",
-            },
-          })
-        ).then(() => {
-          message.success("Solde réglé avec succès !");
-          dispatch(getHistorique({ periodeFilter })); // Refresh historique data
-        });
-      },
-    });
+    setIsModalVisible(true);
   };
 
   if (!sharedData) {
@@ -69,12 +52,17 @@ function DailyOverview({ periodeFilter, sharedData, settaille, commision }) {
   }
 
   const netBalance =
-    (sharedData?.details?.totalbalance * (100 - commision)) / 100 -
+    (sharedData?.details?.totalbalance * (100 - 15)) / 100 -
     sharedData?.details?.totalLivraison +
     totalH;
-
-  return (
+   return (
     <OverviewCard color={(netBalance >= 0).toString()}>
+      <AddHistorique 
+        visible={isModalVisible}
+        onCancel={() => setIsModalVisible(false)}
+        defaultAmount={Math.abs(netBalance)}
+        defaultDriverId={sharedData?.companyId?.id}
+      />
       <div className="d-flex align-items-center justify-content-between overview-head">
         <Heading as="h4">{sharedData?.companyId?.name}</Heading>
         <Button onClick={() => settaille(24)}>
@@ -130,7 +118,7 @@ function DailyOverview({ periodeFilter, sharedData, settaille, commision }) {
               >
                 <span style={{ fontSize: 20 }}>
                   <span style={{ color: "red" }}>
-                    {sharedData?.companyId?.name}
+                    {sharedData?.companyId?.firstName+" "+sharedData?.companyId?.lastName}
                   </span>{" "}
                   doit vous verser
                 </span>

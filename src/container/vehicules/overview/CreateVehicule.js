@@ -34,7 +34,6 @@ import face3 from "../../../static/img/right.png";
 import face4 from "../../../static/img/back.png";
 import assurancePictures1 from "../../../static/img/assurancePictures.png";
 import grayCardPictures from "../../../static/img/grayCardPictures.jpeg";
-import grayCardPicturesBack from "../../../static/img/grayCardPicturesBack.jpg";
 import moment from "moment";
 
 const CreateVehicule = ({ visible, onCancel }) => {
@@ -81,7 +80,7 @@ const CreateVehicule = ({ visible, onCancel }) => {
   const fileListvehiculePictureface4 = [];
   const fileListassurancePictures = [];
   const fileListgrayCardPictures = [];
-  const fileListgrayCardPicturesBack = [];
+ 
   const [image, setimage] = useState();
 
   // upload file vehiculePictureface1
@@ -91,8 +90,7 @@ const CreateVehicule = ({ visible, onCancel }) => {
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
 
-    // console.log("file", file);
-    const formData = new FormData();
+     const formData = new FormData();
 
     formData.append("files", file);
     try {
@@ -155,8 +153,7 @@ const CreateVehicule = ({ visible, onCancel }) => {
     // .target.files[0];
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
-
-    // console.log("file", file);
+ 
     const formData = new FormData();
 
     formData.append("files", file);
@@ -221,8 +218,7 @@ const CreateVehicule = ({ visible, onCancel }) => {
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
 
-    // console.log("file", file);
-    const formData = new FormData();
+     const formData = new FormData();
 
     formData.append("files", file);
     try {
@@ -285,8 +281,7 @@ const CreateVehicule = ({ visible, onCancel }) => {
     // .target.files[0];
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
-
-    // console.log("file", file);
+ 
     const formData = new FormData();
 
     formData.append("files", file);
@@ -351,8 +346,7 @@ const CreateVehicule = ({ visible, onCancel }) => {
     // .target.files[0];
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
-
-    // console.log("file", file);
+ 
     const formData = new FormData();
 
     formData.append("files", file);
@@ -418,8 +412,7 @@ const CreateVehicule = ({ visible, onCancel }) => {
     // .target.files[0];
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
-
-    // console.log("file", file);
+ 
     const formData = new FormData();
 
     formData.append("files", file);
@@ -478,15 +471,12 @@ const CreateVehicule = ({ visible, onCancel }) => {
       removeIcon: <FeatherIcon icon="trash-2" />,
     },
   };
-  const handleFileSelect4 = async (e) => {
+
+  // upload file for grayCardPictureBack
+  const handleFileSelectGrayBack = async (e) => {
     const file = e;
-    // .target.files[0];
-
-    const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
-
-    // console.log("file", file);
+    const isLt2MB = file.size / 1024 / 1024 < 1;
     const formData = new FormData();
-
     formData.append("files", file);
     try {
       const response = await axios.post(
@@ -500,44 +490,36 @@ const CreateVehicule = ({ visible, onCancel }) => {
           ...prevState,
           data: {
             ...prevState.data,
-            grayCardPicturesBack: imageUrl,
+            grayCardPictureBack: imageUrl,
           },
         }));
-
         message.success("Fichier téléchargé avec succès.");
       } else {
         message.error("Le téléchargement du fichier a échoué.");
       }
     } catch (error) {
-      console.log(error)
       message.error("Le téléchargement du fichier a échoué.");
     }
   };
-
-  const fileUploadProps4 = {
+  const fileUploadPropsGrayBack = {
     name: "files",
     multiple: false,
     beforeUpload: (file) => {
-      handleFileSelect4(file);
+      handleFileSelectGrayBack(file);
       return false;
     },
-
     onChange(info) {
       const { status } = info.file;
-
       if (status !== "uploading") {
         setimage({ ...image, file: info.file, list: info.fileList });
       }
       if (status === "done") {
         message.success(`${info.file.name} Fichier téléchargé avec succès.`);
       } else if (status === "error") {
-        message.error(
-          `${info.file.name} "Le téléchargement du fichier a échoué.`
-        );
+        message.error(`${info.file.name} Le téléchargement du fichier a échoué.`);
       }
     },
     listType: "picture",
-    defaultFileList: fileListgrayCardPicturesBack,
     showUploadList: {
       showRemoveIcon: true,
       removeIcon: <FeatherIcon icon="trash-2" />,
@@ -556,6 +538,7 @@ const CreateVehicule = ({ visible, onCancel }) => {
     
       assurancePictures: null,
       grayCardPictures: null,
+      grayCardPictureBack: null,
       vehiculePictureface1: null,
       vehiculePictureface2: null,
       vehiculePictureface3: null,
@@ -619,6 +602,7 @@ const CreateVehicule = ({ visible, onCancel }) => {
     const {
       assurancePictures,
       grayCardPictures,
+      grayCardPictureBack,
       vehiculePictureface1,
       vehiculePictureface2,
       vehiculePictureface3,
@@ -632,6 +616,9 @@ const CreateVehicule = ({ visible, onCancel }) => {
     }
     if (!grayCardPictures) {
       errors.grayCardPictures = "Veuillez choisier une Image.";
+    }
+    if (!grayCardPictureBack) {
+      errors.grayCardPictureBack = "Veuillez choisir l'image du verso de la carte grise.";
     }
     if (!vehiculePictureface1) {
       errors.vehiculePictureface1 = "Veuillez choisier une Image.";
@@ -1070,30 +1057,16 @@ const CreateVehicule = ({ visible, onCancel }) => {
                 <Row gutter={15}>
                   <Col xs={24}>
                     <div className="add-product-content">
-                      <Cards title="Carte Grise">
+                      <Cards title="Carte Grise (Recto)">
                         <Dragger {...fileUploadProps3}>
-                          <p
-                            className="ant-upload-drag-icon"
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: "20px",
-                            }}
-                          >
-                            <h3 className="company_details_main_title">
-                              grayCard Pictures
-                            </h3>
+                          <p className="ant-upload-drag-icon" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "20px" }}>
+                            <h3 className="company_details_main_title">grayCard Pictures</h3>
                             <img src={grayCardPictures} width={"30%"} />
-                            <FeatherIcon icon="upload" size={50} />{" "}
+                            <FeatherIcon icon="upload" size={50} />
                           </p>
                         </Dragger>
                         {PicturesErrors.grayCardPictures && (
-                          <p
-                            className="error__message"
-                            style={{ color: "red" }}
-                          >
+                          <p className="error__message" style={{ color: "red" }}>
                             {PicturesErrors.grayCardPictures}
                           </p>
                         )}
@@ -1108,31 +1081,16 @@ const CreateVehicule = ({ visible, onCancel }) => {
                 <Row gutter={15}>
                   <Col xs={24}>
                     <div className="add-product-content">
-                      <Cards title="Carte Grise Back">
-                        <Dragger {...fileUploadProps4}>
-                          <p
-                            className="ant-upload-drag-icon"
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: "20px",
-                            }}
-                          >
-                            <h3 className="company_details_main_title">
-                              grayCard Pictures Back
-                            </h3>
-                            <img src={grayCardPicturesBack} width={"30%"} />
-                            <FeatherIcon icon="upload" size={50} />{" "}
+                      <Cards title="Carte Grise (Verso)">
+                        <Dragger {...fileUploadPropsGrayBack}>
+                          <p className="ant-upload-drag-icon" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "20px" }}>
+                            <h3 className="company_details_main_title">grayCard Picture Back</h3>
+                            <FeatherIcon icon="upload" size={50} />
                           </p>
                         </Dragger>
-                        {PicturesErrors.grayCardPicturesBack && (
-                          <p
-                            className="error__message"
-                            style={{ color: "red" }}
-                          >
-                            {PicturesErrors.grayCardPicturesBack}
+                        {PicturesErrors.grayCardPictureBack && (
+                          <p className="error__message" style={{ color: "red" }}>
+                            {PicturesErrors.grayCardPictureBack}
                           </p>
                         )}
                       </Cards>
@@ -1141,6 +1099,7 @@ const CreateVehicule = ({ visible, onCancel }) => {
                 </Row>
               </div>
             </AddProductForm>
+           
           </ImportStyleWrap>
         </form>
       ),
@@ -1156,58 +1115,52 @@ const CreateVehicule = ({ visible, onCancel }) => {
   };
 
   return (
-    <>
-      <Modal
-        type={state.modalType}
-        title="Ajouter Vehicule... "
-        visible={state.visible}
-        width={700}
-        footer={null}
-        onCancel={handleCancel}
-      >
-        <>
-          <Steps current={current} items={items} />
-          <div style={contentStyle}>{steps[current].content}</div>
-          <div style={{ marginTop: 24 }}>
-            {current < steps.length - 1 && (
-              <>
-                <div className="Horizontal_btn">
-                  <Button
-                    size="default"
-                    type="primary"
-                    key="submit"
-                    onClick={next}
-                    className="btn_Suivant"
-                  >
-                    Suivant
-                  </Button>
-                </div>
-              </>
-            )}
-            <div className="Horizontal_btn">
-              {current > 0 && (
-                <Button
-                  style={{ margin: "0 8px" }}
-                  onClick={prev}
-                  className="btn_Suivant"
-                >
-                  Retour
-                </Button>
-              )}
-              {current === steps.length - 1 && (
-                <Button
-                  type="primary"
-                  className="btn_Suivant"
-                  onClick={handleUpload}
-                >
-                  Sauvegarder
-                </Button>
-              )}
-            </div>
+    <Modal
+      type={state.modalType}
+      title="Ajouter Vehicule... "
+      visible={state.visible}
+      width={700}
+      footer={null}
+      onCancel={handleCancel}
+    >
+      <Steps current={current} items={items} />
+      <div style={contentStyle}>{steps[current].content}</div>
+      <div style={{ marginTop: 24 }}>
+        {current < steps.length - 1 && (
+          <div className="Horizontal_btn">
+            <Button
+              size="default"
+              type="primary"
+              key="submit"
+              onClick={next}
+              className="btn_Suivant"
+            >
+              Suivant
+            </Button>
           </div>
-        </>
-      </Modal>
-    </>
+        )}
+        <div className="Horizontal_btn">
+          {current > 0 && (
+            <Button
+              style={{ margin: "0 8px" }}
+              onClick={prev}
+              className="btn_Suivant"
+            >
+              Retour
+            </Button>
+          )}
+          {current === steps.length - 1 && (
+            <Button
+              type="primary"
+              className="btn_Suivant"
+              onClick={handleUpload}
+            >
+              Sauvegarder
+            </Button>
+          )}
+        </div>
+      </div>
+    </Modal>
   );
 };
 CreateVehicule.propTypes = {

@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getItem } from '../../utility/localStorageControl';
 
-const API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT;
+const API_ENDPOINT = "https://api.tawsilet.com/api";
 
 const authHeader = () => ({
   Authorization: `Bearer ${getItem('access_token')}`,

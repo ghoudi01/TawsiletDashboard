@@ -117,7 +117,7 @@ const Reservations = ({
     { id: "id", title: "ID", dataIndex: "id" },
     {
       id: "pickupAddress",
-      title: "Adresse de ramassage",
+      title: "destination",
       dataIndex: "pickupAddress",
       render: (text, record, i) => (
         <ProjectListTitle>
@@ -128,7 +128,7 @@ const Reservations = ({
 
     {
       id: "deliveryAddress",
-      title: "Adressse de dépot",
+      title: "dépot",
       dataIndex: "deliveryAddress",
       render: (text, record) => (
         <span className="date-finished">{record?.deliveryAddress}</span>
@@ -140,10 +140,10 @@ const Reservations = ({
       title: "Date de Creation",
       dataIndex: "dateCreation",
     },
-    { id: "dateDepart", title: "Date de depart", dataIndex: "dateDepart" },
-    { id: "deparTime", title: "Heure de depart", dataIndex: "deparTime" },
-    { id: "idClient", title: "Client", dataIndex: "idClient" },
-    { id: "company", title: "Société", dataIndex: "company" },
+
+  
+    { id: "idClient", title: "Client", dataIndex: "idClient" ,},
+    { id: "driver", title: "driver", dataIndex: "driver" },
     { id: "payType", title: "Methode de paiemant", dataIndex: "payType" },
     // { id: "action", title: "", dataIndex: "action" },
     {
@@ -287,119 +287,9 @@ const Reservations = ({
       setPing(!ping);
     });
   };
-
-  // const handleActive = ({ status, value }) => {
-  //   console.log("🚀 ~ handleActive ~ value:", value);
-  //   const finalStatus = status === "Accepter" ? "Annuler" : "Accepter";
-
-  //   Modal.confirm({
-  //     title: "Confirm Change",
-  //     content:
-  //       value?.commandStatus ===
-  //       (status === "Accepter" ? "Dispatching" : "Canceled")
-  //         ? "Vous n'avez pas changer le status de cette commande ! veillez verifier votre choix"
-  //         : `Voulez vous changes du ${finalStatus} à ${status}?`,
-  //     okText: "Changer",
-  //     okType: "danger",
-  //     cancelText: "Cancel",
-  //     onOk() {
-  //       if (
-  //         value?.commandStatus ===
-  //         (status === "Accepter" ? "Dispatching" : "Canceled")
-  //       ) {
-  //       } else {
-  //         if (status === "Annuler") {
-  //           dispatch(
-  //             updateReservation({
-  //               id: value?.documentId,
-  //               data: {
-  //                 commandStatus: "Pending",
-  //                 company_id: null,
-  //                 driver_id: null,
-  //               },
-  //             })
-  //           ).then(() => {
-  //             dispatch(getCommands({
-  //               Pagination: { page: 1, pageSize: 10 },
-  //             }))
-  //             if (value?.driver_id?.documentId) {
-  //               dispatch(
-  //                 updateDriver({
-  //                   id: value?.driver_id?.documentId,
-  //                   isFree: true,
-  //                 })
-  //               );
-  //             }
-
-  //             dispatch(
-  //               sendNotification({
-  //                 id:
-  //                   role === "owner" || role === "admin"
-  //                     ? value?.company_id?.data?.id
-  //                     : 227,
-  //                 title: "Une commande a été anuulé.",
-  //                 sendFrom: {
-  //                   id: currentUser?.id,
-  //                   name: currentUser?.name,
-  //                 },
-  //                 command: value?.id,
-  //                 notification_type: "canceled",
-  //                 types: ["notification", "email"],
-  //                 smsCore: `${currentUser?.name}  a annulé la commande numéro : ${value?.refNumber}`,
-  //                 notificationCore: "vous avez une notification",
-  //                 saveNotification: true,
-  //                 template_id: "d-8b266aac7fd64f73bab6ee0c80df8dbd",
-  //                 dynamicTemplateData: {
-  //                   commandeid: value?.id,
-  //                 },
-  //               })
-  //             );
-  //             setPing(!ping);
-  //           });
-  //         } else {
-  //           dispatch(
-  //             updateReservation({
-  //               id: value?.id,
-
-  //               body: {
-  //                 data: {
-  //                   commandStatus: "Dispatched_to_partner",
-  //                 },
-  //               },
-  //             })
-  //           ).then(() => setPing(!ping));
-  //         }
-  //       }
-  //     },
-  //     onCancel() {},
-  //   });
-  // };
+ 
   const [statusselected, setstatusselected] = useState();
-  // const handleDelete = (id, value) => {
-  //   setSelectedId(id);
-
-  //   Modal.confirm({
-  //     title: "Confirm Delete",
-  //     content: "Are you sure you want to delete this item?",
-  //     okText: "Delete",
-  //     okType: "danger",
-  //     cancelText: "Cancel",
-  //     onOk() {
-  //       {
-  //         dispatch(
-  //           updateDriver({
-  //             id: value?.driver_id?.data?.id,
-  //             isFree: true,
-  //           })
-  //         );
-  //         dispatch(deleteReservation(id)).then(() => setPing(!ping));
-  //       }
-  //     },
-  //     onCancel() {
-  //       setSelectedId(null);
-  //     },
-  //   });
-  // };
+   
 
   const dataSource = reservations?.length
     ? reservations?.map((value, i) => ({
@@ -415,13 +305,13 @@ const Reservations = ({
         deparTime: value?.deparTime?.slice(0, 5),
         idClient: (
           <p className="no-margin" style={{ color: "blue" }}>
-            {value?.client_id?.firstName} {value?.client_id?.lastName}
+            {value?.client?.firstName} {value?.client?.lastName}
           </p>
         ),
-        company: (
+        driver: (
           <p className="no-margin" style={{ color: "blue" }}>
             {" "}
-            {value?.company_id?.name}
+            {value?.driver?.firstName} {value?.driver?.lastName}
           </p>
         ),
         payType: (

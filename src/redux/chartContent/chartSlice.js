@@ -10,7 +10,7 @@ export const getCommandCount = createAsyncThunk(
     try {
       const response = await axios.get(
         `${process.env.REACT_APP_BACKUP_URL}commands?pLevel=1${
-          companyId ? `&filters[company_id][id][$eq]=${companyId}` : ""
+          companyId ? `&filters[driver][id][$eq]=${companyId}` : ""
         }`,
         {
           headers: {
@@ -81,7 +81,8 @@ export const getBalance = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      console.log(error);
+      console.error("Error getting balance:", error);
+      throw error;
     }
   }
 );
@@ -115,6 +116,11 @@ export const getHistorique = createAsyncThunk(
     const formattedStartDate = startDate.toISOString().slice(0, 10);
     const formattedEndDate = endDate.toISOString().slice(0, 10);
     try {
+      console.log(`${process.env.REACT_APP_BACKUP_URL}transactions?pLevel=3&sort=createdAt:DESC${
+          periodeFilter === "all"
+            ? ""
+            : `&filters[$and][0][createdAt][$gte]=${formattedStartDate}&filters[$and][1][createdAt][$lte]=${formattedEndDate}`
+        }`)
       const response = await axios.get(
         `${process.env.REACT_APP_BACKUP_URL}transactions?pLevel=3&sort=createdAt:DESC${
           periodeFilter === "all"
@@ -129,7 +135,8 @@ export const getHistorique = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      console.log(error);
+      console.error("Error getting historique:", error);
+      throw error;
     }
   }
 );
@@ -150,7 +157,8 @@ export const addHistorique = createAsyncThunk(
       getHistorique();
       return response.data;
     } catch (error) {
-      console.log(error);
+      console.error("Error adding historique:", error);
+      throw error;
     }
   }
 );
@@ -169,7 +177,8 @@ export const deleteHistorique = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      console.log(error);
+      console.error("Error deleting historique:", error);
+      throw error;
     }
   }
 );

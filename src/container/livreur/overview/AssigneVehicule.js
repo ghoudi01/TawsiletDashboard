@@ -1,233 +1,273 @@
 import React, { useState, useEffect, useMemo } from "react";
-import {
-  Form,
-  Input,
-  Select,
-  Col,
-  Row,
-  DatePicker,
-  Badge,
-  Dropdown,
-  Menu,
-  AutoComplete,
-} from "antd";
-
-import propTypes from "prop-types";
+import { Modal, Input, List, Avatar, Pagination, Tag } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
+import propTypes, { array } from "prop-types";
 import { Button } from "../../../components/buttons/buttons";
-import { Modal } from "antd";
-import { CheckboxGroup } from "../../../components/checkbox/checkbox";
-import { BasicFormWrapper } from "../../styled";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
 import {
   getDriver,
-  getVehiculeList,
-  getusers,
   updateUser,
 } from "../../../redux/User/userSlice";
-import { useSelector } from "react-redux";
-import {
-  createNewReservation,
-  getReservations,
-  updateReservation,
-} from "../../../redux/reservations/reservationSlice.js";
-import { getVehicule } from "../../../redux/vehicule/vehiculeSlice";
-import { sendNotification } from "../../../redux/notifications/notificationSlice";
+import { updateVehicule } from "../../../redux/vehicule/vehiculeSlice";
 
-const { Option } = Select;
-const dateFormat = "MM/DD/YYYY";
+const { Search } = Input;
+
+// Custom styles
+const customStyles = {
+  searchInput: {
+    marginBottom: 20,
+  },
+  searchInputFocus: {
+    borderColor: "#dbb961",
+    boxShadow: "0 0 0 2px rgba(219, 185, 97, 0.2)",
+  },
+  selectedItem: {
+    backgroundColor: "rgba(219, 185, 97, 0.1) !important",
+    borderLeft: "3px solid #dbb961",
+  },
+  listItem: {
+    cursor: "pointer",
+    padding: "12px 24px",
+    borderBottom: "1px solid #f0f0f0",
+    transition: "all 0.3s ease",
+  },
+  listItemHover: {
+    backgroundColor: "rgba(219, 185, 97, 0.05)",
+  },
+};
 
 function AssigneVehicule({ visible, onCancel, usersList, driverDetais }) {
   const dispatch = useDispatch();
-
-  const vehicules = useSelector((state) => state?.user?.vehiculeList);
-  const drivers = useSelector((state) => state?.user?.drivers);
-  const currentId = useSelector((state) => state?.user?.currentUser?.id);
   const currentUser = useSelector((store) => store?.user?.currentUser);
 
- 
-
-  const findMatchingId = async (id) => {
-    for (const user of usersList) {
-      if (user && Array.isArray(user)) {
-        for (const account of user) {
-          if (account.vehicule_id && account.vehicule_id.id === id) {
-            const matchId = user.id;
-            if (matchId === driverDetais?.id) {
-              return;
-            } else {
-              const toUpdateBody = {
-                    vehicule_id: null,
-              };
-              await dispatch(
-                updateUser({
-                  id: matchId,
-                  user: toUpdateBody,
-                })
-              );
-            }
-          }
-        }
-      }
-    }
-    return null; // Return null if no match is found
-  };
-  const [options, setOptions] = useState([]);
-  const [selectedLabel, setSelectedLabel] = useState("");
-
-  // const [VehiculeList, setVehiculeList] = useState([]);
-  const id_societe = driverDetais?.company_id?.id;
-
-  const [toUpdate, setToUpdate] = useState({
-    
-        vehicule_id: {
-          id: driverDetais?.vehicule_id?.id,
-        },
-    
+  const [searchText, setSearchText] = useState("");
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [vehicles, setVehicles] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10,
+    total: 0
   });
 
-  // useEffect(() => {
-  //   if (vehicules && id_societe) {
-  //     setVehiculeList(
-  //       vehicules
-  //     );
-  //   }
-  // }, []);
+  const fetchVehicles = async (currentPage = 1, search = "") => {
+    try {
+      setLoading(true);
+      const jwt = localStorage.getItem("token");
+      const offset = (currentPage - 1) * pagination.pageSize;
+      const filterString = [
+        `filters[$or][0][mark][$containsi]=${encodeURIComponent(search)}`,
+        `filters[$or][1][model][$containsi]=${encodeURIComponent(search)}`,
+        `filters[$or][2][matriculation][$containsi]=${encodeURIComponent(search)}`
+      ].join('&');
+      
+      // Build pagination and populate manually
+      const paginationString = `pagination[start]=${offset}&pagination[limit]=${pagination.pageSize}`;
+      const populateString = `populate[0]=vehiculePictureface1&populate[1]=driver&&populate[2]=driver.vehicule&populate[3]=driver.vehicules&populate[4]=type`;
+      
+      // Combine all parts into one full query string
+      const fullUrl = `${process.env.REACT_APP_BACKUP_URL}vehicules?${filterString}&${paginationString}&${populateString}`;
+      
+      const response = await axios.get(fullUrl, {
+        headers: {
+          Authorization: `Bearer ${jwt}`,
+        },
+      });
+
+      setVehicles(response.data.data);
+      setPagination(prev => ({
+        ...prev,
+        total: response.data.total,
+        current: currentPage
+      }));
+    } catch (error) {
+      console.error("Error fetching vehicles:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (visible) {
-      dispatch(
-        getVehiculeList({
-          companyId: driverDetais?.company_id?.id,
-        })
-      );
+      fetchVehicles();
     }
-    // dispatch(
-    //   getVehicule(
-    //     currentUser.user_role === "company"
-    //       ? { user_id: currentUser?.id }
-    //       : currentUser.user_role === "agent" && {
-    //           user_id: currentUser?.company_id?.id,
-    //         }
-    //   )
-    // );
   }, [visible]);
 
-  const updatedOptions = useMemo(
-    () =>
-      vehicules?.length > 0 &&
-      vehicules?.map((el) => ({
-        value: el?.id || "", // Provide a default value for 'value' if 'id' is missing
-        label: (
-          <span>
-            <img
-              src={"../../images/Avatar.svg"}
-              alt="Profile"
-              style={{ marginRight: "8px", width: "34px", height: "34px" }}
-            />
-            {el?.mark || " nul"} {el?.model || "nul"}
-          </span>
-        ),
-        fullName: (el?.mark + " " + el?.model).toUpperCase(),
-      })),
-    [vehicules]
-  );
-
-  // useEffect(() => {
-  //   setToUpdate({
-
-  //     data:{
-  //       accountOverview: [
-  //         {
-
-  //           vehicule_id:record?.data?.vehicule_id
-  //         },
-  //       ],
-  //     }
-
-  //   });
-  // }, [record]);
-
-  useEffect(() => {
-    setOptions(updatedOptions);
-  }, [updatedOptions]);
-
-  const [form] = Form.useForm();
-  const isDisabled = !toUpdate?.vehicule_id;
-  const [state, setState] = useState({
-    visible,
-    modalType: "primary",
-    checked: [],
-  });
-
-  useEffect(() => {
-    let unmounted = false;
-
-    if (!unmounted) {
-      setState({
-        visible,
-      });
-    }
-
-    return () => {
-      unmounted = true;
-    };
-  }, [visible]);
-
-  const handleCancel = () => {
-    onCancel();
+  const handleSearch = (value) => {
+    setSearchText(value);
+    fetchVehicles(1, value);
   };
-  const [vehiculeid, setVehiculeid] = useState(null);
 
-  return (
+  const handlePageChange = (page) => {
+    fetchVehicles(page, searchText);
+  };
+
+  const handleVehicleSelect = (vehicle) => {
+    setSelectedVehicle(vehicle);
+  };
+
+  const handleSave = async () => {
+    if (!selectedVehicle) return;
+    let new_vehiculesList = Array.isArray(driverDetais?.vehicules)
+    ? driverDetais.vehicules.map(x => x.id)
+    : [];
+  
+  new_vehiculesList.push(selectedVehicle.id);
+   
+  new_vehiculesList = [...new Set(new_vehiculesList)];
+console.log("selectedVehicle",selectedVehicle)
+if(selectedVehicle?.driver?.id){
+  await dispatch(
+        updateUser({
+          id: selectedVehicle?.driver?.id,
+          user: {vehicules:selectedVehicle?.driver?.vehicules.map(x=>x.id!==selectedVehicle.id) },
+        }));
+
+        if(selectedVehicle?.driver.vehicle===selectedVehicle.id){
+          updateUser({
+            id: selectedVehicle?.driver?.id,
+            user: {vehicule:null },
+          })
+        }
+      
+}
+  // we must remove the vehcule from the previos driver , how ? get the ddriver froom the vehcule puht tthe ddriver
+
+
+
+  await dispatch(
+      updateUser({
+        id: driverDetais?.id,
+        user: {vehicules:new_vehiculesList },
+      })
+    );
+
+    await dispatch(
+      updateVehicule({
+        id: selectedVehicle.documentId,
+        vehicule: {
+          data: {
+            driver:driverDetais?.id
+          },
+        },
+      })
+    )
+
+    dispatch(getDriver({}))
+    onCancel()
+  };
+   return (
     <Modal
-      type={state.modalType}
       title="Assigné un Vehicule"
-      visible={state.visible}
+      visible={visible}
       footer={null}
-      onCancel={handleCancel}
+      onCancel={onCancel}
+      width={600}
     >
-      <div className="reservation-modal">
-        <form className="create_reservation_form">
-          <span>Voiture</span>
-          <AutoComplete
-            className="create_reservation_select"
-            options={options}
-            onSelect={(clientId) => {
-              const selectedDriver = options.find(
-                (option) => option.value === clientId
-              );
-              setVehiculeid(clientId);
-              setToUpdate((prevToUpdate) => ({
-                ...prevToUpdate,
-                
-                    vehicule_id: { id: clientId },
-               
-              }));
+      <div className="vehicle-assignment-container" style={{ padding: "20px 0" }}>
+        <Search
+          placeholder="Rechercher par marque, modèle ou matricule..."
+          allowClear
+          enterButton={<SearchOutlined style={{ color: "#dbb961" }} />}
+          size="large"
+          onSearch={handleSearch}
+          onChange={(e) => setSearchText(e.target.value)}
+          style={customStyles.searchInput}
+          className="custom-search-input"
+        />
 
-              setSelectedLabel(
-                `${selectedDriver.label.props.children[1]} ${selectedDriver.label.props.children[2]}`
-              );
-            }}
-            placeholder={
-              options?.length === 0
-                ? "Aucun voiture disponible pour cette société "
-                : "Saisir le nom du voiture ..."
-            }
-            value={selectedLabel}
-            onChange={(e) => setSelectedLabel(e)}
-            filterOption={(inputValue, option) =>
-              option.fullName.includes(inputValue.toUpperCase())
-            }
+        <List
+          loading={loading}
+          itemLayout="horizontal"
+          dataSource={vehicles}
+          style={{
+            maxHeight: "400px",
+            overflow: "auto",
+            border: "1px solid #f0f0f0",
+            borderRadius: "8px",
+          }}
+          renderItem={(vehicle) => {
+            const getVehicleTypeName = (type) => {
+              if (!type || !type.id) return null;
+              switch (type.id) {
+                case 1:
+                  return "Éco";
+                case 2:
+                  return "Berline";
+                case 3:
+                  return "Van";
+                default:
+                  return null;
+              }
+            };
+            const typeName = getVehicleTypeName(vehicle.type);
+            return (
+              <List.Item
+                onClick={() => handleVehicleSelect(vehicle)}
+                style={{
+                  ...customStyles.listItem,
+                  ...(selectedVehicle?.id === vehicle.id
+                    ? customStyles.selectedItem
+                    : {}),
+                }}
+                onMouseEnter={(e) => {
+                  if (selectedVehicle?.id !== vehicle.id) {
+                    e.currentTarget.style.backgroundColor =
+                      customStyles.listItemHover.backgroundColor;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (selectedVehicle?.id !== vehicle.id) {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }
+                }}
+              >
+                <List.Item.Meta
+                  avatar={
+                    <Avatar
+                      src={vehicle?.vehiculePictureface1?.url}
+                      style={{ width: 40, height: 40 }}
+                    />
+                  }
+                  title={
+                    <>
+                      {`${vehicle.mark || "N/A"} ${vehicle.model || "N/A"}`}
+                      {typeName && (
+                        <Tag style={{ marginLeft: 8 }}>{typeName}</Tag>
+                      )}
+                    </>
+                  }
+                  description={`Matricule: ${
+                    vehicle.matriculation || "N/A"
+                  }`}
+                />
+              </List.Item>
+            );
+          }}
+          locale={{
+            emptyText: "Aucun véhicule disponible pour cette société",
+          }}
+        />
+
+        <div style={{ marginTop: 16, textAlign: "right" }}>
+          <Pagination
+            current={pagination.current}
+            pageSize={pagination.pageSize}
+            total={pagination.total}
+            onChange={handlePageChange}
+            showSizeChanger={false}
           />
-        </form>
+        </div>
       </div>
-      <div key="1" className="project-modal-footer">
+
+      <div className="project-modal-footer" style={{ marginTop: 20, textAlign: "right" }}>
         <Button
           size="default"
           className="btn_Suivant"
-          key="back"
           outlined
-          onClick={handleCancel}
+          onClick={onCancel}
+          style={{ marginRight: 8 }}
         >
           Annuler
         </Button>
@@ -235,48 +275,9 @@ function AssigneVehicule({ visible, onCancel, usersList, driverDetais }) {
           size="default"
           type="primary"
           className="btn_ADD"
-          disabled={isDisabled}
-          key="submit"
-          onClick={async () => {
-            try {
-              await findMatchingId(vehiculeid).then(() =>
-                dispatch(
-                  updateUser({
-                    id: driverDetais?.id,
-                    user: toUpdate,
-                  })
-                )
-              );
-
-              // Dispatch other actions after updateUser is successful
-              dispatch(
-                sendNotification({
-                  id: driverDetais?.id,
-                  title: "Vous avez une notification.",
-                  sendFrom: {
-                    id: currentUser?.id,
-                    name: currentUser?.name,
-                  },
-                  notification_type: "dispatched",
-                  types: ["notification"],
-                  smsCore: `${currentUser?.name} vous a assigné la voiture : ${driverDetais?.vehicule_id?.mark} matricule : ${driverDetais?.vehicule_id?.matriculation}`,
-                  notificationCore: "vous avez une notification",
-                  saveNotification: true,
-                  template_id: "d-8b266aac7fd64f73bab6ee0c80df8dbd",
-                })
-              );
-
-              // Dispatch getDriver action if needed
-              dispatch(getDriver({}));
-
-              // Close the modal
-              handleCancel();
-            } catch (error) {
-              // Handle any errors that occur during the updateUser action
-              console.error("Error updating user:", error);
-              // Optionally, show an error message or notification to the user
-            }
-          }}
+          disabled={!selectedVehicle}
+          onClick={handleSave}
+          style={{ backgroundColor: "#dbb961", borderColor: "#dbb961" }}
         >
           Enregistrer
         </Button>
@@ -288,6 +289,8 @@ function AssigneVehicule({ visible, onCancel, usersList, driverDetais }) {
 AssigneVehicule.propTypes = {
   visible: propTypes.bool.isRequired,
   onCancel: propTypes.func.isRequired,
+  usersList: propTypes.array.isRequired,
+  driverDetais: propTypes.object.isRequired,
 };
 
 export default AssigneVehicule;

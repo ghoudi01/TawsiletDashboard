@@ -19,7 +19,7 @@ const Updateagent = ({ visible, onCancel, match, modalId }) => {
   const dispatch = useDispatch();
 
   const agentUpdate = useSelector((state) => state.user.getted);
-  // console.log("Loading", agentUpdate);
+  
   const currentId = useSelector((state) => state?.user?.currentUser?.id);
 
   const [confirmLoading, setConfirmLoading] = useState(false);

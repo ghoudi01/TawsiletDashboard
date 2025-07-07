@@ -1,63 +1,44 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import styled from "styled-components";
-import axios from "axios";
 
 const DriverItem = ({
   driver,
+  driverDetails,
   setCenterSelected,
   setSelectedDriver,
   setZoomSelected,
   asideActive,
+  onClick,
 }) => {
-  const [driverDetails, setDriverDetails] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    const fetchDriverDetails = async () => {
-      
-      if (driver?.id) {
-        setIsLoading(true);
-        try {
-          const response = await axios.get(
-            `${process.env.REACT_APP_BACKUP_URL}users/?filters[documentId][$eq]=${driver.id}&populate[0]=vehicule&populate[1]=profilePicture`
-          );
-          console.log("response",response)
-          setDriverDetails(response.data[0]);
-        } catch (error) {
-          console.error("Error fetching driver details:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchDriverDetails();
-  }, [driver?.id]);
-
+ 
   const getCarIcon = (isActive, isFree) => {
-    let color = "#808080"; // default: gray (not active)
-    if (isActive) {
-      color = isFree ? "#00cc00" : "#cc0000"; // green if free, red if busy
+    
+    if (!isFree) {
+      return "#808080"; // Gray when not active
     }
-    return color
+    if (!isActive) {
+      return "#cc0000"; // Red when not free
+    }
+    return "#00cc00"; // Green when active and free
   }
 
    
   return (
     <DriverCard
       onClick={() => {
+          
         setCenterSelected({
           lat: driver?.location?.latitude,
           lng: driver?.location?.longitude,
         });
         setSelectedDriver(driver);
-        setZoomSelected(12);
+        setZoomSelected(17);
+        if (onClick) onClick();
       }}
-      disabled={!driver?.location?.location}
       disablecard={driver?.location?.longitude}
       style={{
-        backgroundColor: driver?.location?.longitude ? "none" : "rgba(200,200,200,0.3)",
-        pointerEvents: !driver?.location?.location && "none",
+        backgroundColor: (driver?.location?.latitude && driver?.location?.longitude) ? "none" : "rgba(200,200,200,0.3)",
+        pointerEvents: (driver?.location?.latitude && driver?.location?.longitude) ? "auto" : "none",
       }}
     >
       {driverDetails?.profilePicture ? (

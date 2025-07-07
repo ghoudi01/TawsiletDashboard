@@ -18,6 +18,7 @@ function ChangeDriverInfo({ visible, onCancel, record }) {
     email: "",
     phoneNumber: "",
     password: "",
+    region: "",
   });
 
   const [fileList, setFileList] = useState({
@@ -28,6 +29,34 @@ function ChangeDriverInfo({ visible, onCancel, record }) {
   });
 
   const [inputErrors, setInputErrors] = useState({});
+
+  const regionOptions = [
+    "Ariana",
+    "Beja",
+    "Ben Arous",
+    "Bizerte",
+    "Gabes",
+    "Gafsa",
+    "Jendouba",
+    "Kairouan",
+    "Kasserine",
+    "Kebili",
+    "Kef",
+    "Mahdia",
+    "Manouba",
+    "Medenine",
+    "Monastir",
+    "Nabeul",
+    "Sfax",
+    "Sidi Bouzid",
+    "Siliana",
+    "Sousse",
+    "Tataouine",
+    "Tozeur",
+    "Tunis",
+    "Zaghouan",
+    "global",
+  ];
 
   useEffect(() => {
     if (record) {
@@ -43,6 +72,7 @@ function ChangeDriverInfo({ visible, onCancel, record }) {
         email: toUpdate.email || "",
         phoneNumber: toUpdate.phoneNumber || "",
         password: "", // password not fetched for security
+        region: toUpdate.region || "",
       });
 
       setFileList({
@@ -88,6 +118,7 @@ function ChangeDriverInfo({ visible, onCancel, record }) {
     if (!formData.lastName) errors.lastName = "Last name required";
     if (!formData.email) errors.email = "Email required";
     if (!formData.phoneNumber) errors.phoneNumber = "Phone required";
+    if (!formData.region) errors.region = "Region required";
     if (formData.password && formData.password.length < 6)
       errors.password = "Password must be at least 6 characters";
     return errors;
@@ -108,28 +139,50 @@ function ChangeDriverInfo({ visible, onCancel, record }) {
     }
     setInputErrors({});
 
-    const driverData = {
-      ...formData,
-      user_role: "driver",
-      validation: {
-        description: null,
-        validation_state: "waiting",
-      },
-      cinFront: fileList.cinFront.length ? fileList.cinFront[0] : null,
-      cinBack: fileList.cinBack.length ? fileList.cinBack[0] : null,
-      licenceFront: fileList.licenceFront.length
-        ? fileList.licenceFront[0]
-        : null,
-      licenceBack: fileList.licenceBack.length ? fileList.licenceBack[0] : null,
-      username: formData.lastName + " " + formData.firstName,
-      confirmed: true,
+    // Build the object with only changed fields
+    const updatedFields = {};
+
+    // Compare formData fields
+    Object.keys(formData).forEach((key) => {
+      if (key === "password") {
+        if (formData.password && formData.password.length > 0) {
+          updatedFields.password = formData.password;
+        }
+      } else if (formData[key] !== (toUpdate?.[key] || "")) {
+        updatedFields[key] = formData[key];
+      }
+    });
+
+    // Compare fileList fields
+    const fileFields = [
+      { key: "cinFront", toUpdateKey: "cinPictureFront" },
+      { key: "cinBack", toUpdateKey: "cinPictureBack" },
+      { key: "licenceFront", toUpdateKey: "licencePicture" },
+      { key: "licenceBack", toUpdateKey: "licencePictureBack" },
+    ];
+
+    fileFields.forEach(({ key, toUpdateKey }) => {
+      const newFile = fileList[key]?.[0] || null;
+      const oldFile = toUpdate?.[toUpdateKey] || null;
+      if (
+        (newFile && !oldFile) ||
+        (!newFile && oldFile) ||
+        (newFile && oldFile && newFile.url !== oldFile.url)
+      ) {
+        updatedFields[key] = newFile;
+      }
+    });
+
+    // Always include these if your backend requires them
+    updatedFields.user_role = "driver";
+    updatedFields.validation = {
+      description: null,
+      validation_state: "waiting",
     };
+    updatedFields.username = formData.lastName + " " + formData.firstName;
+    updatedFields.confirmed = true;
 
-    if (!formData.password) {
-      delete driverData.password;
-    }
-
-    dispatch(updateUser({ id: record, user: driverData })).then(() => {
+    dispatch(updateUser({ id: record, user: updatedFields })).then(() => {
       dispatch(getusers());
       message.success("Driver info updated successfully!");
       onCancel();
@@ -219,6 +272,24 @@ function ChangeDriverInfo({ visible, onCancel, record }) {
             }
             placeholder="New password"
           />
+        </Form.Item>
+
+        <Form.Item
+          label="Region"
+          required
+          validateStatus={inputErrors.region ? "error" : ""}
+          help={inputErrors.region}
+        >
+          <select
+            value={formData.region}
+            onChange={e => setFormData({ ...formData, region: e.target.value })}
+            style={{ width: '100%', padding: '8px', borderRadius: 4, borderColor: inputErrors.region ? '#ff4d4f' : undefined }}
+          >
+            <option value="">Select region</option>
+            {regionOptions.map(region => (
+              <option key={region} value={region}>{region}</option>
+            ))}
+          </select>
         </Form.Item>
 
         <Divider>Identity Documents</Divider>

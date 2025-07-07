@@ -24,7 +24,7 @@ function Menus() {
   };
 
   const onVerticleHandleClick = () => {
-    // console.log('click ', e);
+   
   };
 
   return (

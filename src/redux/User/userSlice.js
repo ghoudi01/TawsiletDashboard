@@ -182,10 +182,10 @@ export const getUserById = createAsyncThunk("user/get", async (id) => {
 //get drivers
 
 export const getDriver = createAsyncThunk("drivers/all", async (params) => {
-  const { page = 1, pageSize = 10, text = "" } = params;
+  const { page = 1, pageSize = 10, text = "",status="" } = params;
+  
   try {
     const jwt = localStorage.getItem("token");
-    console.log(jwt);
     const response = await axios.get(
       `${process.env.REACT_APP_BACKUP_URL}usersbyrole/driver`,
       {
@@ -193,16 +193,16 @@ export const getDriver = createAsyncThunk("drivers/all", async (params) => {
           page: page,
           pageSize: pageSize,
           text: text,
+          status
         },
         headers: {
           Authorization: `Bearer ${jwt}`,
         },
       }
     );
-    console.log("apiget driver work", response.data);
-
     return response.data;
   } catch (error) {
+    console.error("Error getting drivers:", error);
     throw error;
   }
 });
@@ -370,7 +370,7 @@ export const getClients = createAsyncThunk("clients/all", async (params) => {
   const { page = 1, pageSize = 10, text = "" } = params;
   try {
     const jwt = localStorage.getItem("token");
-    console.log(jwt);
+  
     const response = await axios.get(
       `${process.env.REACT_APP_BACKUP_URL}usersbyrole/client`,
       {
@@ -568,7 +568,7 @@ export const getDriversWithCars = createAsyncThunk(
 export const updateDriver = createAsyncThunk(
   "driver/update",
   async ({ id, isFree }, { rejectWithValue }) => {
-    console.log("🚀 ~ id:", id);
+ 
     try {
       const jwt = localStorage.getItem("token");
       if (!jwt) {
@@ -582,16 +582,7 @@ export const updateDriver = createAsyncThunk(
           headers: { Authorization: `Bearer ${jwt}` },
         }
       );
-      console.log("Fetched driver details:", driverResponse.data);
-
-      // Prepare updated data
-      // const updatedData = {
-      //   // documentId: driverResponse?.data?.[0]?.documentId,
-      //   isFree,
-      // };
-
-      // Update the driver
-
+    
       const updateResponse = await axios.put(
         `${process.env.REACT_APP_BACKUP_URL}users/${driverResponse.data?.[0]?.id}`,
         { data: { isFree: isFree } },
@@ -608,12 +599,37 @@ export const updateDriver = createAsyncThunk(
   }
 );
 
+export const updateDriverValidation = createAsyncThunk(
+  "driver/updateValidation",
+  async ({ id, validation }, { rejectWithValue }) => {
+    try {
+      const jwt = localStorage.getItem("token");
+      if (!jwt) {
+        throw new Error("Authentication token is missing.");
+      }
+
+      const response = await axios.put(
+        `${process.env.REACT_APP_BACKUP_URL}driver/${id}/validation`,
+        { validation },
+        {
+          headers: { Authorization: `Bearer ${jwt}` },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Error updating driver validation:", error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 export const updateUser = createAsyncThunk(
   "user/update",
   async ({ id, user }) => {
     try {
       const jwt = localStorage.getItem("token");
-      console.log(jwt, "==============");
+  
 
       const response = await axios.put(
         `${process.env.REACT_APP_BACKUP_URL}users/${id}?pLevel=4`,
@@ -624,8 +640,7 @@ export const updateUser = createAsyncThunk(
           },
         }
       );
-      console.log(response.data, "==============");
-      // Check if the response contains a valid data object
+     
       if (response.data) {
         return response.data;
       } else {
@@ -756,9 +771,27 @@ export const getVehiculeList = createAsyncThunk(
 
       const { data } = await client.query({
         query: GET_VEHICULES_LIST,
-        variables: { company: companyId },
+       
       });
       return data.vehicules;
+    } catch (error) {
+      throw error;
+    }
+  }
+);
+
+export const getUsersByVehiculeId = createAsyncThunk(
+  "user/byVehiculeId",
+  async (vehiculeId) => {
+    try {
+      const jwt = localStorage.getItem("token");
+      const response = await axios.get(
+        `${process.env.REACT_APP_BACKUP_URL}users?filters[vehicules][id][$eq]=${vehiculeId}`,
+        {
+          headers: { Authorization: `Bearer ${jwt}` },
+        }
+      );
+      return response.data;
     } catch (error) {
       throw error;
     }
@@ -817,12 +850,7 @@ export const registerUser = createAsyncThunk(
         `${process.env.REACT_APP_BACKUP_URL}auth/local/register`,
         credentials
       );
-      // console.log(response)
-      // if (response.data.user.user_role === "admin") {
-      //   window.location.href = "/admin/dashboard";
-      // } else {
-      //   window.location.href = "/clientprofile/details";
-      // }
+    
 
       return response.data.user;
     } catch (error) {
@@ -1203,7 +1231,7 @@ export const userSlice = createSlice({
     [changePassword.rejected]: (state, action) => {
       state.status = "fail";
       state.isLoading = false;
-      // console.log(action);
+    
     },
 
     [getClients.pending]: (state) => {
@@ -1303,8 +1331,25 @@ export const userSlice = createSlice({
     },
     [updateUser.fulfilled]: (state, action) => {
       state.status = "success";
-      state.updatedUser = action.payload;
-      state.isLoading = false;
+  state.updatedUser = action.payload;
+  state.isLoading = false;
+
+  // 🛠️ Update the specific user in drivers.results
+  const updatedUser = action.payload;
+   if(updatedUser.user_role==="driver"){
+   const   index =  state.drivers?.results?.findIndex((u) => u.id === updatedUser.id);
+   if (index !== -1) {
+    state.drivers.results[index] = updatedUser;
+  }
+
+  }
+  if(updatedUser.user_role==="client"){
+    const   index =  state.clients?.results?.findIndex((u) => u.id === updatedUser.id);
+   if (index !== -1) {
+    state.clients.results[index] = updatedUser;
+ }
+}
+ 
     },
     [updateUser.rejected]: (state) => {
       state.status = "fail";
@@ -1320,6 +1365,39 @@ export const userSlice = createSlice({
       state.isLoading = false;
     },
     [updateDriver.rejected]: (state) => {
+      state.status = "fail";
+      state.isLoading = false;
+    },
+    [updateDriverValidation.pending]: (state) => {
+      state.status = "pending";
+      state.isLoading = true;
+    },
+    [updateDriverValidation.fulfilled]: (state, action) => {
+      state.status = "success";
+      state.isLoading = false;
+ 
+      if (action.payload.user_role==="driver") {
+       const index= state.drivers.results.findIndex(
+          (user) => user.id === action.payload.id
+        );
+        if (index !== -1) {
+          state.drivers.results[index] = action.payload;
+        }
+
+      }
+     
+        if (action.payload.user_role==="client") {
+          const index= state.clients.results.findIndex(
+            (user) => user.id === action.payload.id
+          );
+          if (index !== -1) {
+            state.clients.results[index] = action.payload;
+          }
+        
+      }
+     
+    },
+    [updateDriverValidation.rejected]: (state) => {
       state.status = "fail";
       state.isLoading = false;
     },

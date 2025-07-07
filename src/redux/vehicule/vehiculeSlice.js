@@ -33,10 +33,17 @@ const constructApiUrl = (params) => {
       text
     );
   }
-
-  if (status !== null) {
-    apiUrl.searchParams.append("filters[status][$eq]", status);
+  console.log("statusstatus",status)
+  if (status) {
+    if(status==="waiting"){
+      apiUrl.searchParams.append("filters[$or][0][validation][validation_state][$eq]", "waiting");
+      apiUrl.searchParams.append("filters[$or][1][validation][$null]", true);
+  
+    }
+    else 
+    apiUrl.searchParams.append("filters[validation][validation_state][$eq]", status);
   }
+ 
 
   if (user_id) {
     apiUrl.searchParams.append("filters[user][id][$eq]", user_id);
@@ -113,6 +120,7 @@ const fetchData = async ({ url, page = 1, pageSize = 10, text = "" }) => {
       pageSize,
     },
     populate: ["validation", "type"],
+    //  : [{ createdAt: 'desc' }],
   };
 
   if (text) {
@@ -226,13 +234,10 @@ export const updateVehicule = createAsyncThunk(
   async ({ id, vehicule }) => {
     try {
       const jwt = localStorage.getItem("token");
-      console.log(vehicule, "updatevehicule==========>");
-      console.log(id, "id==========>");
-      const { id: _, ...cleanedData } = vehicule.data; // exclude id from body
-
+ 
       const response = await axios.put(
         `${process.env.REACT_APP_BACKUP_URL}vehicules/${id}`,
-        vehicule,
+        {data:vehicule.data},
         {
           headers: {
             Authorization: `Bearer ${jwt}`,
@@ -242,7 +247,7 @@ export const updateVehicule = createAsyncThunk(
 
       return response.data;
     } catch (error) {
-      console.log(error, "err====>");
+      console.error("Error updating vehicule:", error);
       throw error;
     }
   }

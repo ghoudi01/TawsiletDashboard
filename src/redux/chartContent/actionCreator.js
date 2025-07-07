@@ -352,7 +352,7 @@ const incomeFilterData = (value) => {
 };
 
 const performanceGetData = (id) => {
-  // console.log(id, "eeeeezzzzzzzzzzz");
+  
   return async (dispatch) => {
     const { year } = performance;
     try {
@@ -365,7 +365,7 @@ const performanceGetData = (id) => {
 };
 
 const performanceFilterData = ({ value, id }) => {
-  // console.log(id, value, "eeeeeeeeee");
+ 
   return async (dispatch) => {
     function extractCommandArrays(commands) {
       // Get current date and relevant information
@@ -737,8 +737,7 @@ const performanceFilterData = ({ value, id }) => {
           return departDate >= lastMonday && departDate <= lastSunday;
         })
         .reduce((acc, obj) => acc + obj.totalPrice, 0);
-      // console.log("response", response.data.data);
-      let calcul = {
+       let calcul = {
         week: {
           users: [
             totalThisWeek.toString(), //affichage ce mois total
@@ -864,11 +863,7 @@ const performanceFilterData = ({ value, id }) => {
       };
       // JSON.stringify(calcul, null, 2)
       setTimeout(() => {
-        // console.log(
-        //   "totalPricePerMonthLastTwoYears:",
-        //   totalPricePerDayLastWeek,
-        //   totalPricePerDayThisWeek
-        // );
+       
 
         dispatch(performanceSuccess(calcul[value]));
       }, 100);

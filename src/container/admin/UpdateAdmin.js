@@ -46,8 +46,7 @@ const UpdateAdmin = ({ visible, onCancel, match, modalId }) => {
   const dispatch = useDispatch();
 
   const adminUpdate = useSelector((state) => state.user.getted);
-  // console.log("fffffffffffff", adminUpdate);
-  const currentId = useSelector((state) => state?.user?.currentUser?.id);
+   const currentId = useSelector((state) => state?.user?.currentUser?.id);
 
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [modalText, setModalText] = useState("Content of the modal");

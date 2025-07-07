@@ -154,7 +154,7 @@ const DateTimeInput = ({
     const selectedTime = new Date(selectedDate);
     selectedTime.setHours(parseInt(hour, 10));
     selectedTime.setMinutes(parseInt(minute, 10));
-    // console.log(selectedTime);
+   
     return selectedTime < oneHourFromNow;
   };
 

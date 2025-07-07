@@ -17,7 +17,7 @@ const StatusSelector = ({
   const dispatch = useDispatch();
   const meta = useSelector((state) => state?.user?.companies?.pageInfo);
 
-  console.log(companyId);
+ 
 
   const statusOptions = [
     { value: "valid", label: "Validate", color: "green" },
@@ -25,7 +25,7 @@ const StatusSelector = ({
   ];
 
   const handleStatusChange = useCallback(async (newStatus) => {
-    console.log("🚀 ~ handleStatusChange ~ newStatus:", newStatus);
+   
     if (!companyId) {
       console.error("No company ID provided!");
       message.error("No company record found for status update.");

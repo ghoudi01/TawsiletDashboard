@@ -37,7 +37,7 @@ const Vehicules = ({
   const [selectedata, setSelecteData] = useState();
   const meta = useSelector((state) => state?.vehicules?.meta);
    const dispatch = useDispatch();
-  console.log(textFilter, "textFilter===========>");
+  
   const vehicules = useSelector((state) => state?.vehicules?.vehicules);
   const [AddModalVisible, setAddModalVisible] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -360,11 +360,11 @@ useEffect(() => {
     currentuser?.user_role === "owner"
       ? {
           id: "Company",
-          title: "Société",
+          title: "chauffeur",
           dataIndex: "Company",
           render: (text, record) => (
             <ProjectListTitle>
-              <p>{record?.company}</p>
+              <p>{record?.driver? record?.driver?.firstName+" "+record?.driver?.lastName:"pas de chauffeur"}</p>
             </ProjectListTitle>
           ),
         }
@@ -423,14 +423,15 @@ useEffect(() => {
       assuranceDate: value?.assuranceDate,
       validation: value?.validation?.validation_state,
       company: value?.company?.name ? value?.company?.name : "",
+      driver:value?.driver,
       action: (
         <div style={{ display: "flex", justifyContent: "flex-start" }}>
-          {value.validation?.validation_state === "waiting" ? (
-            <img src={wait} className="validation_icon_driver" />
-          ) : value.validation?.validation_state === "valid" ? (
+          {value.validation?.validation_state === "valid" ? (
             <img src={valid} className="validation_icon_driver" />
-          ) : (
+          ) : value.validation?.validation_state === "invalid" ? (
             <img src={invalid} className="validation_icon_driver" />
+          ) : (
+            <img src={wait} className="validation_icon_driver" />
           )}
         </div>
       ),

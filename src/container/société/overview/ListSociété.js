@@ -61,7 +61,6 @@ const Sociétés = ({
   // Redux selectors
   const meta = useSelector((state) => state?.user?.companies?.pageInfo);
   const societes = useSelector((state) => state?.user?.companies?.nodes);
-  console.log("🚀 ~ societes:", societes)
   const currentuser = useSelector((state) => state?.user?.currentUser);
   const isLoading = useSelector((state) => state?.user?.isLoading);
 
@@ -287,7 +286,6 @@ useEffect(() => {
                 <>
                   <Link
                     onClick={() => {
-                      console.log(record)
                       setViewModal(true);
                       setSelecteData(record);
                       setSelectedId(record.documentId)

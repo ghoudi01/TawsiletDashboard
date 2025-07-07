@@ -72,7 +72,6 @@ const ViewCompanyModal = ({ visible, onCancel, companyId, filterStatus, textFilt
 
   // Compute company details directly (no useMemo)
   const [companyDetails, setCompanyDetails] = useState(null);
-  console.log("🚀 ~ ViewCompanyModal ~ companyDetails:", companyDetails)
 
   const extractCompanyDetails = () =>{
     setCompanyDetails(company

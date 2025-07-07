@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 // import { Form,  } from "antd";
 import {
   Button,
@@ -66,7 +66,7 @@ function UpdateVehicule({
 
   useEffect(() => {
     if (visible) {
-      dispatch(getVehiculeById(recorddata?.id));
+      dispatch(getVehiculeById(recorddata?.documentId));
     }
   }, [visible]);
   const uploadButton = (
@@ -90,19 +90,31 @@ function UpdateVehicule({
       assuranceDate: "",
       assurancePictures: null,
       grayCardPictures: null,
+      grayCardPictureBack: null,
       vehiculePictureface1: null,
       vehiculePictureface2: null,
       vehiculePictureface3: null,
       vehiculePictureface4: null,
-      grayCardPicturesBack: null,
-      type: recorddata?.type?.id,
+       type: recorddata?.type?.id,
+     
     },
   });
   const handleUpload = () => {
+    let payload = { ...updatevehicule };
+    if (payload.data) {
+      payload.data.vehiculePictureface1 = updatevehicule?.data?.vehiculePictureface1?.id;
+      payload.data.vehiculePictureface2 = updatevehicule?.data?.vehiculePictureface2?.id;
+      payload.data.vehiculePictureface3 = updatevehicule?.data?.vehiculePictureface3?.id;
+      payload.data.vehiculePictureface4 = updatevehicule?.data?.vehiculePictureface4?.id;
+      payload.data.assurancePictures = updatevehicule?.data?.assurancePictures?.id;
+      payload.data.grayCardPictures = updatevehicule?.data?.grayCardPictures?.id;
+      payload.data.grayCardPictureBack = updatevehicule?.data?.grayCardPictureBack?.id;
+    }
+
     dispatch(
       updateVehicule({
-        id: recorddata.documentId,
-        vehicule: updatevehicule,
+        id: recorddata?.documentId,
+        vehicule: payload
       })
     ).then(() => {
       setPing(!ping);
@@ -111,8 +123,11 @@ function UpdateVehicule({
     handleCancel();
   };
   useEffect(() => {
+    if (visible) {
     if (recorddata) {
-      setupdatevehicule({
+     
+       setupdatevehicule({
+        loaded:true,
         data: {
           mark: recorddata?.mark,
           model: recorddata?.model,
@@ -121,135 +136,69 @@ function UpdateVehicule({
           matriculation: recorddata?.matriculation,
           assuranceDate: recorddata?.assuranceDate,
           type: recorddata?.type?.id,
-          vehiculePictureface1: {
-            id: recorddata?.vehiculePictureface1?.id,
-          },
-          vehiculePictureface2: {
-            id: recorddata?.vehiculePictureface2?.id,
-          },
-          vehiculePictureface3: {
-            id: recorddata?.vehiculePictureface3?.id,
-          },
-          vehiculePictureface4: {
-            id: recorddata?.vehiculePictureface4?.id,
-          },
-          assurancePictures: { id: recorddata?.assurancePictures?.id },
-          grayCardPictures: { id: recorddata?.grayCardPictures?.id },
-          grayCardPicturesBack: {
-            id: recorddata?.grayCardPicturesBack?.id,
-          },
+          vehiculePictureface1: recorddata?.vehiculePictureface1,
+          vehiculePictureface2: recorddata?.vehiculePictureface2,
+          vehiculePictureface3:recorddata?.vehiculePictureface3,
+          vehiculePictureface4:recorddata?.vehiculePictureface4,
+          assurancePictures:recorddata?.assurancePictures,
+          grayCardPictures: recorddata?.grayCardPictures,
+          grayCardPictureBack: recorddata?.grayCardPictureBack,
+     
         },
       });
+  
+    }}
+    else {
+      setupdatevehicule({})
     }
 
     setimage({
       file: recorddata ? recorddata?.vehiculePictureface1 : null,
       list: [recorddata ? recorddata?.vehiculePictureface1 : null],
     });
-  }, [recorddata]);
-  // upload images
-  const fileList = [];
-  const fileListvehiculePictureface1 = [
-    {
-      uid: "-1",
-      name: recorddata?.vehiculePictureface1
-        ? recorddata?.vehiculePictureface1?.name
-        : "",
-      status: "done",
-      url: recorddata?.vehiculePictureface1
-        ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.vehiculePictureface1?.data?.url}`
-        : "",
+  }, [recorddata,visible]);
+ 
+ 
 
-      // thumbUrl: record?.logo?.name,
-    },
-  ];
-  const fileListvehiculePictureface2 = [
-    {
-      uid: "-1",
-      name: recorddata?.vehiculePictureface2?.data?.attributes
-        ? recorddata?.vehiculePictureface2?.data?.name
-        : "",
-      status: "done",
-      url: recorddata?.vehiculePictureface2?.data?.attributes
-        ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.vehiculePictureface2?.data?.url}`
-        : "",
+  // Constants for file upload configuration
+  const UPLOAD_CONFIG = {
+    maxSize: 2, // MB
+    allowedTypes: ['image/jpeg', 'image/png'],
+    uploadUrl: `${process.env.REACT_APP_BACKUP_URL}upload`,
+  };
 
-      // thumbUrl: record?.logo?.name,
-    },
-  ];
-  const fileListvehiculePictureface3 = [
-    {
-      uid: "-1",
-      name: recorddata?.vehiculePictureface3?.data?.attributes
-        ? recorddata?.vehiculePictureface3?.data?.name
-        : "",
-      status: "done",
-      url: recorddata?.vehiculePictureface3?.data?.attributes
-        ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.vehiculePictureface3?.data?.url}`
-        : "",
+  // Memoized file validation
+  const validateFile = useCallback((file) => {
+    const isAllowedType = UPLOAD_CONFIG.allowedTypes.includes(file.type);
+    const isLt2MB = file.size / 1024 / 1024 < UPLOAD_CONFIG.maxSize;
 
-      // thumbUrl: record?.logo?.name,
-    },
-  ];
-  const fileListvehiculePictureface4 = [
-    {
-      uid: "-1",
-      name: recorddata?.vehiculePictureface4?.data?.attributes
-        ? recorddata?.vehiculePictureface4?.data?.name
-        : "",
-      status: "done",
-      url: recorddata?.vehiculePictureface4?.data?.attributes
-        ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.vehiculePictureface4?.data?.url}`
-        : "",
+    if (!isAllowedType) {
+      message.error('Vous ne pouvez télécharger que des fichiers JPG ou PNG!');
+      return false;
+    }
+    if (!isLt2MB) {
+      message.error(`L'image doit être inférieure à ${UPLOAD_CONFIG.maxSize}MB!`);
+      return false;
+    }
+    return true;
+  }, []);
 
-      // thumbUrl: record?.logo?.name,
-    },
-  ];
+  // Memoized file upload handler
+  const handleFileSelect = useCallback(async (file, attributeName) => {
+    if (!validateFile(file)) return;
 
-  const fileListassurancePictures = [
-    {
-      uid: "-1",
-      name: recorddata?.assurancePictures?.data?.attributes
-        ? recorddata?.assurancePictures?.data?.name
-        : "",
-      status: "done",
-      url: recorddata?.assurancePictures?.data?.attributes
-        ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.assurancePictures?.data?.url}`
-        : "",
-
-      // thumbUrl: record?.logo?.name,
-    },
-  ];
-  const fileListgrayCardPictures = [
-    {
-      uid: "-1",
-      name: recorddata?.grayCardPictures?.data?.attributes
-        ? recorddata?.grayCardPictures?.data?.name
-        : "",
-      status: "done",
-      url: recorddata?.grayCardPictures?.data?.attributes
-        ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.grayCardPictures?.data?.url}`
-        : "",
-
-      // thumbUrl: record?.logo?.name,
-    },
-  ];
-
-  // upload file vehiculePictureface1
-  const handleFileSelect = async (e) => {
-    const file = e;
-    // .target.files[0];
-
-    const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
-
-    // console.log("file", file);
     const formData = new FormData();
-
     formData.append("files", file);
+
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_BACKUP_URL}upload`,
-        formData
+        UPLOAD_CONFIG.uploadUrl,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
 
       if (response.status === 201) {
@@ -258,472 +207,56 @@ function UpdateVehicule({
           ...prevState,
           data: {
             ...prevState.data,
-            vehiculePictureface1: {
-              id: imageUrl?.id,
-             
-            },
+            [attributeName]: imageUrl,
           },
         }));
+        setPicturesErrors((prev) => ({ ...prev, [attributeName]: null }));
         message.success("Fichier téléchargé avec succès.");
       } else {
-        message.error("Le téléchargement du fichier a échoué.");
+        throw new Error('Upload failed');
       }
-
-      message.success("Fichier téléchargé avec succès.");
     } catch (error) {
+      console.error('Upload error:', error);
       message.error("Le téléchargement du fichier a échoué.");
+      setPicturesErrors((prev) => ({ 
+        ...prev, 
+        [attributeName]: "Erreur lors du téléchargement" 
+      }));
     }
-  };
+  }, [validateFile]);
 
-  const fileUploadProps = {
+  // Memoized onChange handler
+  const handleUploadChange = useCallback((info) => {
+    const { status } = info.file;
+    if (status !== "uploading") {
+      setimage((prev) => ({ 
+        ...prev, 
+        file: info.file, 
+        list: info.fileList 
+      }));
+    }
+    if (status === "done") {
+      message.success(`${info.file.name} téléchargé avec succès.`);
+    } else if (status === "error") {
+      message.error(`${info.file.name} a échoué.`);
+    }
+  }, []);
+
+  // Memoized file upload props creator
+  const createFileUploadProps = useCallback((attributeName) => ({
     name: "files",
     multiple: false,
     beforeUpload: (file) => {
-      handleFileSelect(file);
+      handleFileSelect(file, attributeName);
       return false;
     },
-
-    onChange(info) {
-      const { status } = info.file;
-
-      if (status !== "uploading") {
-        setimage({ ...image, file: info.file, list: info.fileList });
-      }
-      if (status === "done") {
-        message.success(`${info.file.name} file uploaded successfully.`);
-      } else if (status === "error") {
-        message.error(`${info.file.name} file upload failed.`);
-      }
-    },
-    listType: "picture",
-    // defaultFileList: fileListvehiculePictureface1,
-    showUploadList: {
-      showRemoveIcon: true,
-      removeIcon: <FeatherIcon icon="trash-2" />,
-    },
-  };
-  // upload file vehiculePictureface2
-  const handleFileSelect01 = async (e) => {
-    const file = e;
-    // .target.files[0];
-
-    const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
-
-    // console.log("file", file);
-    const formData = new FormData();
-
-    formData.append("files", file);
-    try {
-      const response = await axios.post(
-        `https://api.tawsilet.com/api/upload`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      if (response.status === 201) {
-        const imageUrl = response.data[0];
-        setupdatevehicule((updatevehicule) => ({
-          ...updatevehicule,
-          data: {
-            ...updatevehicule.data,
-            vehiculePictureface2: {
-              id: imageUrl?.id,
-             
-            },
-          },
-        }));
-        setPicturesErrors({});
-        message.success("Fichier téléchargé avec succès.");
-      } else {
-        message.error("Le téléchargement du fichier a échoué.");
-      }
-    } catch (error) {
-      message.error("Le téléchargement du fichier a échoué.");
-    }
-  };
-
-  const fileUploadProps01 = {
-    name: "files",
-    multiple: false,
-    beforeUpload: (file) => {
-      handleFileSelect01(file);
-      return false;
-    },
-
-    onChange(info) {
-      const { status } = info.file;
-
-      if (status !== "uploading") {
-        setimage({ ...image, file: info.file, list: info.fileList });
-      }
-      if (status === "done") {
-        message.success(`${info.file.name} file uploaded successfully.`);
-      } else if (status === "error") {
-        message.error(`${info.file.name} file upload failed.`);
-      }
-    },
-    listType: "picture",
-    // defaultFileList: fileListvehiculePictureface2,
-    showUploadList: {
-      showRemoveIcon: true,
-      removeIcon: <FeatherIcon icon="trash-2" />,
-    },
-  };
-  // upload file vehiculePictureface3
-  const handleFileSelect02 = async (e) => {
-    const file = e;
-    // .target.files[0];
-
-    const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
-
-    // console.log("file", file);
-    const formData = new FormData();
-
-    formData.append("files", file);
-    try {
-      const response = await axios.post(
-        `https://api.tawsilet.com/api/upload`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      if (response.status === 201) {
-        const imageUrl = response.data[0];
-        setupdatevehicule((updatevehicule) => ({
-          ...updatevehicule,
-          data: {
-            ...updatevehicule.data,
-            vehiculePictureface3: {
-              id: imageUrl?.id,
-             
-            },
-          },
-        }));
-        setPicturesErrors({});
-        message.success("Fichier téléchargé avec succès.");
-      } else {
-        message.error("Le téléchargement du fichier a échoué.");
-      }
-    } catch (error) {
-      message.error("Le téléchargement du fichier a échoué.");
-    }
-  };
-
-  const fileUploadProps02 = {
-    name: "files",
-    multiple: false,
-    beforeUpload: (file) => {
-      handleFileSelect02(file);
-      return false;
-    },
-
-    onChange(info) {
-      const { status } = info.file;
-
-      if (status !== "uploading") {
-        setimage({ ...image, file: info.file, list: info.fileList });
-      }
-      if (status === "done") {
-        message.success(`${info.file.name} file uploaded successfully.`);
-      } else if (status === "error") {
-        message.error(`${info.file.name} file upload failed.`);
-      }
-    },
-    listType: "picture",
-    // defaultFileList: fileListvehiculePictureface3,
-    showUploadList: {
-      showRemoveIcon: true,
-      removeIcon: <FeatherIcon icon="trash-2" />,
-    },
-  };
-  // upload file vehiculePictureface4
-  const handleFileSelect03 = async (e) => {
-    const file = e;
-    // .target.files[0];
-    // console.log("file", file);
-    const formData = new FormData();
-
-    formData.append("files", file);
-    try {
-      const response = await axios.post(
-        `https://api.tawsilet.com/api/upload`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      if (response.status === 201) {
-        const imageUrl = response.data[0];
-        setupdatevehicule((updatevehicule) => ({
-          ...updatevehicule,
-          data: {
-            ...updatevehicule.data,
-            vehiculePictureface4: {
-              id: imageUrl?.id,
-             
-            },
-          },
-        }));
-        setPicturesErrors({});
-        message.success("Fichier téléchargé avec succès.");
-      } else {
-        message.error("Le téléchargement du fichier a échoué.");
-      }
-    } catch (error) {
-      message.error("Le téléchargement du fichier a échoué.");
-    }
-  };
-
-  const fileUploadProps03 = {
-    name: "files",
-    multiple: false,
-    beforeUpload: (file) => {
-      handleFileSelect03(file);
-      return false;
-    },
-
-    onChange(info) {
-      const { status } = info.file;
-
-      if (status !== "uploading") {
-        setimage({ ...image, file: info.file, list: info.fileList });
-      }
-      if (status === "done") {
-        message.success(`${info.file.name} file uploaded successfully.`);
-      } else if (status === "error") {
-        message.error(`${info.file.name} file upload failed.`);
-      }
-    },
-    listType: "picture",
-    // defaultFileList: fileListvehiculePictureface4,
-    showUploadList: {
-      showRemoveIcon: true,
-      removeIcon: <FeatherIcon icon="trash-2" />,
-    },
-  };
-  // upload file 2
-  const handleFileSelect2 = async (e) => {
-    const file = e;
-    // .target.files[0];
-
-    const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
-
-    // console.log("file", file);
-    const formData = new FormData();
-
-    formData.append("files", file);
-    try {
-      const response = await axios.post(
-        `https://api.tawsilet.com/api/upload`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      if (response.status === 201) {
-        const imageUrl = response.data[0];
-        setupdatevehicule((updatevehicule) => ({
-          ...updatevehicule,
-          data: {
-            ...updatevehicule.data,
-            assurancePictures: {
-              id: imageUrl?.id,
-             
-            },
-          },
-        }));
-        setPicturesErrors({});
-        message.success("Fichier téléchargé avec succès.");
-      } else {
-        message.error("Le téléchargement du fichier a échoué.");
-      }
-    } catch (error) {
-      message.error("Le téléchargement du fichier a échoué.");
-    }
-  };
-
-  const fileUploadProps2 = {
-    name: "files",
-    multiple: false,
-    beforeUpload: (file) => {
-      handleFileSelect2(file);
-      return false;
-    },
-
-    onChange(info) {
-      const { status } = info.file;
-
-      if (status !== "uploading") {
-        setimage({ ...image, file: info.file, list: info.fileList });
-      }
-      if (status === "done") {
-        message.success(`${info.file.name} file uploaded successfully.`);
-      } else if (status === "error") {
-        message.error(`${info.file.name} file upload failed.`);
-      }
-    },
-    listType: "picture",
-    // defaultFileList: fileListassurancePictures,
-    showUploadList: {
-      showRemoveIcon: true,
-      removeIcon: <FeatherIcon icon="trash-2" />,
-    },
-  };
-
-  // upload file 3
-
-  const handleFileSelect3 = async (e) => {
-    const file = e;
-    // .target.files[0];
-
-    const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
-
-    // console.log("file", file);
-    const formData = new FormData();
-
-    formData.append("files", file);
-    try {
-      const response = await axios.post(
-        `https://api.tawsilet.com/api/upload`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      if (response.status === 201) {
-        const imageUrl = response.data[0];
-        setupdatevehicule((updatevehicule) => ({
-          ...updatevehicule,
-          data: {
-            ...updatevehicule.data,
-            grayCardPictures: {
-              id: imageUrl?.id,
-             
-            },
-          },
-        }));
-        setPicturesErrors({});
-        message.success("Fichier téléchargé avec succès.");
-      } else {
-        message.error("Le téléchargement du fichier a échoué.");
-      }
-    } catch (error) {
-      message.error("Le téléchargement du fichier a échoué.");
-    }
-  };
-
-  const fileUploadProps3 = {
-    name: "files",
-    multiple: false,
-    beforeUpload: (file) => {
-      handleFileSelect3(file);
-      return false;
-    },
-
-    onChange(info) {
-      const { status } = info.file;
-
-      if (status !== "uploading") {
-        setimage({ ...image, file: info.file, list: info.fileList });
-      }
-      if (status === "done") {
-        message.success(`${info.file.name} file uploaded successfully.`);
-      } else if (status === "error") {
-        message.error(`${info.file.name} file upload failed.`);
-      }
-    },
-    listType: "picture",
-    // defaultFileList: fileListgrayCardPictures,
-    showUploadList: {
-      showRemoveIcon: true,
-      removeIcon: <FeatherIcon icon="trash-2" />,
-    },
-  };
-  const handleFileSelectGrayCardBack = async (file) => {
-    const isLt2MB = file.size / 1024 / 1024 < 2;
-    if (!isLt2MB) {
-      message.error("Le fichier doit être inférieur à 2MB.");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("files", file);
-
-    try {
-      const response = await axios.post(
-        `https://api.tawsilet.com/api/upload`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      if (response.status === 201) {
-        const uploadedFile = response.data[0];
-
-        setupdatevehicule((prev) => ({
-          ...prev,
-          data: {
-            ...prev.data,
-            grayCardPicturesBack: {
-              id: uploadedFile?.id,
-            },
-          },
-        }));
-
-        setPicturesErrors({});
-        message.success("Fichier téléchargé avec succès.");
-      } else {
-        message.error("Le téléchargement du fichier a échoué.");
-      }
-    } catch (error) {
-      message.error("Le téléchargement du fichier a échoué.");
-    }
-  };
-  const fileUploadPropsGrayCardBack = {
-    name: "files",
-    multiple: false,
-    beforeUpload: (file) => {
-      handleFileSelectGrayCardBack(file);
-      return false; // Prevent automatic upload
-    },
-    onChange(info) {
-      const { status } = info.file;
-
-      if (status !== "uploading") {
-        setimage({ ...image, file: info.file, list: info.fileList });
-      }
-      if (status === "done") {
-        message.success(`${info.file.name} téléchargé avec succès.`);
-      } else if (status === "error") {
-        message.error(`${info.file.name} a échoué.`);
-      }
-    },
+    onChange: handleUploadChange,
     listType: "picture",
     showUploadList: {
       showRemoveIcon: true,
       removeIcon: <FeatherIcon icon="trash-2" />,
     },
-  };
+  }), [handleFileSelect, handleUploadChange]);
 
   const [addVehiculeErrors, setAddVehiculeErrors] = useState({});
   const isInputValid = () => {
@@ -787,11 +320,12 @@ function UpdateVehicule({
     const {
       assurancePictures,
       grayCardPictures,
+      grayCardPictureBack,
       vehiculePictureface1,
       vehiculePictureface2,
       vehiculePictureface3,
       vehiculePictureface4,
-      grayCardPicturesBack,
+   
     } = updatevehicule.data;
 
     const errors = {};
@@ -800,13 +334,14 @@ function UpdateVehicule({
       errors.assurancePictures = "Veuillez choisier une Image.";
       message.error(`Assurance image vide Veuillez remplire.`);
     }
-    if (!grayCardPicturesBack) {
-      errors.grayCardPicturesBack = "Veuillez choisier une Image.";
-      message.error(`Assurance image vide Veuillez remplire.`);
-    }
+   
     if (!grayCardPictures) {
       errors.grayCardPictures = "Veuillez choisier une Image.";
       message.error(`Carte Grise vide Veuillez remplire.`);
+    }
+    if (!grayCardPictureBack) {
+      errors.grayCardPictureBack = "Veuillez choisir l'image du verso de la carte grise.";
+      message.error(`Carte Grise (verso) vide Veuillez remplire.`);
     }
     if (!vehiculePictureface1) {
       errors.vehiculePictureface1 = "Veuillez choisier une Image.";
@@ -857,8 +392,7 @@ function UpdateVehicule({
   const handleCancel = () => {
     onCancel();
   };
-
-  const steps = [
+   const steps = [
     {
       title: "Information de Vehicule ",
       content: (
@@ -1042,18 +576,15 @@ function UpdateVehicule({
                 >
                   <Input
                     placeholder={
-                      updatevehicule
-                        ? updatevehicule?.data?.assuranceDate
-                        : "null"
+                      updatevehicule?.data?.assuranceDate
                     }
                     value={
-                      updatevehicule
-                        ? updatevehicule?.data?.assuranceDate
-                        : "null"
+                      updatevehicule?.data?.assuranceDate
                     }
+                    defaultValue={updatevehicule?.data?.assuranceDate}
                     type="date"
                     onChange={(e) => {
-                      setupdatevehicule({
+                      setupdatevehicule({ 
                         ...updatevehicule,
                         data: {
                           ...updatevehicule.data,
@@ -1080,244 +611,157 @@ function UpdateVehicule({
                 <Row gutter={15}>
                   <Col xs={24}>
                     <div className="add-product-content">
-                      <Cards title="Photo du véhicule">
-                        <Dragger {...fileUploadProps}>
-                          <p
-                            className="ant-upload-drag-icon"
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: "20px",
-                            }}
-                          >
-                            <h3 className="company_details_main_title">
-                              Face Gauche
-                            </h3>
-                            <img
-                              width={"20%"}
-                              src={
-                                recorddata?.vehiculePictureface1?.data
-                                  ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.vehiculePictureface1?.url}`
-                                  : face1
-                              }
-                            />
-                            <FeatherIcon icon="upload" size={50} />
-                          </p>
-                        </Dragger>
-                        {PicturesErrors.assurancePictures && (
-                          <p
-                            className="error__message"
-                            style={{ color: "red" }}
-                          >
-                            {PicturesErrors.assurancePictures}
-                          </p>
-                        )}
+                      <Cards title="Photos du véhicule">
+                        <Row gutter={[16, 16]}>
+                          {/* Front View */}
+                          <Col xs={24} md={12}>
+                            <Dragger {...createFileUploadProps('vehiculePictureface1')}>
+                              <p className="ant-upload-drag-icon" style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "20px",
+                              }}>
+                                <h3 className="company_details_main_title">Vue Avant</h3>
+                                <img
+                                  alt="Vue Avant"
+                                  width={"100%"}
+                                  src={recorddata?.vehiculePictureface1?.url || face1}
+                                />
+                                <FeatherIcon icon="upload" size={50} />
+                              </p>
+                            </Dragger>
+                            {PicturesErrors.vehiculePictureface1 && (
+                              <p className="error__message" style={{ color: "red" }}>
+                                {PicturesErrors.vehiculePictureface1}
+                              </p>
+                            )}
+                          </Col>
 
-                        <Dragger {...fileUploadProps2}>
-                          <p
-                            className="ant-upload-drag-icon"
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: "20px",
-                            }}
-                          >
-                            <h3 className="company_details_main_title">
-                              Face Avant
-                            </h3>
-                            <img
-                              width={"20%"}
-                              src={
-                                recorddata?.assurancePictures?.data
-                                  ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.assurancePictures?.url}`
-                                  : face2
-                              }
-                            />
-                            <FeatherIcon icon="upload" size={50} />
-                          </p>
-                        </Dragger>
-                        {PicturesErrors.grayCardPictures && (
-                          <p
-                            className="error__message"
-                            style={{ color: "red" }}
-                          >
-                            {PicturesErrors.grayCardPictures}
-                          </p>
-                        )}
+                          {/* Back View */}
+                          <Col xs={24} md={12}>
+                            <Dragger {...createFileUploadProps('vehiculePictureface2')}>
+                              <p className="ant-upload-drag-icon" style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "20px",
+                              }}>
+                                <h3 className="company_details_main_title">Vue Arrière</h3>
+                                <img
+                                  alt="Vue Arrière"
+                                  width={"100%"}
+                                  src={recorddata?.vehiculePictureface2?.url || face2}
+                                />
+                                <FeatherIcon icon="upload" size={50} />
+                              </p>
+                            </Dragger>
+                            {PicturesErrors.vehiculePictureface2 && (
+                              <p className="error__message" style={{ color: "red" }}>
+                                {PicturesErrors.vehiculePictureface2}
+                              </p>
+                            )}
+                          </Col>
 
-                        <Dragger {...fileUploadProps3}>
-                          <p
-                            className="ant-upload-drag-icon"
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: "20px",
-                            }}
-                          >
-                            <h3 className="company_details_main_title">
-                              Face Avant
-                            </h3>
-                            <img
-                              width={"20%"}
-                              src={
-                                recorddata?.grayCardPictures?.data
-                                  ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.grayCardPictures?.url}`
-                                  : face2
-                              }
-                            />
-                            <FeatherIcon icon="upload" size={50} />
-                          </p>
-                        </Dragger>
-                        {PicturesErrors.vehiculePictureface1 && (
-                          <p
-                            className="error__message"
-                            style={{ color: "red" }}
-                          >
-                            {PicturesErrors.vehiculePictureface1}
-                          </p>
-                        )}
+                          {/* Left Side */}
+                          <Col xs={24} md={12}>
+                            <Dragger {...createFileUploadProps('vehiculePictureface3')}>
+                              <p className="ant-upload-drag-icon" style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "20px",
+                              }}>
+                                <h3 className="company_details_main_title">Vue Gauche</h3>
+                                <img
+                                  alt="Vue Gauche"
+                                  width={"100%"}
+                                  src={recorddata?.vehiculePictureface3?.url || face3}
+                                />
+                                <FeatherIcon icon="upload" size={50} />
+                              </p>
+                            </Dragger>
+                            {PicturesErrors.vehiculePictureface3 && (
+                              <p className="error__message" style={{ color: "red" }}>
+                                {PicturesErrors.vehiculePictureface3}
+                              </p>
+                            )}
+                          </Col>
 
-                        <Dragger {...fileUploadProps01}>
-                          <p
-                            className="ant-upload-drag-icon"
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: "20px",
-                            }}
-                          >
-                            <h3 className="company_details_main_title">
-                              Face Avant
-                            </h3>
-                            <img
-                              width={"20%"}
-                              src={
-                                recorddata?.vehiculePictureface2?.data
-                                  ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.vehiculePictureface2?.url}`
-                                  : face2
-                              }
-                            />
-                            <FeatherIcon icon="upload" size={50} />
-                          </p>
-                        </Dragger>
-                        {PicturesErrors.vehiculePictureface2 && (
-                          <p
-                            className="error__message"
-                            style={{ color: "red" }}
-                          >
-                            {PicturesErrors.vehiculePictureface1}{" "}
-                          </p>
-                        )}
+                          {/* Right Side */}
+                          <Col xs={24} md={12}>
+                            <Dragger {...createFileUploadProps('vehiculePictureface4')}>
+                              <p className="ant-upload-drag-icon" style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "20px",
+                              }}>
+                                <h3 className="company_details_main_title">Vue Droite</h3>
+                                <img
+                                  alt="Vue Droite"
+                                  width={"100%"}
+                                  src={recorddata?.vehiculePictureface4?.url || face4}
+                                />
+                                <FeatherIcon icon="upload" size={50} />
+                              </p>
+                            </Dragger>
+                            {PicturesErrors.vehiculePictureface4 && (
+                              <p className="error__message" style={{ color: "red" }}>
+                                {PicturesErrors.vehiculePictureface4}
+                              </p>
+                            )}
+                          </Col>
+                        </Row>
+                      </Cards>
 
-                        <Dragger {...fileUploadProps02}>
-                          <p
-                            className="ant-upload-drag-icon"
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: "20px",
-                            }}
-                          >
-                            <h3 className="company_details_main_title">
-                              Face Droite
-                            </h3>
-                            <img
-                              width={"50%"}
-                              src={
-                                recorddata?.vehiculePictureface3?.data
-                                  ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.vehiculePictureface3?.url}`
-                                  : face3
-                              }
-                            />
-                            <FeatherIcon icon="upload" size={50} />
-                          </p>
-                        </Dragger>
-                        {PicturesErrors.vehiculePictureface3 && (
-                          <p
-                            className="error__message"
-                            style={{ color: "red" }}
-                          >
-                            {PicturesErrors.vehiculePictureface1}
-                          </p>
-                        )}
-
-                        <Dragger {...fileUploadProps03}>
-                          <p
-                            className="ant-upload-drag-icon"
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: "20px",
-                            }}
-                          >
-                            <h3 className="company_details_main_title">
-                              Face Arrière
-                            </h3>
-                            <img
-                              width={"19%"}
-                              src={
-                                recorddata?.vehiculePictureface4?.data
-                                  ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.vehiculePictureface4?.url}`
-                                  : face4
-                              }
-                            />
-                            <FeatherIcon icon="upload" size={50} />
-                          </p>
-                        </Dragger>
-                        {PicturesErrors.grayCardPicturesBack && (
-                          <p
-                            className="error__message"
-                            style={{ color: "red" }}
-                          >
-                            {PicturesErrors.grayCardPicturesBack}
-                          </p>
-                        )}
-                        <Dragger {...fileUploadPropsGrayCardBack}>
-                          <p
-                            className="ant-upload-drag-icon"
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: "20px",
-                            }}
-                          >
-                            <h3 className="company_details_main_title">
-                              Carte Grise (Verso)
-                            </h3>
-                            <img
-                              width={"20%"}
-                              src={
-                                recorddata?.grayCardPicturesBack?.data
-                                  ? `${process.env.REACT_APP_BACKUP_URL}${recorddata?.grayCardPicturesBack?.url}`
-                                  : face4 // Replace with your fallback image
-                              }
-                            />
-                            <FeatherIcon icon="upload" size={50} />
-                          </p>
-                        </Dragger>
-
-                        {PicturesErrors.vehiculePictureface4 && (
-                          <p
-                            className="error__message"
-                            style={{ color: "red" }}
-                          >
-                            {PicturesErrors.vehiculePictureface1}
-                          </p>
-                        )}
+                      <Cards title="Documents" style={{ marginTop: "20px" }}>
+                        <Row gutter={[16, 16]}>
+                          {/* Carte Grise Recto */}
+                          <Col xs={24} md={12}>
+                            <Dragger {...createFileUploadProps('grayCardPictures')}>
+                              <p className="ant-upload-drag-icon" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "20px" }}>
+                                <h3 className="company_details_main_title">Carte Grise (Recto)</h3>
+                               {!recorddata?.grayCardPictures?.url? <FeatherIcon icon="file-text" size={50} />
+                             :  <img
+                                  alt="grayCardPictures"
+                                  width={"100%"}
+                                  src={recorddata?.grayCardPictures?.url}
+                                />}
+                                <FeatherIcon icon="upload" size={50} />
+                              </p>
+                            </Dragger>
+                            {PicturesErrors.grayCardPictures && (
+                              <p className="error__message" style={{ color: "red" }}>
+                                {PicturesErrors.grayCardPictures}
+                              </p>
+                            )}
+                          </Col>
+                          {/* Carte Grise Verso */}
+                          <Col xs={24} md={12}>
+                            <Dragger {...createFileUploadProps('grayCardPictureBack')}>
+                              <p className="ant-upload-drag-icon" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "20px" }}>
+                                <h3 className="company_details_main_title">Carte Grise (Verso)</h3>
+                               {!recorddata?.grayCardPictureBack?.url? <FeatherIcon icon="file-text" size={50} />
+                             :  <img
+                                  alt="grayCardPictureBack"
+                                  width={"100%"}
+                                  src={recorddata?.grayCardPictureBack?.url}
+                                />}
+                                <FeatherIcon icon="upload" size={50} />
+                              </p>
+                            </Dragger>
+                            {PicturesErrors.grayCardPictureBack && (
+                              <p className="error__message" style={{ color: "red" }}>
+                                {PicturesErrors.grayCardPictureBack}
+                              </p>
+                            )}
+                          </Col>
+                        </Row>
                       </Cards>
                     </div>
                   </Col>
@@ -1345,7 +789,7 @@ function UpdateVehicule({
       footer={null}
       onCancel={handleCancel}
     >
-      <>
+    {updatevehicule.loaded&&(  <>
         <Steps current={current} items={items} />
         <div style={contentStyle}>{steps[current].content}</div>
         <div style={{ marginTop: 24 }}>
@@ -1383,7 +827,7 @@ function UpdateVehicule({
             )}
           </div>
         </div>
-      </>
+      </>)}
     </Modal>
   );
 }

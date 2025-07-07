@@ -10,7 +10,7 @@ import CommandStatus from "../../../utility/enums/commandStatus";
 import axios from "axios";
 
 const AssignDriver = ({ visible, onCancel, record, setPing, ping }) => {
-  console.log("🚀 ~ AssignDriver ~ record:", record);
+ 
   const dispatch = useDispatch();
 
   const drivers = useSelector((state) => state?.user?.driverList);
@@ -25,9 +25,7 @@ const AssignDriver = ({ visible, onCancel, record, setPing, ping }) => {
   const companyId = useSelector(
     (store) => store?.reservations?.viewedCommand?.company_id?.documentId
   );
-  console.log("🚀 ~ AssignDriver ~ companyId:", companyId);
-  // const companyId = record?.company_id?.documentId;
-
+   
   // Populate driver options based on available drivers
   useEffect(() => {
     const jwt = localStorage.getItem("token");
@@ -43,7 +41,7 @@ const AssignDriver = ({ visible, onCancel, record, setPing, ping }) => {
           }
         )
         .then((res) => {
-          console.log("🚀 ~ useEffect ~ res:", res.data);
+        
           const availableDrivers = res.data.filter((driver) => driver);
           const updatedOptions = availableDrivers.map((driver) => ({
             value: driver?.documentId || "",
@@ -61,7 +59,7 @@ const AssignDriver = ({ visible, onCancel, record, setPing, ping }) => {
           }));
           setOptions(updatedOptions);
         });
-      // console.log("🚀 ~ useEffect ~ companyDrivers:", companyDrivers);
+  
     }
   }, [drivers, companyId]);
 

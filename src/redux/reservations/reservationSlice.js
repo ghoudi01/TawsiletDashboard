@@ -1,15 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import client from "../../apolloClient";
 import {
-  GET_RESERVATION_BY_ID,
+ 
   GET_RESERVATIONS,
-  GET_RESERVATIONS_COUNT,
   GET_COMMAND_DETAILS_BY_ID,
 } from "./queries";
 import {
   CREATE_RESERVATION,
-  DELETE_RESERVATION,
-  UPDATE_RESERVATION,
+ 
 } from "./mutations";
 import axios from "axios";
 
@@ -31,29 +29,40 @@ export const getReservationById = createAsyncThunk(
 export const getReservations = createAsyncThunk(
   "reservations/all",
   async (params, { rejectWithValue }) => {
-    const { page = 1, pageSize = 10, text = "" } = params || {};
+    const { page = 1, pageSize = 10, text = "" ,user_id=null} = params || {};
     try {
       const jwt = localStorage.getItem("token");
+      const params={
+        // pLevel: 1,
+         "pagination[page]": page,
+         "pagination[pageSize]": pageSize,
+         ...(text && {
+           "filters[$or][0][clientFullName][$containsi]": text,
+           "filters[$or][1][departureCity][$containsi]": text,
+           "filters[$or][2][arrivalCity][$containsi]": text,
+         }),
+         "populate[0]":"pickUpAddress",
+         "populate[1]":"dropOfAddress",
+         "populate[2]":"client",
+         "filters[driver][$null]":true,
+         "filters[client][$notNull]":true,
+       }
+       if(user_id){
+        params.filters["client"]["$eq"]=user_id
+       } 
+
+
 
       const response = await axios.get(
         `${process.env.REACT_APP_BACKUP_URL}commands`,
         {
-          params: {
-            pLevel: 1,
-            "pagination[page]": page,
-            "pagination[pageSize]": pageSize,
-            ...(text && {
-              "filters[$or][0][clientFullName][$containsi]": text,
-              "filters[$or][1][departureCity][$containsi]": text,
-              "filters[$or][2][arrivalCity][$containsi]": text,
-            }),
-          },
+          params,
           headers: {
             Authorization: `Bearer ${jwt}`,
           },
         }
       );
-
+      console.log(response)
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -79,10 +88,10 @@ export const getReservationsCount = createAsyncThunk(
       });
 
       const { data } = await axios.get(
-        `${process.env.REACT_APP_BACKUP_URL}commands/count?${params.toString()}`
+        `${process.env.REACT_APP_BACKUP_URL}commands?${params.toString()}`
       );
 
-      return { count: data };
+      return { count: data?.meta?.pagination?.total };
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }
@@ -149,50 +158,33 @@ export const createNewReservation = createAsyncThunk(
 export const getCommands = createAsyncThunk(
   "getCommands/all",
   async (
-    { filters, pagination, sort = "createdAt:desc", currentUser },
+    { filters, Pagination, sort = "createdAt:desc", currentUser },
     { rejectWithValue }
   ) => {
-    let companyId;
-    switch (currentUser.user_role) {
-      case "agent":
-        companyId = currentUser.agent_company.documentId;
-        break;
-      case "company": //
-        companyId = currentUser.companies[0].documentId;
-        break;
-      default:
-        companyId = undefined;
-    }
-    // currentUser.user_role === "agent" ? currentUser.agent_company.documentId
-    // console.log("🚀 ~ user:", user)
-    // console.log("🚀 ~ filters:", filters);
-
     try {
-      const { data } = await client.query({
-        query: GET_RESERVATIONS,
-        variables: {
-          filters: {
-            ...filters,
-            ...(companyId
-              ? {
-                  company_id: {
-                    documentId: {
-                      eq: companyId,
-                    },
-                  },
-                }
-              : { company_id: { documentId: { ne: null } } }),
-
-            commandStatus: { notIn: ["Pending", "Canceled_by_client"] },
+      const jwt = localStorage.getItem("token");
+      const response = await axios.get(
+        `${process.env.REACT_APP_BACKUP_URL}commands`,
+        {
+          params: {
+            "pagination[page]": Pagination.page,
+            "pagination[pageSize]": Pagination.pageSize,
+            "populate[0]":"pickUpAddress",
+            "populate[1]":"dropOfAddress",
+            "populate[2]":"client",
+            "filters[driver][$notNull]":true,
+            "filters[client][$notNull]":true,
+            ...filters
           },
-          pagination,
-          sort,
-        },
-        fetchPolicy: "network-only",
-      });
-      console.log("🚀 ~ data.commands:", data.commands_connection);
-      return data.commands_connection;
+          headers: {
+            Authorization: `Bearer ${jwt}`,
+          },
+        }
+      );
+
+      return response.data;
     } catch (error) {
+      console.error("Error fetching commands:", error);
       return rejectWithValue(error.message);
     }
   }

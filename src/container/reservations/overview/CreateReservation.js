@@ -384,10 +384,7 @@ function CreateReservation({ visible, onCancel, setPing, ping }) {
 
   useEffect(() => {
     const fetchData = async () => {
-      // const commandData = await JSON.parse(localStorage.getItem("command"));
-      // const originRef = await commandData?.pickUpAddress?.Address;
-      // const destiantionRef = await commandData?.dropOfAddress?.Address;
-      // await console.log(commandData.pickUpAddress.Address);
+     
 
       const result = await calculateRoute({
         originRef: newreservation?.data?.pickUpAddress?.Address,
@@ -398,20 +395,7 @@ function CreateReservation({ visible, onCancel, setPing, ping }) {
     };
     fetchData().catch((err) => console.log(err));
 
-    // axios
-    //   .post(`${process.env.REACT_APP_BACKUP_URL}/calcul`, {
-    //     distance: newreservation?.data?.distance,
-    //     volume: newreservation?.data?.items,
-    //   })
-    //   .then((res) => setMinPrice(res.data));
-    // axios
-    //   .post(`${process.env.REACT_APP_BASE_URL}/calcul`, {
-    //     distance: newreservation?.data?.distance,
-    //     volume: newreservation?.data?.items,
-    //     accessDepart: newreservation?.data?.pickUpAcces,
-    //     accessArrivee: newreservation?.data?.dropAcces,
-    //   })
-    //   .then((res) => setMaxPrice(res.data));
+   
   }, []);
   async function calculateRoute({ originRef, destiantionRef }) {
     if (originRef === "" || destiantionRef === "") {
@@ -420,16 +404,7 @@ function CreateReservation({ visible, onCancel, setPing, ping }) {
     // eslint-disable-next-line no-undef
     const directionsService = new google.maps.DirectionsService();
     Geocode.setApiKey(process.env.REACT_APP_GOOGLE_MAPS_API_KEY);
-    // let originPositionAddress = originPosition
-    //   ? Geocode.fromLatLng(originPosition.lat, originPosition.lng)
-    //   : null;
-
-    // Geocode.fromLatLng(destinationPosition.lat, destinationPosition.lng).then(
-    //   (response) =>
-    //     setDestinationPositionAddress(response.results[0].formatted_address)
-    // );
-    // console.log(originRef, "++++++", destiantionRef);
-    // console.log(destinationPositionAddress);
+    
 
     const results = await directionsService.route({
       origin: originRef, //|| originPosition,
@@ -437,7 +412,7 @@ function CreateReservation({ visible, onCancel, setPing, ping }) {
       // eslint-disable-next-line no-undef
       travelMode: google.maps.TravelMode.DRIVING,
     });
-    // console.log(results);
+  
     setNewreservation({
       ...newreservation,
       data: {
@@ -460,29 +435,7 @@ function CreateReservation({ visible, onCancel, setPing, ping }) {
         },
       },
     });
-    // setDirectionsResponse(results);
-    // setDistance(results.routes[0].legs[0].distance.value);
-    // setDuration(results.routes[0].legs[0].duration.text);
-
-    // setOriginPosition({
-    //   lat: results.routes[0].legs[0].start_location.lat(),
-    //   lng: results.routes[0].legs[0].start_location.lng(),
-    // });
-
-    // setDestinationPosition({
-    //   lat: results.routes[0].legs[0].end_location.lat(),
-    //   lng: results.routes[0].legs[0].end_location.lng(),
-    // });
-
-    // // results.routes[0].legs[0].end_location.lat();        end location lat
-    // // results.routes[0].legs[0].end_location.lng();        end location lng
-
-    // results.routes[0].legs[0].start_location.lat();         start location lat
-    // results.routes[0].legs[0].start_location.lng();          start location lng
-
-    // results.request.destination.query;
-    // results.request.origin.query;
-    // console.log(originPosition, destinationPosition);
+  
   }
   useEffect(() => {
     const buttonVisible = hasFilledItem();

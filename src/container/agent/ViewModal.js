@@ -30,7 +30,7 @@ const UpdateUserModal = ({ open, onClose, data, refresh }) => {
   };
 
   const handleFinish = async (values) => {
-    console.log("Form Values:", values);
+   
     dispatch(updateUser({ id: data.id, user: values }));
     dispatch(getDriver());
   };
@@ -181,23 +181,7 @@ const UpdateUserModal = ({ open, onClose, data, refresh }) => {
                 />
               </Form.Item>
 
-              <Form.Item label="grayCardPicturesBack">
-                <img
-                  src={data?.vehicule?.grayCardPicturesBack?.url}
-                  alt="Gray Card Back"
-                  style={{
-                    width: 120,
-                    height: 120,
-                    objectFit: "cover",
-                    borderRadius: 4,
-                    border: "1px solid #ddd",
-                    cursor: "pointer",
-                  }}
-                  onClick={() =>
-                    handleImageClick(data?.vehicule?.grayCardPicturesBack?.url)
-                  }
-                />
-              </Form.Item>
+             
 
               <Form.Item label="vehiculePictureface1">
                 <img

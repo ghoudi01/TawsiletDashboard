@@ -33,7 +33,7 @@ import StatusCommand from "./StatusCommands";
 const Status = () => {
   const currentUser = useSelector((store) => store?.user?.currentUser);
   const [allCommands, setAllCommands] = useState([]);
-  console.log(currentUser, "===///", allCommands);
+ 
   const chartData = useSelector((store) => {
     return {
       commandCount: store?.charts?.commandCount,

@@ -43,7 +43,7 @@ export const GET_VEHICULES_LIST = gql`
       matriculation
       model
       assuranceDate
-      vinNumber
+      documentId
       year
       mark
       assurancePictures {
@@ -142,7 +142,7 @@ export const GET_COMPANY_DETAILS_BY_ID = gql`
           description
         }
         year
-        vinNumber
+         
         vehiculePictureface1 {
           url
         }

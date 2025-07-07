@@ -114,7 +114,7 @@ function Project({ match }) {
                 activeFilter === "invalid" ? "slected_filter_status_bg" : ""
               }
             >
-              Invalide
+              bloquer
             </li>
           </Link>
           <Link to="#" onClick={() => handleFilterClick("waiting")}>

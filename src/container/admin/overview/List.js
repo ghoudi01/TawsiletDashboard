@@ -61,7 +61,7 @@ const Admin = ({ text }) => {
     setOpenU(true);
   };
   const [selectedRows, setSelectedRows] = useState([]);
-  // console.log(selectedRows);
+ 
   const handleSelectAll = (checked) => {
     if (checked) {
       const allIds = users.map((value) => value.id);

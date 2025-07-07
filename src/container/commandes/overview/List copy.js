@@ -658,7 +658,7 @@ const Reservations = ({
       },
     });
   };
-  console.log("🚀 ~ mappp:", mappp);
+ 
   const dataSource = reservations.length
     ? reservations?.map((value, i) => ({
         key: value.id,

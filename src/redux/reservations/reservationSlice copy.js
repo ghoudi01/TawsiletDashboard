@@ -24,27 +24,7 @@ export const getReservationById = createAsyncThunk(
     }
   }
 );
-// get all
-// export const getReservations = createAsyncThunk(
-//   "reservations/all",
-
-//   async ({ pagination, text="" }) => {
-//     console.log(text);
-//     const current = pagination?.current || 1;
-//     const pageSize = pagination?.pageSize || 25;
-//     try {
-//       const response = await axios.get(
-//         `${process.env.REACT_APP_BACKUP_URL}commands?pLevel=4&pagination[pageSize]=${pageSize}&pagination[page]=${current}&filters[company_id][id][$null]=true&filters[pickUpAddress][Address][$contains]=${text}&filters[dropOfAddress][Address][$contains]=${text}`
-//       );
-//       console.log(response.data);
-//       return response.data;
-//     } catch (error) {}
-//   }
-// );
-
-//  =====================================================================================>
-
-// Function to construct the API URL
+ 
 const constructApiUrl = ({
   current = 1,
   pageSize = 10,

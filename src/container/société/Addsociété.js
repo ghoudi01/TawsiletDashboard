@@ -57,7 +57,7 @@ const Addsociété = ({ visible, onCancel, record }) => {
   const minDate = moment(currentDate).add(1, "months");
 
   const currentId = useSelector((state) => state?.user?.currentUser?.id);
-  // console.log(currentId, "currentId");
+ 
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [modalText, setModalText] = useState("Content of the modal");
 
@@ -84,8 +84,7 @@ const Addsociété = ({ visible, onCancel, record }) => {
     // .target.files[0];
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
-
-    // console.log("file", file);
+ 
     const formData = new FormData();
 
     formData.append("files", file);
@@ -139,7 +138,7 @@ const Addsociété = ({ visible, onCancel, record }) => {
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
 
-    // console.log("file", file);
+ 
     const formData = new FormData();
 
     formData.append("files", file);
@@ -195,8 +194,7 @@ const Addsociété = ({ visible, onCancel, record }) => {
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
 
-    // console.log("file", file);
-    const formData = new FormData();
+     const formData = new FormData();
 
     formData.append("files", file);
 
@@ -253,7 +251,7 @@ const Addsociété = ({ visible, onCancel, record }) => {
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
 
-    // console.log("file", file);
+   
     const formData = new FormData();
 
     formData.append("files", file);
@@ -312,8 +310,7 @@ const Addsociété = ({ visible, onCancel, record }) => {
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
 
-    // console.log("file", file);
-    const formData = new FormData();
+     const formData = new FormData();
 
     formData.append("files", file);
 
@@ -370,8 +367,7 @@ const Addsociété = ({ visible, onCancel, record }) => {
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
 
-    // console.log("file", file);
-    const formData = new FormData();
+     const formData = new FormData();
 
     formData.append("files", file);
 
@@ -428,7 +424,7 @@ const Addsociété = ({ visible, onCancel, record }) => {
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
 
-    // console.log("file", file);
+  
     const formData = new FormData();
 
     formData.append("files", file);
@@ -487,7 +483,7 @@ const Addsociété = ({ visible, onCancel, record }) => {
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
 
-    // console.log("file", file);
+     
     const formData = new FormData();
 
     formData.append("files", file);
@@ -545,7 +541,7 @@ const Addsociété = ({ visible, onCancel, record }) => {
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
 
-    // console.log("file", file);
+ 
     const formData = new FormData();
 
     formData.append("files", file);

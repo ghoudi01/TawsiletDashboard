@@ -15,7 +15,7 @@ const { Countdown } = Statistic;
 
 function Statistics() {
   const onFinish = () => {
-    // console.log('finished!');
+    
   };
 
   return (

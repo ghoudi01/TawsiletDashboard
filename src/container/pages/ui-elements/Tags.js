@@ -15,16 +15,14 @@ function Tags() {
     checke: null,
   });
   const log = () => {
-    // console.log(e);
-  };
+   };
 
   const checked = (checke) => {
     setstate({ ...state, checke });
   };
 
   const preventDefault = () => {
-    // console.log('Clicked! But prevent default.');
-  };
+   };
 
   return (
     <>

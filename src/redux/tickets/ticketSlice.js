@@ -5,12 +5,15 @@ import axios from "axios";
 export const getTickets = createAsyncThunk(
   "tickets/getTickets",
   async ({ user_role, page, pageSize, text }) => {
-    console.log("🚀 ~ user_role:", user_role)
-    const response = await axios.get(
-      `${process.env.REACT_APP_BACKUP_URL}tickets?populate=*&filters[user][user_role][$eq]=${user_role}&pagination[page]=${page}&pagination[pageSize]=${pageSize}`
-    );
-    console.log(response, "tickets data !!!!!!!!!!!!!!!!!!!!!");
-    return response.data;
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_BACKUP_URL}tickets?populate[0]=client&populate[1]=command&filters[client][user_role][$eq]=${user_role}&pagination[page]=${page}&pagination[pageSize]=${pageSize}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching tickets:", error);
+      throw error;
+    }
   }
 );
 export const getTicketById = createAsyncThunk(

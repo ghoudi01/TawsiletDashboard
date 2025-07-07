@@ -121,7 +121,7 @@ module.exports = {
             "year",
             "color",
             "matriculation",
-            "vinNumber",
+            
             "createdAt",
             "updatedAt",
             "assuranceDate",

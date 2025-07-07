@@ -15,6 +15,7 @@ export const transformReservations = (
   setOpen,
   setSelectedData
 ) => {
+ 
   return reservations?.map((value) => ({
     key: value?.documentId,
     id: value?.refNumber,

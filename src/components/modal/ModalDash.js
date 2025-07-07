@@ -50,7 +50,7 @@ function ModalDash({ record, open, setOpen, setSelectedId, ping, setPing }) {
       model: "",
       year: "",
       matriculation: "",
-      vinNumber: "",
+   
       color: "",
       assuranceDate: "",
     },
@@ -79,93 +79,7 @@ function ModalDash({ record, open, setOpen, setSelectedId, ping, setPing }) {
   const [newRecord, setNewRecord] = useState(record);
 
   useEffect(() => {
-    // if (record) {
-    //   setDetails({
-    //     driverId: record?.driver_id?.id,
-    //     company_name:
-    //       record?.company_id?.?
-    //         ?.name,
-    //     adresse_ramassage: record?.pickUpAddress?.Address,
-    //     SpecificNote: record?.SpecificNote,
-    //     adresse_depot: record?.dropOfAddress?.Address,
-    //     date: record?.departDate,
-    //     distance: record?.distance,
-    //     duration: record?.duration,
-    //     price: record?.totalPrice,
-    //     payType: record?.payType,
-    //     firstname:
-    //       record?.driver_id?.?
-    //         ?.firstName,
-    //     lastname:
-    //       record?.driver_id?.?
-    //         ?.lastName,
-    //     driverPhone:
-    //       record?.driver_id?.phoneNumber,
-    //     driverEmail: record?.driver_id?.email,
-    //     items: record?.items,
-    //     company_details: {
-    //       name: record?.company_id?.attributes
-    //         ?.name,
-    //       address:
-    //         record?.company_id?.
-    //           .address,
-    //       phoneNumber:
-    //         record?.company_id?.phoneNumber,
-    //       email: record?.company_id?.email,
-    //     },
-    //     vehicule_details: {
-    //       mark: record?.vehicule_id?.mark,
-    //       model: record?.vehicule_id?.model,
-    //       year: record?.vehicule_id?.year,
-    //       matriculation:
-    //         record?.vehicule_id?.matriculation,
-    //       vinNumber:
-    //         record?.vehicule_id?.vinNumber,
-    //       color: record?.vehicule_id?.color,
-    //       assuranceDate:
-    //         record?.vehicule_id?.assuranceDate,
-    //     },
-    //     driver_details: {
-    //       id: record?.driver_id?.id,
-    //       email: record?.driver_id?.email,
-    //       confirmed: record?.driver_id?.confirmed,
-    //       blocked: record?.driver_id?.blocked,
-    //       phoneNumber:
-    //         record?.driver_id?.phoneNumber,
-    //       user_role: record?.driver_id?.user_role,
-    //       firstName:
-    //         record?.driver_id?.
-    //           ?.firstName,
-    //       lastName:
-    //         record?.driver_id?.
-    //           ?.lastName,
-    //       cin: record?.driver_id?.attributes
-    //         ?.cin,
-    //       licenceNumber:
-    //         record?.driver_id?.
-    //           ?.licenceNumber,
-    //       licenceClass:
-    //         record?.driver_id?.
-    //           ?.licenceClass,
-    //     },
-    //     client_details: {
-    //       firstName:
-    //         record?.client_id?.
-    //           ?.firstName,
-    //       lastName:
-    //         record?.client_id?.
-    //           ?.lastName,
-    //       phoneNumber:
-    //         record?.client_id?.phoneNumber,
-    //       email: record?.client_id?.email,
-    //       profile_picture:
-    //         record?.client_id?.profile_picture
-    //           ?.url,
-    //     },
-    //   });
-    // }
-    // setDriverId(details?.driverId);
-
+   
     if (open) {
       dispatch(getReservationById(record?.id)).then((res) => {
         setNewRecord(res?.payload?.data);
@@ -205,7 +119,7 @@ function ModalDash({ record, open, setOpen, setSelectedId, ping, setPing }) {
         model: newRecord?.vehicule_id?.model,
         year: newRecord?.vehicule_id?.year,
         matriculation: newRecord?.vehicule_id?.matriculation,
-        vinNumber: newRecord?.vehicule_id?.vinNumber,
+     
         color: newRecord?.vehicule_id?.color,
         assuranceDate: newRecord?.vehicule_id?.assuranceDate,
       },
@@ -458,12 +372,7 @@ function ModalDash({ record, open, setOpen, setSelectedId, ping, setPing }) {
                     </div>
                   )}
 
-                  {details.company_details.phoneNumber && (
-                    <div className="modal_info_items">
-                      <h3>Numéro Vin</h3>
-                      <p>{details?.vehicule_details?.vinNumber}</p>
-                    </div>
-                  )}
+                 
                   <Dropdown
                     className="wide-dropdwon"
                     content={

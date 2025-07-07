@@ -30,23 +30,28 @@ const Historique = () => {
     ?.filter((el) =>
       current.user_role === ("owner" || "admin")
         ? el
-        : el?.sender?.data?.id === current.id ||
-          el?.reciever?.data?.id === current.id
+        : el?.sender?.id === current.id ||
+          el?.reciever?.id === current.id
     )
     .map((el) => {
-      console.log(el,"=============")
+       console.log("el?.sender?.data",el?.sender)
       return {
         type: el?.transactionType === "incomes" ? "Revenus" : "Payement",
         sender:
-          el?.sender?.data?.user_role === "owner"
+          el?.sender?.user_role === "owner"
             ? "Tawsilet"
-            : el?.sender?.data?.accountOverview[0]?.name,
+            : el?.sender?.firstName+" "+el?.sender?.lastName,
         reciever:
-          el?.reciever?.data?.user_role === "owner"
+          el?.reciever?.user_role === "owner"
             ? "Tawsilet"
-            : el?.reciever?.data?.accountOverview[0]?.name,
+            : el?.reciever?.firstName+" "+el?.reciever?.lastName,
         Montant: `${el?.sold} TND`,
         methode: el?.payType,
+        evidence: el?.evidence ? (
+          <a href={el.evidence.url} target="_blank" rel="noopener noreferrer">
+            <FeatherIcon icon="file" size={16} />
+          </a>
+        ) : null,
         delete:
           current.user_role === ("owner") ? (
             <FeatherIcon
@@ -99,6 +104,11 @@ const Historique = () => {
       title: "Methode de payment",
       dataIndex: "methode",
       key: "Montant",
+    },
+    {
+      title: "PREUVE",
+      dataIndex: "evidence",
+      key: "evidence",
     },
     {
       title: "",

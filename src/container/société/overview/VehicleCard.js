@@ -11,10 +11,7 @@ const VehicleCard = ({ vehicule }) => (
         <span style={{ color: 'green' }}>In Service</span>
       </div>
     </div>
-    <div className="vehicle-details">
-      <p>License: {vehicule.matriculation}</p>
-      <p>VIN: {vehicule.vinNumber}</p>
-    </div>
+   
     <LinkOutlined className="vehicle-icon" />
   </div>
 );

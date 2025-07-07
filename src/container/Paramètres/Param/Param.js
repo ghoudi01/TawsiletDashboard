@@ -13,6 +13,7 @@ function Param() {
     WAITING_TIME_CHARGE: 0.3,
     WAITING_TIME_GRACE_PERIOD: 1,
     START_CHARGE_AFTERT_TIME: 1,
+    min_radius_search: 1,
   });
 
   const handleChange = (key, value) => {
@@ -31,7 +32,7 @@ function Param() {
             },
           }
         );
-          console.log(response.data,"====")
+        
         // ✅ Set fetched data into state
         if (response.data?.data) {
           setParams((prev) => ({
@@ -40,7 +41,7 @@ function Param() {
           }));
         }
 
-        console.log("✅ Parameters fetched:", response.data);
+      
       } catch (error) {
         console.error("❌ Failed to fetch parameters:", error);
       }
@@ -51,9 +52,7 @@ function Param() {
 
   const updateParameters = async (inputData) => {
     const jwt = localStorage.getItem("token");
-    console.log(
-      `${process.env.REACT_APP_BACKUP_URL}parameters/uhevts0oaweghxiwdvc58pei`
-    );
+   
     try {
       const response = await axios.put(
         `${process.env.REACT_APP_BACKUP_URL}parameters/uhevts0oaweghxiwdvc58pei`,
@@ -62,6 +61,7 @@ function Param() {
             WAITING_TIME_CHARGE: inputData.WAITING_TIME_CHARGE,
             WAITING_TIME_GRACE_PERIOD: inputData.WAITING_TIME_GRACE_PERIOD,
             START_CHARGE_AFTERT_TIME: inputData.START_CHARGE_AFTERT_TIME,
+            min_radius_search: inputData.min_radius_search,
           },
         },
         {
@@ -70,7 +70,7 @@ function Param() {
           },
         }
       );
-      console.log("✅ Parameters updated:", response.data);
+    
       notification.success({
         message: "Paramètres mis à jour",
         description: "Les paramètres ont été mis à jour avec succès.",
@@ -121,7 +121,7 @@ function Param() {
                       </div>
 
                       <div>
-                        <Text strong>Période de grâce d'attente</Text>
+                        <Text strong>temps calcule</Text>
                         <InputNumber
                           min={0}
                           value={params.WAITING_TIME_GRACE_PERIOD}
@@ -137,6 +137,18 @@ function Param() {
                           min={0}
                           value={params.START_CHARGE_AFTERT_TIME}
                           onChange={(val) => handleChange("START_CHARGE_AFTERT_TIME", val)}
+                          style={{ width: '100%', marginTop: 8 }}
+                          size="large"
+                        />
+                      </div>
+
+                      <div>
+                        <Text strong>Rayon de recherche minimum (km)</Text>
+                        <InputNumber
+                          min={0}
+                          step={0.1}
+                          value={params.min_radius_search}
+                          onChange={(val) => handleChange("min_radius_search", val)}
                           style={{ width: '100%', marginTop: 8 }}
                           size="large"
                         />

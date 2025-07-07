@@ -33,7 +33,7 @@ const Reservations = ({
   pageSize,
   total,
 }) => {
-  console.log("🚀 ~ reservations:", reservations);
+   
 
   const dispatch = useDispatch();
   const meta = useSelector(
@@ -186,6 +186,7 @@ const Reservations = ({
           <p className="no-margin" style={{ margin: "0" }}>
             {record?.pickupAddress}
           </p>
+
         </ProjectListTitle>
       ),
     },
@@ -194,9 +195,11 @@ const Reservations = ({
       id: "deliveryAddress",
       title: "Adressse d'arrivée",
       dataIndex: "deliveryAddress",
-      render: (text, record) => (
+      render: (text, record) => {
+      
+        return (
         <span className="date-finished">{record?.deliveryAddress}</span>
-      ),
+      )},
     },
     {
       id: "dateCreation",

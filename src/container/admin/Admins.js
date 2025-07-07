@@ -47,9 +47,7 @@ function Admins({ match }) {
   const adminsCount = useSelector(
     (state) => state?.user?.admins?.pagination?.total
   );
-  // const owner = users?.filter((user) => user?.user_role === "owner");
-  console.log("admins", users);
-  const currentId = useSelector((state) => state?.user?.currentUser?.id);
+    const currentId = useSelector((state) => state?.user?.currentUser?.id);
   const currentname = useSelector((state) => state?.user?.currentUser?.name);
   const userRole = useSelector((state) => state?.user?.currentUser?.user_role);
   const { path } = match;
@@ -90,7 +88,7 @@ function Admins({ match }) {
     setOpenU(true);
   };
   const [selectedRows, setSelectedRows] = useState([]);
-  // console.log(selectedRows);
+  
   const handleSelectAll = (checked) => {
     if (checked) {
       const allIds = users?.map((value) => value.id);

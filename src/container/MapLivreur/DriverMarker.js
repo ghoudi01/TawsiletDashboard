@@ -6,20 +6,40 @@ import styled from 'styled-components';
 import axios from 'axios';
 
 const ICONS = {
-  free: "../../images/Layer 1 (3).png",
-  busy: "../../images/Layer 1 (1).png",
+  
+  "1":{
+    free: require("../../static/img/GreenEco.png"),
+    busy: require("../../static/img/RedEco.png"),
+    offline: require("../../static/img/GrayEco.png"),
+  },
+  "2":{
+    free: require("../../static/img/GreenClass.png"),
+    busy: require("../../static/img/RedClass.png"),
+    offline: require("../../static/img/GrayClass.png"),
+  },
+  "3":{
+    free: require("../../static/img/GreenVan.png"),
+    busy: require("../../static/img/RedVan.png"),
+    offline: require("../../static/img/GrayVan.png"),
+  }
+
 };
 
+
+
+
 const DriverMarker = ({ driverId, location, onSelect, isSelected }) => {
+
+  
   const [driverDetails, setDriverDetails] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDriverData = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKUP_URL}users/?filters[documentId][$eq]=${driverId}&populate[0]=vehicule&populate[1]=profilePicture`);
+        const response = await axios.get(`${process.env.REACT_APP_BACKUP_URL}users/?filters[documentId][$eq]=${driverId}&populate[0]=vehicule&populate[1]=profilePicture&populate[2]=vehicule.type`);
         setDriverDetails(response.data[0]);
-        
+         
       } catch (error) {
         console.error(`Error fetching driver details for ${driverId}:`, error);
       } finally {
@@ -35,22 +55,24 @@ const DriverMarker = ({ driverId, location, onSelect, isSelected }) => {
   }
 
   const { latitude, longitude, isFree,isActive } = location;
-  const { firstName, vehicule, profilePicture, rating, phoneNumber } = driverDetails;
- 
-  const getCarIcon = (isActive, isFree) => {
-    let color = "#808080"; // default: gray (not active)
-    if (isActive) {
-      color = isFree ? "#00cc00" : "#cc0000"; // green if free, red if busy
-    }
+  const { firstName, vehicule, profilePicture, rating, phoneNumber,region } = driverDetails;
   
-    const svg = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24">
-        <path fill="${color}" d="M5,11H19L21,16H3L5,11M6.5,18A1.5,1.5 0 0,1 5,16.5A1.5,1.5 0 0,1 6.5,15A1.5,1.5 0 0,1 8,16.5A1.5,1.5 0 0,1 6.5,18M17.5,18A1.5,1.5 0 0,1 16,16.5A1.5,1.5 0 0,1 17.5,15A1.5,1.5 0 0,1 19,16.5A1.5,1.5 0 0,1 17.5,18Z"/>
-      </svg>
-    `;
+
+  const getCarIcon = (isActive, isFree,carTypeId) => {
+    let imageURL= "../../static/img/GreenEco.png"
+    if(carTypeId){
+      if (isActive) {
+        imageURL = isFree ? ICONS[carTypeId].free : ICONS[carTypeId].busy
+      }
+      else {
+        imageURL = ICONS[carTypeId].offline
+      }
+    }
+     
+  
   
     return {
-      url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
+      url: imageURL,
       scaledSize: new window.google.maps.Size(40, 40),
     };
   };
@@ -58,7 +80,7 @@ const DriverMarker = ({ driverId, location, onSelect, isSelected }) => {
   return (
     <>
     <Marker
-  icon={getCarIcon(isActive, isFree)}
+  icon={getCarIcon(isActive, isFree,vehicule?.type?.id)}
   position={{
     lat: parseFloat(latitude),
     lng: parseFloat(longitude),
@@ -95,6 +117,14 @@ const DriverMarker = ({ driverId, location, onSelect, isSelected }) => {
                     : "Véhicule inconnu"
                   }
                 </h5>
+                <h6>
+                  {vehicule?.type?.id === 1 && 'Eco'}
+                  {vehicule?.type?.id === 2 && 'Van'}
+                  {vehicule?.type?.id === 3 && 'Berline'}
+                </h6>
+                <h6>
+                  Région: {region || 'Inconnue'}
+                </h6>
               </div>
             </div>
 

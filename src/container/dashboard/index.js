@@ -1,259 +1,229 @@
-import React, { Suspense, lazy, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Row, Col, Skeleton, Radio } from "antd";
 import FeatherIcon from "feather-icons-react";
 import { PageHeader } from "../../components/page-headers/page-headers";
 import { Cards } from "../../components/cards/frame/cards-frame";
 import { Button } from "../../components/buttons/buttons";
 import { Main } from "../styled";
-import { ShareButtonPageHeader } from "../../components/buttons/share-button/share-button";
-import { ExportButtonPageHeader } from "../../components/buttons/export-button/export-button";
 import { CalendarButtonPageHeader } from "../../components/buttons/calendar-button/calendar-button";
-
 import DashChartClientIcon from "../../static/img/DashChartClientIcon.svg";
 import dashCommandCountIcon from "../../static/img/dashCommandCountIcon.svg";
 import DashSocCountIcon from "../../static/img/DashSocCountIcon.svg";
 import DashDriverCountIcon from "../../static/img/DashDriverCountIcon.svg";
-
 import {
-  ChartjsBarChart,
-  ChartjsHorizontalChart,
-  ChartjsStackedChart,
-  ChartjsLineChart,
-  ChartjsAreaChart,
-  ChartjsBarChartTransparent,
   ChartjsDonutChart,
-  ChartjsPieChart,
-  ChartjsDonutChart2,
 } from "../../components/charts/chartjs";
-import { useDispatch } from "react-redux";
-import {
-  getCommandCount,
-  getCommandStatusCount,
-  getUsersCount,
-} from "../../redux/chartContent/chartSlice";
-import { useSelector } from "react-redux";
 import styled from "styled-components";
-import {
-  getAdmins,
-  getClients,
-  getCommands,
-  getDriver,
-} from "../../redux/User/userSlice";
-
 import Counter from "./Counter";
-
 import Reservations from "./List";
 import Heading from "../../components/heading/heading";
 import Addagent from "../agent/Addagent";
 import Addadmin from "../admin/Addadmin";
 import { NavLink } from "react-router-dom/cjs/react-router-dom.min";
+import axios from "axios";
+
+const API_BASE = process.env.REACT_APP_BACKUP_URL || "https://api.tawsilet.com/api/";
 
 const Dashboard = () => {
-  const currentUser = useSelector((store) => store?.user?.currentUser);
-  const drivers = useSelector((state) => state.user.drivers);
-  const clients = useSelector((state) => state.user.clients);
-  const [pageDriver, setPageDriver] = useState(1);
-  const [pageSizeDriver, setPageSizeDriver] = useState(100);
-  const driversPagination = useSelector(
-    (state) => state?.user?.driversPagination
-  );
-  const [pageClient, setPageClient] = useState(1);
-  const [pageSizeClient, setPageSizeClient] = useState(100);
-
-  const clientsPagination = useSelector(
-    (state) => state?.user?.clientPagination
-  );
-  const { commandsCount, pagination, commands } = useSelector(
-    (state) => state.user
-  );
+  // State
+  const [currentUser, setCurrentUser] = useState(null);
+  const [drivers, setDrivers] = useState({ results: [], pagination: {} });
+  const [clients, setClients] = useState({ results: [], pagination: {} });
+  const [adminsList, setAdminsList] = useState([]);
+  const [agentsList, setAgentsList] = useState([]);
+  const [commands, setCommands] = useState([]);
+  const [commandsCount, setCommandsCount] = useState({ pagination: {} });
   const [allCommands, setAllCommands] = useState([]);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(100);
-  const chartData = useSelector((store) => {
-    return {
-      commandCount: store?.charts?.commandCount,
-      clientCount: store?.charts?.clientCount,
-      companyCount: store?.charts?.companyCount,
-      driverCount: store?.charts?.driverCount,
-      agentCount: store?.charts?.agentCount,
-      vehiculeCount: store?.charts?.vehiculeCount,
-    };
+  const [chartData, setChartData] = useState({
+    commandCount: 0,
+    clientCount: 0,
+    companyCount: 0,
+    driverCount: 0,
+    agentCount: 0,
+    vehiculeCount: 0,
+    commandData: {},
   });
-  const dispatch = useDispatch();
   const [state, setState] = useState({
     visibleAgent: false,
     visibleAdmin: false,
   });
-
-  function formatDate(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  }
-
-  function getFormattedDate(timePeriod) {
-    const currentDate = new Date();
-
-    switch (timePeriod) {
-      case "today":
-        return formatDate(currentDate);
-
-      case "thisWeek":
-        const weekStart = new Date(
-          currentDate.getFullYear(),
-          currentDate.getMonth(),
-          currentDate.getDate() - currentDate.getDay()
-        );
-        return formatDate(weekStart);
-
-      case "thisMonth":
-        return `${currentDate.getFullYear()}-${String(
-          currentDate.getMonth() + 1
-        ).padStart(2, "0")}-01`;
-
-      case "thisYear":
-        return `${currentDate.getFullYear()}-01-01`;
-
-      default:
-        throw new Error("Invalid time period");
-    }
-  }
-
   const [dateFilter, setDateFilter] = useState(null);
+  // Pagination states
+  const [pageDriver, setPageDriver] = useState(1);
+  const [pageSizeDriver] = useState(100);
+  const [pageClient, setPageClient] = useState(1);
+  const [pageSizeClient] = useState(100);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(100);
 
+  // Fetch current user
   useEffect(() => {
-    dispatch(
-      getDriver({ page: pageDriver, pageSize: pageSizeDriver, text: "" })
-    );
-    if (pageDriver < driversPagination?.pageCount) {
-      setPageDriver((prevPage) => prevPage + 1);
-    }
-  }, [pageDriver, pageSizeDriver, dispatch, driversPagination?.pageCount]);
-
-  useEffect(() => {
-    if (currentUser) {
-      dispatch(getAdmins({}));
-      // dispatch(getReservations({ free: true }));
-
-      // dispatch(getusersTwoDeep());
-    }
-  }, [currentUser]);
-  useEffect(() => {
-    dispatch(
-      getClients({ page: pageClient, pageSize: pageSizeClient, text: "" })
-    );
-    if (pageClient < clientsPagination?.pageCount) {
-      setPageClient((prevPage) => prevPage + 1);
-    }
-  }, [pageClient, pageSizeClient, dispatch, clientsPagination?.pageCount]);
-
-  useEffect(() => {
-    dispatch(getCommands({ page, pageSize }));
-    if (page < pagination?.pagination?.pageCount) {
-      setPage((prevPage) => prevPage + 1);
-    }
-  }, [page, pageSize, dispatch, pagination?.pagination?.pageCount]);
-  useEffect(() => {
-    if (commands && commands.length > 0) {
-      setAllCommands((prevCommands) => {
-        // Use a Set to avoid duplicate commands based on the unique identifier (e.g., command.id)
-        const existingIds = new Set(prevCommands.map((command) => command.id));
-        // Filter out any commands that are already in the previous commands
-        const newCommands = commands.filter(
-          (command) => !existingIds.has(command.id)
-        );
-        // Combine the old and new commands without duplicates
-        return [...prevCommands, ...newCommands];
+    const fetchCurrentUser = async () => {
+      const jwt = localStorage.getItem("token");
+      if (!jwt) return;
+      const { data } = await axios.get(`${API_BASE}users/me?pLevel=3`, {
+        headers: { Authorization: `Bearer ${jwt}` },
       });
-    }
-  }, [commands]);
-  const charts = useSelector((store) => store.charts);
-  const adminsList = useSelector((store) => store?.user?.admins?.results);
-  const agentsList = useSelector((store) => store?.user?.agents?.results);
-  const reservationLoading = useSelector(
-    (store) => store?.reservations?.isLoading
-  );
+      setCurrentUser(data);
+    };
+    fetchCurrentUser();
+  }, []);
 
+  // Fetch drivers
+  useEffect(() => {
+    const fetchDrivers = async () => {
+      const jwt = localStorage.getItem("token");
+      const { data } = await axios.get(`${API_BASE}usersbyrole/driver`, {
+        params: { page: pageDriver, pageSize: pageSizeDriver, text: "" },
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      setDrivers(data);
+    };
+    fetchDrivers();
+  }, [pageDriver, pageSizeDriver]);
+
+  // Fetch clients
+  useEffect(() => {
+    const fetchClients = async () => {
+      const jwt = localStorage.getItem("token");
+      const { data } = await axios.get(`${API_BASE}usersbyrole/client`, {
+        params: { page: pageClient, pageSize: pageSizeClient, text: "" },
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      setClients(data);
+    };
+    fetchClients();
+  }, [pageClient, pageSizeClient]);
+
+  // Fetch admins
+  useEffect(() => {
+    const fetchAdmins = async () => {
+      const jwt = localStorage.getItem("token");
+      const { data } = await axios.get(`${API_BASE}users`, {
+        params: {
+          "filters[user_role][$eq]": "admin",
+          "pagination[page]": 1,
+          "pagination[pageSize]": 100,
+        },
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      setAdminsList(data?.results || []);
+    };
+    fetchAdmins();
+  }, []);
+
+  // Fetch agents
+  useEffect(() => {
+    const fetchAgents = async () => {
+      const jwt = localStorage.getItem("token");
+      const { data } = await axios.get(`${API_BASE}users`, {
+        params: {
+          "filters[user_role][$startsWith]": "agent",
+          "pagination[page]": 1,
+          "pagination[pageSize]": 100,
+        },
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      setAgentsList(data?.results || []);
+    };
+    fetchAgents();
+  }, []);
+
+  // Fetch commands
+  useEffect(() => {
+    const fetchCommands = async () => {
+      const jwt = localStorage.getItem("token");
+      const { data } = await axios.get(`${API_BASE}commands`, {
+        params: { "pagination[page]": page, "pagination[pageSize]": pageSize },
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      setCommands(data?.results || []);
+      setCommandsCount({ pagination: data?.pagination || {} });
+      setAllCommands((prev) => {
+        const existingIds = new Set(prev.map((c) => c.id));
+        const newCommands = (data?.results || []).filter((c) => !existingIds.has(c.id));
+        return [...prev, ...newCommands];
+      });
+    };
+    fetchCommands();
+  }, [page, pageSize]);
+
+  // Fetch chart data (counts)
+  useEffect(() => {
+    const fetchChartData = async () => {
+      const jwt = localStorage.getItem("token");
+      // Users count
+      const usersCountRes = await axios.post(`${API_BASE}users/count`, {}, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      // Command status count
+      const commandStatusRes = await axios.post(`${API_BASE}command/count`, { data: { dateFilter } }, {
+        headers: { Authorization: `Bearer ${jwt}` },
+      });
+      setChartData({
+        ...usersCountRes.data,
+        commandData: commandStatusRes.data,
+      });
+    };
+    fetchChartData();
+  }, [dateFilter]);
+
+  // Helpers
   const translateEtatToFrench = (etat) => {
     switch (etat) {
       case "Pending":
-        return "En Attente"; // French for "Pending"
+        return "En Attente";
       case "Processing":
-        return "En Traitement"; // French for "Processing"
-
+        return "En Traitement";
       case "Completed":
-        return "Terminé"; // French for "Completed"
+        return "Terminé";
       case "Canceled":
-        return "Annulé"; // French for "Canceled"
+        return "Annulé";
       case "Failed":
-        return "Échoué"; // French for "Failed"
+        return "Échoué";
       default:
-        return etat; // Fallback to the original value if no translation is found
+        return etat;
     }
   };
-  // Data array with translated etat values
   const data = [
-    currentUser.user_role === "owner" || currentUser.user_role === "admin"
+    currentUser?.user_role === "owner" || currentUser?.user_role === "admin"
       ? {
-          etat: translateEtatToFrench("Pending"), // Translate "Pending" to French
-          value: charts?.commandData?.pendingCount || 0,
+          etat: translateEtatToFrench("Pending"),
+          value: chartData?.commandData?.pendingCount || 0,
           percentage: Math.floor(
-            (charts?.commandData?.pendingCount / charts?.commandCount) * 100
+            (chartData?.commandData?.pendingCount / chartData?.commandCount) * 100
           ),
           color: "#53B483",
         }
       : null,
-
     {
-      etat: translateEtatToFrench("Completed"), // Translate "Completed" to French
-      value: charts?.commandData?.completedCount || 0,
+      etat: translateEtatToFrench("Completed"),
+      value: chartData?.commandData?.completedCount || 0,
       percentage: Math.floor(
-        (charts?.commandData?.completedCount / charts?.commandCount) * 100
+        (chartData?.commandData?.completedCount / chartData?.commandCount) * 100
       ),
       color: "#FF6384",
     },
     {
-      etat: translateEtatToFrench("Canceled"), // Translate "Canceled" to French
+      etat: translateEtatToFrench("Canceled"),
       value:
-        (charts?.commandData?.canceledByClientCount || 0) +
-        (charts?.commandData?.canceledByPartnerCount || 0),
+        (chartData?.commandData?.canceledByClientCount || 0) +
+        (chartData?.commandData?.canceledByPartnerCount || 0),
       percentage: Math.floor(
-        ((charts?.commandData?.canceledByClientCount +
-          charts?.commandData?.canceledByPartnerCount) /
-          charts?.commandCount) *
+        ((chartData?.commandData?.canceledByClientCount +
+          chartData?.commandData?.canceledByPartnerCount) /
+          chartData?.commandCount) *
           100
       ),
       color: "#36A2EB",
     },
-  ].filter(Boolean); // Remove null values (e.g., if "Pending" is not included for non-admin/owner users)
+  ].filter(Boolean);
 
-  const showModalAgent = () => {
-    setState({
-      ...state,
-      visibleAgent: true,
-    });
-  };
+  const showModalAgent = () => setState((s) => ({ ...s, visibleAgent: true }));
+  const onCancelAgent = () => setState((s) => ({ ...s, visibleAgent: false }));
+  const showModalAdmin = () => setState((s) => ({ ...s, visibleAdmin: true }));
+  const onCancelAdmin = () => setState((s) => ({ ...s, visibleAdmin: false }));
 
-  const onCancelAgent = () => {
-    setState({
-      ...state,
-      visibleAgent: false,
-    });
-  };
-
-  const showModalAdmin = () => {
-    setState({
-      ...state,
-      visibleAdmin: true,
-    });
-  };
-  const onCancelAdmin = () => {
-    setState({
-      ...state,
-      visibleAdmin: false,
-    });
-  };
   const commandStatuses = [
     "Pending",
     "On_route_to_delivery",
@@ -265,24 +235,21 @@ const Dashboard = () => {
   const translateToFrench = (label) => {
     switch (label) {
       case "Pending":
-        return "En Attente"; // French for "Pending"
+        return "En Attente";
       case "Completed":
-        return "Terminé"; // French for "Completed"
+        return "Terminé";
       case "Canceled":
-        return "Annulé"; // French for "Canceled"
+        return "Annulé";
       case "Failed":
-        return "Échoué"; // French for "Failed"
+        return "Échoué";
       default:
-        return label; // Fallback to the original label if no translation is found
+        return label;
     }
   };
-
-  // Original labels
   const originalLabels = ["Pending", "Completed", "Canceled", "Failed"];
-
-  // Translate labels into French
   const frenchLabels = originalLabels.map((label) => translateToFrench(label));
 
+  // Render
   return (
     <ChartContainer>
       <PageHeader
@@ -299,21 +266,16 @@ const Dashboard = () => {
           <Col lg={24} xs={24}>
             <Cards title="Aperçus" size={"large"}>
               <Row justify={"space-between"}>
-                {/* <ChartHeader> */}
                 {currentUser?.user_role === "owner" ||
                 currentUser?.user_role === "admin" ? (
                   <>
-                    {" "}
                     <Col md={6} xs={12}>
-                      <NavLink
-                        to="/admin/clients/list"
-                        style={{ color: "unset" }}
-                      >
+                      <NavLink to="/admin/clients/list" style={{ color: "unset" }}>
                         <ChartHeaderItem>
                           <img src={DashChartClientIcon} alt="" />
                           <div>
                             <Counter
-                              endValue={clients?.pagination?.total}
+                              endValue={clients?.pagination?.total || 0}
                               incrementDuration={3}
                             />
                             <span>Client</span>
@@ -322,36 +284,28 @@ const Dashboard = () => {
                       </NavLink>
                     </Col>
                     <Col md={6} xs={12}>
-                      <NavLink
-                        to="/admin/commandes/view"
-                        style={{ color: "unset" }}
-                      >
+                      <NavLink to="/admin/commandes/view" style={{ color: "unset" }}>
                         <ChartHeaderItem>
                           <img src={dashCommandCountIcon} alt="" />
                           <div>
                             <Counter
-                              endValue={commandsCount?.pagination?.total}
+                              endValue={commandsCount?.pagination?.total || 0}
                               incrementDuration={3}
                             />
-
                             <span>Commande</span>
                           </div>
                         </ChartHeaderItem>
                       </NavLink>
                     </Col>
                     <Col md={6} xs={12}>
-                      <NavLink
-                        to="/admin/Livreurs/list"
-                        style={{ color: "unset" }}
-                      >
+                      <NavLink to="/admin/Livreurs/list" style={{ color: "unset" }}>
                         <ChartHeaderItem>
                           <img src={DashDriverCountIcon} alt="" />
                           <div>
                             <Counter
-                              endValue={drivers?.pagination?.total}
+                              endValue={drivers?.pagination?.total || 0}
                               incrementDuration={3}
                             />
-
                             <span>Chauffeur</span>
                           </div>
                         </ChartHeaderItem>
@@ -360,87 +314,57 @@ const Dashboard = () => {
                   </>
                 ) : (
                   <>
-                    {" "}
                     <Col md={6} xs={12}>
-                      <NavLink
-                        to="/admin/Agents/view"
-                        style={{ color: "unset" }}
-                      >
+                      <NavLink to="/admin/Agents/view" style={{ color: "unset" }}>
                         <ChartHeaderItem>
                           <img src={DashChartClientIcon} alt="" />
                           <div>
-                            {currentUser.user_role === "company" ? (
-                              <Counter
-                                endValue={chartData.agentCount}
-                                incrementDuration={3}
-                              />
-                            ) : (
-                              <Counter
-                                endValue={chartData.agentCount}
-                                incrementDuration={3}
-                              />
-                            )}
+                            <Counter
+                              endValue={chartData.agentCount || 0}
+                              incrementDuration={3}
+                            />
                             <span>Agent</span>
                           </div>
                         </ChartHeaderItem>
                       </NavLink>
                     </Col>
                     <Col md={6} xs={12}>
-                      <NavLink
-                        to="/admin/commandes/view"
-                        style={{ color: "unset" }}
-                      >
+                      <NavLink to="/admin/commandes/view" style={{ color: "unset" }}>
                         <ChartHeaderItem>
                           <img src={dashCommandCountIcon} alt="" />
                           <div>
                             <Counter
-                              endValue={chartData?.commandCount}
+                              endValue={chartData?.commandCount || 0}
                               incrementDuration={3}
                             />
-
                             <span>Commande</span>
                           </div>
                         </ChartHeaderItem>
                       </NavLink>
                     </Col>
                     <Col md={6} xs={12}>
-                      <NavLink
-                        to="/admin/Vehicules/view"
-                        style={{ color: "unset" }}
-                      >
+                      <NavLink to="/admin/Vehicules/view" style={{ color: "unset" }}>
                         <ChartHeaderItem>
                           <img src={DashSocCountIcon} alt="" />
                           <div>
                             <Counter
-                              endValue={chartData.vehiculeCount}
+                              endValue={chartData.vehiculeCount || 0}
                               incrementDuration={3}
                             />
-
                             <span>Véhicule</span>
                           </div>
                         </ChartHeaderItem>
                       </NavLink>
                     </Col>
                     <Col md={6} xs={12}>
-                      <NavLink
-                        to="/admin/Livreurs/list"
-                        style={{ color: "unset" }}
-                      >
+                      <NavLink to="/admin/Livreurs/list" style={{ color: "unset" }}>
                         <ChartHeaderItem>
                           <img src={DashDriverCountIcon} alt="" />
                           <div>
-                            {currentUser.user_role === "company" ? (
-                              <Counter
-                                endValue={chartData.driverCount}
-                                incrementDuration={3}
-                              />
-                            ) : (
-                              <Counter
-                                endValue={chartData.driverCount}
-                                incrementDuration={3}
-                              />
-                            )}
-
+                            <Counter
+                              endValue={chartData.driverCount || 0}
+                              incrementDuration={3}
+                            />
                             <span>Chauffeur</span>
                           </div>
                         </ChartHeaderItem>
@@ -448,268 +372,137 @@ const Dashboard = () => {
                     </Col>
                   </>
                 )}
-                {/* </ChartHeader> */}
-                {/* <h2>Welcome to StrikingDash</h2> */}
-                {/* <ChartjsBarChartGrad
-                  label={"chart"}
-                  height={500}
-                  datasets={[{}]}
-                /> */}
               </Row>
             </Cards>
           </Col>
         </Row>
-        {
-          <Row justify="center" gutter={25}>
-            <Col
-              xxl={18}
-              lg={16}
-              xs={24}
-              md={16}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                height: "100%",
-              }}
+        <Row justify="center" gutter={25}>
+          <Col xxl={18} lg={16} xs={24} md={16} style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+            <Cards
+              title="Etat des expéditions"
+              isbutton={
+                <div className="card-radio">
+                  <Radio.Group defaultValue="all">
+                    <Radio.Button value="all" onClick={() => setDateFilter(null)}>
+                      Tous
+                    </Radio.Button>
+                    <Radio.Button value="today" onClick={() => setDateFilter("today")}>Aujourd'hui</Radio.Button>
+                    <Radio.Button value="week" onClick={() => setDateFilter("thisWeek")}>Semaine</Radio.Button>
+                    <Radio.Button value="month" onClick={() => setDateFilter("thisMonth")}>Mois</Radio.Button>
+                    <Radio.Button value="year" onClick={() => setDateFilter("thisYear")}>Année</Radio.Button>
+                  </Radio.Group>
+                </div>
+              }
+              size={"meduim"}
             >
-              <Cards
-                title="Etat des expéditions"
-                isbutton={
-                  <div className="card-radio">
-                    <Radio.Group
-                      // onChange={forcastOverview}
-                      defaultValue="all"
-                    >
-                      <Radio.Button
-                        value="all"
-                        onClick={() => setDateFilter(null)}
-                      >
-                        Tous
-                      </Radio.Button>
-                      <Radio.Button
-                        value="today"
-                        onClick={() => setDateFilter("today")}
-                      >
-                        Aujourd'hui
-                      </Radio.Button>
-                      <Radio.Button
-                        value="week"
-                        onClick={() => setDateFilter("thisWeek")}
-                      >
-                        Semaine
-                      </Radio.Button>
-                      <Radio.Button
-                        value="month"
-                        onClick={() => setDateFilter("thisMonth")}
-                      >
-                        Mois
-                      </Radio.Button>
-                      <Radio.Button
-                        value="year"
-                        onClick={() => setDateFilter("thisYear")}
-                      >
-                        Année
-                      </Radio.Button>
-                    </Radio.Group>
-                  </div>
-                }
-                size={"meduim"}
-              >
-                <Cards headless>
-                  <div
-                    style={{
-                      // minHeight: "calc(100vh - 320px)",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10%",
-                    }}
-                  >
-                    <Row
-                      gutter={[25, 50]}
-                      justify={"space-between"}
-                      align={"center"}
-                      // md={24}
-                      style={{ width: "100%", alignItems: "center" }}
-                    >
-                      <Col md={24} lg={12} flex={"auto"}>
-                        <section>
-                          <ChartjsDonutChart
-                            labels={frenchLabels}
-                            datasets={[
-                              {
-                                data: [
-                                  allCommands?.filter((command) =>
-                                    commandStatuses.includes(
-                                      command.commandStatus
-                                    )
-                                  ).length || 0,
-
-                                  allCommands?.filter(
-                                    (command) =>
-                                      command.commandStatus ===
-                                      "Canceled_by_client"
-                                  ).length || 0, //
-
-                                  allCommands?.filter(
-                                    (command) =>
-                                      command.commandStatus === "Completed"
-                                  ).length || 0, //this one is completed
-                                  (charts?.commandData?.failedPickupCount ||
-                                    0) +
-                                    (charts?.commandData?.failedDeliveryCount ||
-                                      0),
-                                ],
-                                backgroundColor: [
-                                  "#53B483",
-                                  "#59B4D1",
-                                  "#FF6384",
-                                ],
-                              },
-                            ]}
-                            height={"300%"}
-                          />
-                          {/* <div style={{ width: "100%" }}></div> */}
-                        </section>
-                      </Col>
-                      <Col md={24} lg={11} flex={"auto"}>
-                        <Table>
-                          <thead>
-                            <tr>
-                              <th>Etats</th>
-                              <th>Valeur</th>
-                              <th>% </th>
+              <Cards headless>
+                <div style={{ display: "flex", alignItems: "center", gap: "10%" }}>
+                  <Row gutter={[25, 50]} justify={"space-between"} align={"center"} style={{ width: "100%", alignItems: "center" }}>
+                    <Col md={24} lg={12} flex={"auto"}>
+                      <section>
+                        <ChartjsDonutChart
+                          labels={frenchLabels}
+                          datasets={[
+                            {
+                              data: [
+                                allCommands?.filter((command) => commandStatuses.includes(command.commandStatus)).length || 0,
+                                allCommands?.filter((command) => command.commandStatus === "Canceled_by_client").length || 0,
+                                allCommands?.filter((command) => command.commandStatus === "Completed").length || 0,
+                                (chartData?.commandData?.failedPickupCount || 0) + (chartData?.commandData?.failedDeliveryCount || 0),
+                              ],
+                              backgroundColor: ["#53B483", "#59B4D1", "#FF6384"],
+                            },
+                          ]}
+                          height={"300%"}
+                        />
+                      </section>
+                    </Col>
+                    <Col md={24} lg={11} flex={"auto"}>
+                      <Table>
+                        <thead>
+                          <tr>
+                            <th>Etats</th>
+                            <th>Valeur</th>
+                            <th>% </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {data.filter((row) => row !== null).map((row, index) => (
+                            <tr key={index}>
+                              <td>
+                                <Cercle color={row.color} /> {row.etat}
+                              </td>
+                              <td>{row.value}</td>
+                              <td>{row.percentage}%</td>
                             </tr>
-                          </thead>
-                          <tbody>
-                            {data
-                              .filter((row) => row !== null)
-                              .map((row, index) => (
-                                <tr key={index}>
-                                  <td>
-                                    <Cercle color={row.color} /> {row.etat}
-                                  </td>
-                                  <td>{row.value}</td>
-                                  <td>{row.percentage}%</td>
-                                </tr>
-                              ))}
-                          </tbody>
-                        </Table>
-                      </Col>
-                    </Row>
-                  </div>
-                </Cards>
-              </Cards>
-            </Col>
-            <Col
-              xxl={6}
-              xs={24}
-              lg={8}
-              md={8}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              <div className="project-users-wrapper">
-                <Cards
-                  title={
-                    currentUser?.user_role === "owner" ||
-                    currentUser?.user_role === "admin"
-                      ? "Admin"
-                      : "Agent"
-                  }
-                  isbutton={
-                    currentUser?.user_role === "owner" ? (
-                      <Button
-                        className="btn_ADD"
-                        outlined
-                        size="small"
-                        onClick={showModalAdmin}
-                      >
-                        <FeatherIcon icon="user-plus" size={14} /> Ajouter Admin
-                      </Button>
-                    ) : currentUser?.user_role === "company" ? (
-                      <Button
-                        className="btn_ADD"
-                        outlined
-                        size="small"
-                        onClick={showModalAgent}
-                      >
-                        <FeatherIcon icon="user-plus" size={14} /> Ajouter Agent
-                      </Button>
-                    ) : null
-                  }
-                >
-                  <div className="project-users">
-                    {["owner", "admin"].includes(currentUser?.user_role)
-                      ? adminsList
-                          ?.filter((el) => el.user_role === "admin")
-                          .map((admin, index) => (
-                            <div className="porject-user-single">
-                              <div>
-                                <img
-                                  src={
-                                    admin?.profile_picture?.url ||
-                                    require(`../../static/img/users/1.png`)
-                                  }
-                                  alt=""
-                                />
-                              </div>
-                              <div>
-                                <Heading as="h5">
-                                  {admin?.firstName} {admin?.lastName}
-                                </Heading>
-                                <p style={{ color: "#53B483" }}>Active</p>
-                              </div>
-                            </div>
-                          ))
-                      : agentsList
-                          ?.filter(
-                            (el) =>
-                              (currentUser?.user_role === "company" &&
-                                el?.user_role === "agent" &&
-                                el?.agent_company?.documentId ===
-                                  currentUser?.companies[0]?.documentId) ||
-                              (currentUser?.user_role === "agent" &&
-                                el?.user_role === "agent" &&
-                                el?.agent_company?.documentId ===
-                                  currentUser?.agent_company?.documentId)
-                          )
-                          .map((agent, index) => (
-                            <div className="porject-user-single">
-                              <div>
-                                <img
-                                  src={
-                                    agent?.profile_picture?.url ||
-                                    require(`../../static/img/users/1.png`)
-                                  }
-                                  alt=""
-                                />
-                              </div>
-                              <div>
-                                <Heading as="h5">{agent?.username}</Heading>
-                                <p style={{ color: "#53B483" }}>Active</p>
-                              </div>
-                            </div>
                           ))}
-                  </div>
-                </Cards>
-              </div>
-            </Col>
-          </Row>
-        }
-        {(currentUser?.user_role === "owner" ||
-          currentUser?.user_role === "admin") && (
+                        </tbody>
+                      </Table>
+                    </Col>
+                  </Row>
+                </div>
+              </Cards>
+            </Cards>
+          </Col>
+          <Col xxl={6} xs={24} lg={8} md={8} style={{ display: "flex", flexDirection: "column" }}>
+            <div className="project-users-wrapper">
+              <Cards
+                title={currentUser?.user_role === "owner" || currentUser?.user_role === "admin" ? "Admin" : "Agent"}
+                isbutton={
+                  currentUser?.user_role === "owner" ? (
+                    <Button className="btn_ADD" outlined size="small" onClick={showModalAdmin}>
+                      <FeatherIcon icon="user-plus" size={14} /> Ajouter Admin
+                    </Button>
+                  ) : currentUser?.user_role === "company" ? (
+                    <Button className="btn_ADD" outlined size="small" onClick={showModalAgent}>
+                      <FeatherIcon icon="user-plus" size={14} /> Ajouter Agent
+                    </Button>
+                  ) : null
+                }
+              >
+                <div className="project-users">
+                  {["owner", "admin"].includes(currentUser?.user_role)
+                    ? adminsList?.filter((el) => el.user_role === "admin").map((admin, index) => (
+                        <div className="porject-user-single" key={admin.id || index}>
+                          <div>
+                            <img src={admin?.profile_picture?.url || require(`../../static/img/users/1.png`)} alt="" />
+                          </div>
+                          <div>
+                            <Heading as="h5">{admin?.firstName} {admin?.lastName}</Heading>
+                            <p style={{ color: "#53B483" }}>Active</p>
+                          </div>
+                        </div>
+                      ))
+                    : agentsList
+                        ?.filter(
+                          (el) =>
+                            (currentUser?.user_role === "company" &&
+                              el?.user_role === "agent" &&
+                              el?.agent_company?.documentId === currentUser?.companies?.[0]?.documentId) ||
+                            (currentUser?.user_role === "agent" &&
+                              el?.user_role === "agent" &&
+                              el?.agent_company?.documentId === currentUser?.agent_company?.documentId)
+                        )
+                        .map((agent, index) => (
+                          <div className="porject-user-single" key={agent.id || index}>
+                            <div>
+                              <img src={agent?.profile_picture?.url || require(`../../static/img/users/1.png`)} alt="" />
+                            </div>
+                            <div>
+                              <Heading as="h5">{agent?.username}</Heading>
+                              <p style={{ color: "#53B483" }}>Active</p>
+                            </div>
+                          </div>
+                        ))}
+                </div>
+              </Cards>
+            </div>
+          </Col>
+        </Row>
+        {(currentUser?.user_role === "owner" || currentUser?.user_role === "admin") && (
           <Row>
             <Cards>
-              {/* {reservationLoading ? (
-              <Skeleton active={reservationLoading} />
-            ) : ( */}
-              {/* // <Suspense> */}
               <Reservations textFilter={""} />
-
-              {/* // </Suspense>
-            )} */}
             </Cards>
           </Row>
         )}
@@ -722,16 +515,9 @@ const Dashboard = () => {
 
 export default Dashboard;
 
-const ChartHeader = styled.section`
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-`;
-
 const ChartHeaderItem = styled.div`
   width: 20%;
   height: 100px;
-  /* background-color: brown; */
   display: flex;
   gap: 20px;
   align-items: center;
@@ -739,10 +525,8 @@ const ChartHeaderItem = styled.div`
 `;
 
 const Table = styled.table`
-  /* margin: 0 auto; */
   width: 100%;
   border-collapse: collapse;
-  /* border: 1px solid #ccc; */
   th {
     border-bottom: 1px solid #ccc;
     padding: 8px;
@@ -753,18 +537,8 @@ const Table = styled.table`
     align-items: center;
     display: flex;
     gap: 12px;
-    /* border: 1px solid #ccc; */
     padding: 8px;
     text-align: left;
-  }
-  th {
-    /* background-color: #f2f2f2; */
-  }
-  tr:nth-child(even) {
-    /* background-color: #f2f2f2; */
-  }
-  tr:hover {
-    /* background-color: #ddd; */
   }
   th:last-child,
   td:last-child {
@@ -778,28 +552,6 @@ const Cercle = styled.div`
   background-color: ${(props) => props.color};
   border-radius: 50%;
 `;
-
-// const Counter = styled.div`
-//   font: 800 24px system-ui;
-//   position: relative;
-
-//   &::before {
-//     content: attr(data-count);
-//     /* position: absolute; */
-//     /* top: 0;
-//     left: 0; */
-//     animation: counter 3s steps(1) forwards;
-//   }
-
-//   @keyframes counter {
-//     from {
-//       content: "0";
-//     }
-//     to {
-//       content: attr(data-count);
-//     }
-//   }
-// `;
 
 const ChartContainer = styled.div`
   .project-users-wrapper {
@@ -822,8 +574,8 @@ const ChartContainer = styled.div`
     min-height: 368px;
     max-height: 400px;
     overflow: scroll;
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
     .porject-user-single {
       width: 100%;
       overflow: hidden;

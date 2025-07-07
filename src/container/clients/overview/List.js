@@ -204,92 +204,101 @@ const Client = ({
   };
 
   const dataSource =
-    users?.map((value) => ({
-      key: value.id,
-      id: value.id,
-      firstName: value?.firstName,
-      lastName: value?.lastName,
-      phoneNumber: value?.phoneNumber,
-      email: value?.email,
-      cin: value?.cin,
-      blocked: value?.blocked,
-      action: (
-        <SelectGm
-          options={selectOptions}
-          placeholder={value?.blocked === false ? "Activer" : "Désactiver"}
-          onSelect={(e) => {
-            Modal.confirm({
-              title: "Confirmation D'action",
-              content:
-                "Etes vous sure de vouloir changer le statut de cet client?",
-              okText: "Oui",
-              okType: "danger",
-              cancelText: "Annuler",
-              onOk() {
-                dispatch(
-                  updateUser({
-                    id: value.id,
-                    user: { blocked: !value.blocked },
-                  })
-                ).then(() => {
-                  dispatch(getClients({}));
-                });
-              },
-              onCancel() {
-                dispatch(getClients({}));
-              },
-            });
-          }}
-          active={value.blocked}
-        />
-      ),
-      more: (
-        <Dropdown
-          className="wide-dropdwon"
-          content={
-            <>
-              <Link
-                onClick={() => {
-                  setOpen(true);
-                  setmodalId(value);
-                }}
-                to="#"
-              >
-                Voir
-              </Link>
-
-              <Link
-                to="#"
-                onClick={(e) => {
-                  Modal.confirm({
-                    title: "Confirmation D'action",
-                    content: "Etes vous sure de vouloir Suprimer cet client?",
-                    okText: "Oui",
-                    okType: "danger",
-                    cancelText: "Annuler",
-                    onOk() {
-                    
-                      dispatch(usersDel(value.id)).then(() => {
-                        dispatch(getClients({}));
-                      });
-                    },
-                    onCancel() {
-                      dispatch(getClients({}));
-                    },
+    users?.map((value) => {
+      
+      return  {
+        key: value.id,
+        id: value.id,
+        firstName: value?.firstName,
+        lastName: value?.lastName,
+        phoneNumber: value?.phoneNumber,
+        email: value?.email,
+        cin: value?.cin,
+        blocked: value?.blocked,
+        action: (
+          <SelectGm
+            options={selectOptions}
+            placeholder={value?.blocked === false ? "Activer" : "Désactiver"}
+            onSelect={(e) => {
+              console.log(e)
+              Modal.confirm({
+                title: "Confirmation D'action",
+                content:
+                  "Etes vous sure de vouloir changer le statut de cet client?",
+                okText: "Oui",
+                okType: "danger",
+                cancelText: "Annuler",
+                onOk() {
+                  dispatch(
+                    updateUser({
+                      id: value.id,
+                      user: { blocked:e.value==="Activer"?false :true },
+                    })
+                  ).then(() => {
+                   
                   });
-                }}
-              >
-                Supprimer
-              </Link>
-            </>
-          }
-        >
-          <Link to="#">
-            <FeatherIcon icon="more-horizontal" size={18} />
-          </Link>
-        </Dropdown>
-      ),
-    })) || [];
+                },
+                onCancel() {
+              
+                },
+              });
+            }}
+            active={value.blocked}
+          />
+        ),
+        more: (
+          <Dropdown
+            className="wide-dropdwon"
+            content={
+              <>
+                <Link
+                  onClick={() => {
+                    setOpen(true);
+                    setmodalId(value);
+                  }}
+                  to="#"
+                >
+                  Voir
+                </Link>
+  
+                <Link
+                  to="#"
+                  onClick={(e) => {
+                    Modal.confirm({
+                      title: "Confirmation D'action",
+                      content: "Etes vous sure de vouloir Suprimer cet client?",
+                      okText: "Oui",
+                      okType: "danger",
+                      cancelText: "Annuler",
+                      onOk() {
+                      
+                        dispatch(usersDel(value.id)).then(() => {
+                         
+                        });
+                      },
+                      onCancel() {
+                      
+                      },
+                    });
+                  }}
+                >
+                  Supprimer
+                </Link>
+              </>
+            }
+          >
+            <Link to="#">
+              <FeatherIcon icon="more-horizontal" size={18} />
+            </Link>
+          </Dropdown>
+        ),
+      }
+    }
+      
+     
+  
+  
+  ) || [];
 
   return (
     <>

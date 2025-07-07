@@ -27,9 +27,8 @@ import {
   UserOutlined
 } from '@ant-design/icons';
 import { Link } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
-import { getReservations } from "../../redux/reservations/reservationSlice";
+import axios from "axios";
 import OverviewModal from "./OverviewModal";
 
 const { Text, Title } = Typography;
@@ -166,8 +165,7 @@ const StatusDisplay = ({ status }) => {
 };
 
 const ListModal = ({ user }) => {
-  const dispatch = useDispatch();
-  const reservations = useSelector((state) => state.reservations.reservations?.nodes);
+  const [reservations, setReservations] = useState([]);
   const [openModal, setOpenModal] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [pagination, setPagination] = useState({
@@ -180,14 +178,25 @@ const ListModal = ({ user }) => {
     const fetchReservations = async () => {
       setLoading(true);
       try {
-        await dispatch(getReservations({ user_id: user?.id }));
+        const jwt = localStorage.getItem("token");
+        const response = await axios.get(
+          `${process.env.REACT_APP_BACKUP_URL}commands?filters[client][$eq]=${user?.id}&populate[0]=pickUpAddress&populate[1]=dropOfAddress`,
+          {
+            headers: {
+              Authorization: `Bearer ${jwt}`,
+            },
+          }
+        );
+        setReservations(response.data.data);
+      } catch(err) {
+        console.error("Error fetching commands:", err);
       } finally {
         setLoading(false);
       }
     };
     
     fetchReservations();
-  }, [user, dispatch]);
+  }, [user?.id]);
 
   const handleViewDetails = (record) => {
     setSelectedReservation(record);
@@ -260,11 +269,10 @@ const ListModal = ({ user }) => {
       )
     },
     {
-      title: 'Date',
-      dataIndex: 'date',
-      key: 'date',
-      sorter: (a, b) => new Date(a.date) - new Date(b.date),
-    },
+      title: 'Prix',
+      dataIndex: 'totalPrice',
+      key: 'totalPrice',
+     },
     {
       title: 'Paiement',
       dataIndex: 'paytype',
@@ -306,10 +314,10 @@ const ListModal = ({ user }) => {
   
     return {
       key: reservation.documentId,
-      id: reservation.documentId,
+      id: reservation.refNumber,
       pickupAddress: reservation.pickUpAddress?.Address,
       deliveryAddress: reservation.dropOfAddress?.Address,
-      date: reservation.departDate,
+      totalPrice: reservation.totalPrice+" DT",
       paytype: reservation.payType,
       name: reservation.client_id?.data?.email,
       avatar: reservation.client_id?.data?.profilePicture?.url,
@@ -340,7 +348,7 @@ const ListModal = ({ user }) => {
             pageSize: pagination.pageSize,
           })}
           rowClassName="reservation-row"
-        />
+        /> 
       </TableCard>
 
       <OverviewModal 

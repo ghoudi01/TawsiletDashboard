@@ -183,7 +183,7 @@ const UpdateSociete = ({ visible, onCancel, record, text, status }) => {
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
 
-    // console.log("file", file);
+ 
     const formData = new FormData();
 
     formData.append("files", file);
@@ -239,7 +239,7 @@ const UpdateSociete = ({ visible, onCancel, record, text, status }) => {
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
 
-    // console.log("file", file);
+  
     const formData = new FormData();
 
     formData.append("files", file);
@@ -298,8 +298,7 @@ const UpdateSociete = ({ visible, onCancel, record, text, status }) => {
     // .target.files[0];
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
-
-    // console.log("file", file);
+ 
     const formData = new FormData();
 
     formData.append("files", file);
@@ -358,7 +357,7 @@ const UpdateSociete = ({ visible, onCancel, record, text, status }) => {
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
 
-    // console.log("file", file);
+   
     const formData = new FormData();
 
     formData.append("files", file);
@@ -419,7 +418,7 @@ const UpdateSociete = ({ visible, onCancel, record, text, status }) => {
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
 
-    // console.log("file", file);
+    
     const formData = new FormData();
 
     formData.append("files", file);
@@ -479,7 +478,7 @@ const UpdateSociete = ({ visible, onCancel, record, text, status }) => {
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
 
-    // console.log("file", file);
+   
     const formData = new FormData();
 
     formData.append("files", file);
@@ -540,7 +539,7 @@ const UpdateSociete = ({ visible, onCancel, record, text, status }) => {
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
 
-    // console.log("file", file);
+ 
     const formData = new FormData();
 
     formData.append("files", file);
@@ -598,7 +597,7 @@ const UpdateSociete = ({ visible, onCancel, record, text, status }) => {
 
     const isLt2MB = file.size / 1024 / 1024 < 1; // Limiting size to 2MB
 
-    // console.log("file", file);
+  
     const formData = new FormData();
 
     formData.append("files", file);

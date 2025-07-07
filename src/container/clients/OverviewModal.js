@@ -25,7 +25,7 @@ const OverviewModal = ({ open, setOpen, modalId }) => {
   const phoneNumber = modalId?.phoneNumber || "Non renseigné";
   const email = modalId?.email || "Non renseigné";
   const profilePicture = modalId?.profilePicture?.url || null;
-
+console.log("modfalId",modalId)
   return (
     <StyledModal
       title="Détails du client"
@@ -85,15 +85,7 @@ const OverviewModal = ({ open, setOpen, modalId }) => {
       </Divider>
 
       <div className="order-history">
-        {modalId ? (
-          <ListModal user={modalId} />
-        ) : (
-          <EmptyCard>
-            <Paragraph type="secondary">
-              Aucune commande trouvée pour ce client
-            </Paragraph>
-          </EmptyCard>
-        )}
+      <ListModal user={modalId} />
       </div>
     </StyledModal>
   );

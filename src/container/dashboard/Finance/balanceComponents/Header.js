@@ -1,29 +1,46 @@
-import React, { useState } from "react";
-import { Badge, Button, Col, Row, Select, Space, Tabs, Tooltip, Typography } from "antd";
+import React, { useState, useEffect } from "react";
+import { Col, Row, Space, Tooltip, Typography } from "antd";
 import { Cards } from "../../../../components/cards/frame/cards-frame";
 import LandingFilter from "./LandingFilter";
 import {
-    BarChartOutlined,
   DollarOutlined,
-  DownloadOutlined,
   InfoCircleOutlined,
-  LineChartOutlined,
-  PieChartOutlined,
   ShoppingCartOutlined,
 } from "@ant-design/icons";
 import { StatCard } from "./StatCard";
 import { useSelector } from "react-redux";
-import TabPane from "antd/lib/tabs/TabPane";
+import axios from "axios";
 
-const Header = ({ balanceLoading, totalCommands }) => {
-  const { Title, Text } = Typography;
-  const { Option } = Select;
+const Header = () => {
+  const { Title } = Typography;
   const [periodeFilter, setperiodeFilter] = useState("month");
-  const [activeTab, setActiveTab] = useState("overview");
+  const [statistics, setStatistics] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const { current } = useSelector((state) => ({
     current: state.user.currentUser,
   }));
+
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      try {
+       
+        setLoading(true);
+        const response = await axios.get(
+          `${process.env.REACT_APP_BACKUP_URL}dashboard/statistics?period=${String(periodeFilter).toLocaleLowerCase()}`
+        );
+   
+        setStatistics(response.data.data);
+      } catch (error) {
+        console.error("Error fetching statistics:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStatistics();
+  }, [periodeFilter]);
+
   return (
     <Row gutter={[24, 24]}>
       <Col span={24}>
@@ -43,93 +60,47 @@ const Header = ({ balanceLoading, totalCommands }) => {
             </Space>
           }
           size="default"
-          
         >
-         
           <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
             <Col xs={24} sm={12} md={6}>
               <StatCard
                 title="N° de commandes"
-                value={totalCommands}
+                value={statistics?.orders || 0}
                 icon={<ShoppingCartOutlined />}
                 color="#1890ff"
-                loading={balanceLoading}
-                suffix={"Livrée"}
+                loading={loading}
+                suffix={"Coures"}
                 plainText
               />
             </Col>
             <Col xs={24} sm={12} md={6}>
               <StatCard
                 title="Chiffre d'affaires"
-                value={100}
+                value={statistics?.revenue?.total || 0}
                 icon={<DollarOutlined />}
                 color="#52c41a"
                 suffix="TND"
-                loading={balanceLoading}
+                loading={loading}
+                extraData={[
+                  {title: "cash", value: statistics?.revenue?.cash || 0},
+                  {title: "CB", value: statistics?.revenue?.online || 0}
+                ]}
               />
             </Col>
-            <Col xs={24} sm={12} md={6}>
-              <StatCard
-                title="Bénéfice net"
-                value={100}
-                icon={<DollarOutlined />}
-                color="#faad14"
-                suffix="TND"
-                loading={balanceLoading}
-              />
-            </Col>
+            
             {current?.user_role === "owner" && (
               <Col xs={24} sm={12} md={6}>
                 <StatCard
                   title="Commission"
-                  value={100}
+                  value={statistics?.commission || 0}
                   icon={<DollarOutlined />}
                   color="#f5222d"
                   suffix="TND"
-                  loading={balanceLoading}
+                  loading={loading}
                 />
               </Col>
             )}
           </Row>
-          {/* Tabs Navigation */}
-          <Tabs
-            activeKey={activeTab}
-            onChange={setActiveTab}
-            style={{ marginTop: 24 }}
-           
-          >
-            <TabPane
-              tab={
-                <Space>
-                  <PieChartOutlined />
-                  Overview
-                </Space>
-              }
-              key="overview"
-            />
-            <TabPane
-              tab={
-                <Space>
-                  <LineChartOutlined />
-                  Trends
-                </Space>
-              }
-              key="trends"
-            />
-            <TabPane
-              tab={
-                <Space>
-                  <BarChartOutlined />
-                  Details
-                  {current?.user_role === "owner" && (
-                    <Badge count={100} />
-                  )}
-                </Space>
-              }
-              key="details"
-              disabled={current?.user_role !== "owner"}
-            />
-          </Tabs>
         </Cards>
       </Col>
     </Row>
