@@ -6,7 +6,8 @@
     },
     "extends": [
       "eslint:recommended",
-      "plugin:react/recommended"
+      "plugin:react/recommended",
+      "plugin:import/recommended"
     ],
     "parserOptions": {
       "ecmaVersion": "latest",
@@ -14,7 +15,8 @@
     },
     "plugins": [
       "react",
-      "react-hooks"
+      "react-hooks",
+      "import"
     ],
     "rules": {
       "react/no-unescaped-entities": "off",
@@ -30,12 +32,9 @@
       "no-extra-semi": "off",
       "no-async-promise-executor": "off",
       "import/no-unresolved": "off",
-      
-   
-    "no-useless-escape": "off",                 
-     "react/prop-types": "off",                        
-     "no-unused-vars": "off"          
-      
+      "no-useless-escape": "off",
+      "react/prop-types": "off",
+      "no-unused-vars": "off"
     },
     "settings": {
       "react": {
