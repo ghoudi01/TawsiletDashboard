@@ -22,7 +22,7 @@
       "react/no-unescaped-entities": "off",
       "react/no-unknown-property": "off",
       "react/react-in-jsx-scope": "off",
-      "react/jsx-key": "warn",
+      "react/jsx-key": "off",
       "react/display-name": "off",
       "react-hooks/exhaustive-deps": "off",
       "no-useless-catch": "off",
@@ -35,6 +35,10 @@
       "no-useless-escape": "off",
       "react/prop-types": "off",
       "no-unused-vars": "off"
+      
+
+
+      
     },
     "settings": {
       "react": {
