@@ -4,7 +4,7 @@ const jwt = localStorage.getItem("token");
 export const getPrices = createAsyncThunk("prices/all", async () => {
   try {
     const response = await axios.get(
-      `${process.env.REACT_APP_BACKUP_URL}settings?sort=id:asc&populate[0]=icon`,{
+      `${process.env.REACT_APP_BACKUP_URL}settings?sort=id:asc&populate[0]=icon&populate[1]=map_icon`,{
         headers: {
           Authorization: `Bearer ${jwt}`,
         },

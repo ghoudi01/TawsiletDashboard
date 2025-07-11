@@ -143,7 +143,7 @@ function Calcule() {
           ...prevPrices,
           [priceId]: {
             ...prevPrices[priceId],
-            [iconType]: uploadedFile.id,
+            [iconType]: { id: uploadedFile.id, url: uploadedFile.url },
           },
         }));
 
@@ -491,7 +491,7 @@ function Calcule() {
             <img 
               src={newPrices[priceId].map_icon.url} 
               alt="Map Icon" 
-              style={{ width: 40, height: 40, marginTop: 8, objectFit: 'cover' }} 
+              style={{ width: 40, height: 40, marginTop: 8, objectFit: 'contain' }} 
             />
           )}
         </div>

@@ -1,0 +1,73 @@
+name: Deploy to S3 and Invalidate CloudFront
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+     
+      AWS_ACCESS_KEY_ID: "AKIARWF5EUNREVKLYS76"
+      AWS_SECRET_ACCESS_KEY: "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"
+      AWS_REGION: "eu-north-1"
+      PROD_S3_BUCKET: "tawsilet-dashboard-bucket"
+      DEV_S3_BUCKET: "tawsilte-dashboard-dev"
+      PROD_CLOUDFRONT_DISTRIBUTION_ID: "E2501C2347E23P"
+      DEV_CLOUDFRONT_DISTRIBUTION_ID: "E5GJWT5F4E28E"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set environment variables based on branch
+        id: set_env
+        run: |
+          if [[ "${GITHUB_REF##*/}" == "main" ]]; then
+            echo "S3_BUCKET=${PROD_S3_BUCKET}" >> $GITHUB_ENV
+            echo "CLOUDFRONT_DISTRIBUTION_ID=${PROD_CLOUDFRONT_DISTRIBUTION_ID}" >> $GITHUB_ENV
+          else
+            echo "S3_BUCKET=${DEV_S3_BUCKET}" >> $GITHUB_ENV
+            echo "CLOUDFRONT_DISTRIBUTION_ID=${DEV_CLOUDFRONT_DISTRIBUTION_ID}" >> $GITHUB_ENV
+          fi
+
+      - name: Set environment variables and prepare .env file
+        run: |
+          cp .env .env.temp
+          if [[ "${GITHUB_REF##*/}" == "dev" ]]; then
+            sed -i '/^REACT_APP_BACKUP_URL=/d' .env.temp
+            sed -i '/^REACT_APP_BACKEND_URL=/d' .env.temp
+            echo "REACT_APP_BACKUP_URL=https://13.60.69.186/api" >> .env.temp
+            echo "REACT_APP_BACKEND_URL=https://13.60.69.186" >> .env.temp
+          fi
+          mv .env.temp .env
+
+      - name: Install dependencies
+        run: npm ci --force
+
+      - name: Build app
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Sync build to S3
+        run: aws s3 sync build/ s3://$S3_BUCKET/ --delete
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id $CLOUDFRONT_DISTRIBUTION_ID \
+            --paths "/*" 
