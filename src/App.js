@@ -2,15 +2,15 @@ import OneSignal from "react-onesignal";
 import notifSound from "./static/audio/notifSound.mp3";
 
 import React, { useEffect, useState, useRef } from "react";
-// eslint-disable-next-line import/no-extraneous-dependencies
+ 
 import { hot } from "react-hot-loader/root";
-import { Provider, useDispatch, useSelector } from "react-redux";
+import {  useDispatch, useSelector } from "react-redux";
 import { ThemeProvider } from "styled-components";
 import {
   BrowserRouter as Router,
   Redirect,
   Route,
-  Switch,
+  
 } from "react-router-dom";
 import { ConfigProvider } from "antd";
 import Admin from "./routes/admin";
