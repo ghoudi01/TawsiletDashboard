@@ -30,8 +30,12 @@
       "no-extra-semi": "off",
       "no-async-promise-executor": "off",
       "import/no-unresolved": "off",
-      "react/prop-types": "off",
-    "no-unused-vars": "off"
+      
+   
+    "no-useless-escape": "off",                 
+     "react/prop-types": "off",                        
+     "no-unused-vars": "off"          
+      
     },
     "settings": {
       "react": {
