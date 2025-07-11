@@ -9,14 +9,27 @@
       "plugin:react/recommended"
     ],
     "parserOptions": {
-      "ecmaVersion": 12,
+      "ecmaVersion": "latest",
       "sourceType": "module"
     },
-    "plugins": ["react"],
+    "plugins": [
+      "react",
+      "react-hooks"
+    ],
     "rules": {
-      "no-unused-vars": "off",
-      "react/prop-types": "off",
-      "no-console": "warn"
+      "react/no-unescaped-entities": "off",
+      "react/no-unknown-property": "off",
+      "react/react-in-jsx-scope": "off",
+      "react/jsx-key": "warn",
+      "react/display-name": "off",
+      "react-hooks/exhaustive-deps": "off",
+      "no-useless-catch": "off",
+      "no-empty": "off",
+      "no-dupe-keys": "off",
+      "no-unreachable": "off",
+      "no-extra-semi": "off",
+      "no-async-promise-executor": "off",
+      "import/no-unresolved": "off"
     },
     "settings": {
       "react": {
