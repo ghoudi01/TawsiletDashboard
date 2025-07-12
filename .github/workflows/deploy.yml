@@ -41,14 +41,16 @@ jobs:
 
       - name: Set environment variables and prepare .env file
         run: |
-          cp .env .env.temp
-          if [[ "${GITHUB_REF##*/}" == "dev" ]]; then
-            sed -i '/^REACT_APP_BACKUP_URL=/d' .env.temp
-            sed -i '/^REACT_APP_BACKEND_URL=/d' .env.temp
-            echo "REACT_APP_BACKUP_URL=https://13.60.69.186/api" >> .env.temp
-            echo "REACT_APP_BACKEND_URL=https://13.60.69.186" >> .env.temp
+          if [[ "${GITHUB_REF##*/}" == "main" ]]; then
+            echo "Using PRODUCTION environment"
+            cp env.production .env
+          elif [[ "${GITHUB_REF##*/}" == "dev" ]]; then
+            echo "Using DEVELOPMENT environment"
+            cp env.development .env
+          else
+            echo "Using STAGING environment"
+            cp env.staging .env
           fi
-          mv .env.temp .env
 
       - name: Install dependencies
         run: npm ci --force
