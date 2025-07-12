@@ -22,7 +22,7 @@
       "react/no-unescaped-entities": "off",
       "react/no-unknown-property": "off",
       "react/react-in-jsx-scope": "off",
-      "react/jsx-key": "off",
+      "react/jsx-key": "warn",
       "react/display-name": "off",
       "react-hooks/exhaustive-deps": "off",
       "no-useless-catch": "off",
@@ -32,13 +32,11 @@
       "no-extra-semi": "off",
       "no-async-promise-executor": "off",
       "import/no-unresolved": "off",
+      "import/named": "off",
+      "import/namespace": "off",
       "no-useless-escape": "off",
       "react/prop-types": "off",
       "no-unused-vars": "off"
-      
-
-
-      
     },
     "settings": {
       "react": {
