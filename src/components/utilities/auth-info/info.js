@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Avatar,
   Col,
@@ -10,7 +10,7 @@ import {
   message,
 } from "antd";
 import { Link } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import FeatherIcon from "feather-icons-react";
 import { Button } from "../../buttons/buttons";
 import "./profile.css";
@@ -19,14 +19,13 @@ import { Popover } from "../../popup/popup";
 import Notification from "./notification";
 import { logOut } from "../../../redux/authentication/actionCreator";
 import Heading from "../../heading/heading";
-import { useSelector } from "react-redux";
 import {
   changePassword,
   getCurrentUser,
   logout,
   updateUser,
 } from "../../../redux/User/userSlice";
-import { useState } from "react";
+
 import { useForm } from "react-hook-form";
 import TextArea from "antd/lib/input/TextArea";
 import { BasicFormWrapper } from "../../../container/styled";

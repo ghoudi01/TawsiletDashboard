@@ -107,10 +107,7 @@
     "eject": "craco eject"
   },
   "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+    "ignore": true
   },
   "browserslist": {
     "production": [

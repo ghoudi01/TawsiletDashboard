@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Modal, Spin } from "antd";
-import { useDispatch } from "react-redux";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { getReservationById } from "../../redux/reservations/reservationSlice";
 import FeatherIcon from "feather-icons-react";
 import { CloseOutlined, PhoneOutlined } from "@ant-design/icons";
