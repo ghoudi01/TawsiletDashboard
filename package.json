@@ -107,7 +107,7 @@
     "eject": "craco eject"
   },
   "eslintConfig": {
-    "ignore": true
+    "extends": []
   },
   "browserslist": {
     "production": [
