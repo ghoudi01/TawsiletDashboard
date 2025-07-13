@@ -37,7 +37,9 @@ import face4 from "../../../static/img/face4.png";
 
 import { useSelector } from "react-redux";
 import { icons } from "antd/lib/image/PreviewGroup";
-const types = { 1: "Éco", 2: "Berline", 3: "Van" };
+import { fetchVehicleTypes } from "../../../utility/vehicleTypeUtils";
+// Remove hardcoded types object
+// const types = { 1: "Éco", 2: "Berline", 3: "Van" };
 
 function UpdateVehicule({
   visible,
@@ -52,6 +54,22 @@ function UpdateVehicule({
   // const toUpdate = useSelector((state) => state?.vehicule?.getv);
   const dispatch = useDispatch();
   const [image, setimage] = useState();
+  const [vehicleTypes, setVehicleTypes] = useState({});
+
+  // Fetch vehicle types from settings API
+  useEffect(() => {
+    const loadVehicleTypes = async () => {
+      try {
+        const types = await fetchVehicleTypes();
+        setVehicleTypes(types);
+      } catch (error) {
+        console.error("Error loading vehicle types:", error);
+      }
+    };
+
+    loadVehicleTypes();
+  }, []);
+
   function beforeUpload(file) {
     const isJPG = file.type === "image/jpeg";
     if (!isJPG) {
@@ -546,7 +564,6 @@ function UpdateVehicule({
                   <Select
                     placeholder="Sélectionnez le type de véhicule"
                     value={updatevehicule?.data?.type}
-                    defaultValue={types[updatevehicule?.data?.type]}
                     onChange={(value) => {
                       setupdatevehicule({
                         ...updatevehicule,
@@ -557,7 +574,7 @@ function UpdateVehicule({
                       });
                     }}
                   >
-                    {Object.entries(types).map(([key, value]) => (
+                    {Object.entries(vehicleTypes).map(([key, value]) => (
                       <Select.Option key={key} value={key}>
                         {value}
                       </Select.Option>

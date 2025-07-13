@@ -10,13 +10,15 @@ import SelectGmVehicule from "../../../selectGm/SelectGmVehicule";
 import PdfViewer from "../../PdfViewer";
 import { thumbnailPlugin } from "@react-pdf-viewer/thumbnail";
 import axios from "axios";
+import { fetchVehicleTypes } from "../../../utility/vehicleTypeUtils";
 
 const { Title, Text } = Typography;
-const type = { "1": "Éco", "2": "Berline", "3": "Van" };
-const typeOptions = Object.entries(type).map(([id, name]) => ({
-  value: id,
-  label: name,
-}));
+// Remove hardcoded type object and typeOptions
+// const type = { "1": "Éco", "2": "Berline", "3": "Van" };
+// const typeOptions = Object.entries(type).map(([id, name]) => ({
+//   value: id,
+//   label: name,
+// }));
 
 
 function ViewVehicule({ visible, onCancel, record, userRole, recorddata }) {
@@ -24,6 +26,8 @@ function ViewVehicule({ visible, onCancel, record, userRole, recorddata }) {
   const [pdfUrl, setPdfUrl] = useState("");
   const [vehiculeData, setVehiculeData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [vehicleTypes, setVehicleTypes] = useState({});
+  const [typeOptions, setTypeOptions] = useState([]);
    const [selectOptions] = useState([
     { value: "valid", label: "Valider" },
     { value: "invalid", label: "Réfuser" },
@@ -32,6 +36,24 @@ function ViewVehicule({ visible, onCancel, record, userRole, recorddata }) {
   const currentUser = useSelector((state) => state?.user?.currentUser);
   const dispatch = useDispatch();
   const [addedByUsers, setAddedByUsers] = useState([]);
+
+  // Fetch vehicle types from settings API
+  useEffect(() => {
+    const loadVehicleTypes = async () => {
+      try {
+        const types = await fetchVehicleTypes();
+        setVehicleTypes(types);
+        setTypeOptions(Object.entries(types).map(([id, name]) => ({
+          value: id,
+          label: name,
+        })));
+      } catch (error) {
+        console.error("Error loading vehicle types:", error);
+      }
+    };
+
+    loadVehicleTypes();
+  }, []);
 
   useEffect(() => {
     if (visible && recorddata?.documentId) {
@@ -333,7 +355,7 @@ function ViewVehicule({ visible, onCancel, record, userRole, recorddata }) {
                     loading={loading}
                   />
                 ) : (
-                  <Text strong>{type[data?.type?.id] || "-"}</Text>
+                  <Text strong>{vehicleTypes[data?.type?.id?.toString()] || "-"}</Text>
                 )}
               </div>
               <div className="detail-item">

@@ -10,6 +10,7 @@ import {
   updateUser,
 } from "../../../redux/User/userSlice";
 import { updateVehicule } from "../../../redux/vehicule/vehiculeSlice";
+import { fetchVehicleTypes, getVehicleTypeName } from "../../../utility/vehicleTypeUtils";
 
 const { Search } = Input;
 
@@ -38,18 +39,33 @@ const customStyles = {
 };
 
 function AssigneVehicule({ visible, onCancel, usersList, driverDetais }) {
-  const dispatch = useDispatch();
-  const currentUser = useSelector((store) => store?.user?.currentUser);
-
-  const [searchText, setSearchText] = useState("");
-  const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [searchText, setSearchText] = useState("");
+  const [vehicleTypes, setVehicleTypes] = useState({});
   const [pagination, setPagination] = useState({
     current: 1,
     pageSize: 10,
-    total: 0
+    total: 0,
   });
+
+  const dispatch = useDispatch();
+  const currentUser = useSelector((store) => store?.user?.currentUser);
+
+  // Fetch vehicle types from settings API
+  useEffect(() => {
+    const loadVehicleTypes = async () => {
+      try {
+        const types = await fetchVehicleTypes();
+        setVehicleTypes(types);
+      } catch (error) {
+        console.error("Error loading vehicle types:", error);
+      }
+    };
+
+    loadVehicleTypes();
+  }, []);
 
   const fetchVehicles = async (currentPage = 1, search = "") => {
     try {
@@ -188,20 +204,7 @@ if(selectedVehicle?.driver?.id){
             borderRadius: "8px",
           }}
           renderItem={(vehicle) => {
-            const getVehicleTypeName = (type) => {
-              if (!type || !type.id) return null;
-              switch (type.id) {
-                case 1:
-                  return "Éco";
-                case 2:
-                  return "Berline";
-                case 3:
-                  return "Van";
-                default:
-                  return null;
-              }
-            };
-            const typeName = getVehicleTypeName(vehicle.type);
+            const typeName = getVehicleTypeName(vehicleTypes, vehicle.type?.id);
             return (
               <List.Item
                 onClick={() => handleVehicleSelect(vehicle)}

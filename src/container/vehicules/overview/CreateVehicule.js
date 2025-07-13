@@ -35,9 +35,11 @@ import face4 from "../../../static/img/back.png";
 import assurancePictures1 from "../../../static/img/assurancePictures.png";
 import grayCardPictures from "../../../static/img/grayCardPictures.jpeg";
 import moment from "moment";
+import { fetchVehicleTypeOptions } from "../../../utility/vehicleTypeUtils";
 
 const CreateVehicule = ({ visible, onCancel }) => {
   const [assurancePictures, setAssurancePictures] = useState("");
+  const [vehicleTypes, setVehicleTypes] = useState([]);
   const dispatch = useDispatch();
   const currentId = useSelector((state) => state?.user?.currentUser?.id);
   const currentRole = useSelector(
@@ -54,6 +56,21 @@ const CreateVehicule = ({ visible, onCancel }) => {
     checked: [],
     values: "",
   });
+
+  // Fetch vehicle types from settings API
+  useEffect(() => {
+    const loadVehicleTypes = async () => {
+      try {
+        const options = await fetchVehicleTypeOptions();
+        setVehicleTypes(options);
+      } catch (error) {
+        console.error("Error loading vehicle types:", error);
+      }
+    };
+
+    loadVehicleTypes();
+  }, []);
+
   useEffect(() => {
     let unmounted = false;
     if (!unmounted) {
@@ -823,9 +840,11 @@ const CreateVehicule = ({ visible, onCancel }) => {
                     })
                   }
                 >
-                  <Select.Option value={1}>Éco</Select.Option>
-                  <Select.Option value={2}>Berline</Select.Option>
-                  <Select.Option value={3}>Van</Select.Option>
+                  {vehicleTypes.map((type) => (
+                    <Select.Option key={type.value} value={type.value}>
+                      {type.label}
+                    </Select.Option>
+                  ))}
                 </Select>
               </Form.Item>
 
