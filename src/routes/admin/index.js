@@ -44,7 +44,7 @@ const Admin = () => {
     if (userValidation === null) {
       return null;
     }
-    if (["owner", "admin", "driver"].includes(userValidation.user_role)) {
+    if (["owner", "admin", "driver","agent_support"].includes(userValidation.user_role)) {
       return "valid";
     }
 
@@ -81,56 +81,56 @@ const Admin = () => {
           exact
           path={path}
           component={RedirectByRole}
-          allowedRoles={["owner", "admin", "company", "agent", "driver"]}
+          allowedRoles={["owner", "admin", "company", "agent", "driver","agent_support"]}
         />
 
         <ProtectedRoute
           path={`${path}/dashboard`}
           component={Dashboard}
-          allowedRoles={["owner", "admin", "company", "agent"]}
+          allowedRoles={["owner", "admin", "company", "agent","agent_support"]}
         />
 
         <ProtectedRoute
           path={`${path}/reservations`}
           component={Reservations}
-          allowedRoles={["owner", "admin"]}
+          allowedRoles={["owner", "admin","agent_support"]}
         />
         <ProtectedRoute
           path={`${path}/commandes`}
           component={Commandes}
-          allowedRoles={["owner", "admin", "company", "agent"]}
+          allowedRoles={["owner", "admin", "company", "agent","agent_support"]}
         />
         <ProtectedRoute
           path={`${path}/details`}
           component={CommandProfile}
-          allowedRoles={["owner", "admin", "company", "agent"]}
+          allowedRoles={["owner", "admin", "company", "agent","agent_support"]}
         />
 
         <ProtectedRoute
           path={`${path}/Vehicules`}
           component={Vehicules}
-          allowedRoles={["owner", "admin", "company", "agent"]}
+          allowedRoles={["owner", "admin", "company", "agent","agent_support"]}
         />
 
         <ProtectedRoute
           path={`${path}/clients`}
           component={ClientsRoutes}
-          allowedRoles={["owner", "admin"]}
+          allowedRoles={["owner", "admin","agent_support"]}
         />
         <ProtectedRoute
           path={`${path}/Agents`}
           component={AgentsRoutes}
-          allowedRoles={["owner", "admin"]}
+          allowedRoles={["owner", "admin","agent_support"]}
         />
         <ProtectedRoute
           path={`${path}/newDriver`}
           component={newDriver}
-          allowedRoles={["owner", "admin"]}
+          allowedRoles={["owner", "admin","agent_support"]}
         />
         <ProtectedRoute
           path={`${path}/track`}
           component={livreurMap}
-          allowedRoles={["owner", "admin", "company", "agent"]}
+          allowedRoles={["owner", "admin", "company", "agent","agent_support"]}
         />
 
         <ProtectedRoute
@@ -141,7 +141,7 @@ const Admin = () => {
         <ProtectedRoute
           path={`${path}/Livreurs`}
           component={Livreurs}
-          allowedRoles={["owner", "admin", "company", "agent"]}
+          allowedRoles={["owner", "admin", "company", "agent","agent_support"]}
         />
         <ProtectedRoute
           path={`${path}/Admins`}
@@ -187,17 +187,17 @@ const Admin = () => {
         <ProtectedRoute
           path={`${path}/Ticket`}
           component={Ticket}
-          allowedRoles={["admin", "owner"]}
+          allowedRoles={["admin", "owner","agent_support"]}
         />
         <ProtectedRoute
           path={`${path}/detailsTicket`}
           component={TicketDetails}
-          allowedRoles={["owner", "admin"]}
+          allowedRoles={["owner", "admin","agent_support"]}
         />
         <ProtectedRoute
           path={`${path}/detailsTickete`}
           component={TicketDetail}
-          allowedRoles={["owner", "admin"]}
+          allowedRoles={["owner", "admin","agent_support"]}
         />
       </Suspense>
     </>

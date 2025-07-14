@@ -381,7 +381,7 @@ if(checked===false)
         className="wide-dropdwon"
         content={
           <>
-            <Link
+           {["owner","admin"].includes(userRole)&&( <Link
               onClick={() => {
                 setOpenAdd(true);
                 setDriverDetais(value);
@@ -389,8 +389,8 @@ if(checked===false)
               to="#"
             >
               Assigner Voiture
-            </Link>
-          {!value?.pro&&(  <Link
+            </Link>)}
+          {!value?.pro&&["owner","admin"].includes(userRole)&&(  <Link
               onClick={() => {
                 setOpenAssignParent(true);
                 setDriverDetais(value);
@@ -408,7 +408,7 @@ if(checked===false)
             >
               Afficher
             </Link>
-            <Link
+           {["owner","admin"].includes(userRole)&&( <Link
               onClick={() => {
                 setOpenUpdate(true);
                 setmodalId(value.id);
@@ -416,8 +416,8 @@ if(checked===false)
               to="#"
             >
               Modifier
-            </Link>
-            {(userRole === "owner" || userRole === "admin") && (
+            </Link>)}
+            {["owner","admin"].includes(userRole) && (
               <Link
                 to="#"
                 onClick={async (e) => {

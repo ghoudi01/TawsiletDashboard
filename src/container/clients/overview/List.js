@@ -39,7 +39,8 @@ const Client = ({
 }) => {
   const dispatch = useDispatch();
   const users = useSelector((state) => state?.user?.clients?.results);
- 
+  const userRole = useSelector((state) => state?.user?.currentUser?.user_role);
+
   const meta = useSelector((state) => state?.user?.clients?.pagination);
   const isLoading = useSelector((state) => state?.user?.isLoading);
   const [open, setOpen] = useState(false);
@@ -261,7 +262,7 @@ const Client = ({
                   Voir
                 </Link>
   
-                <Link
+               {["owner","admin"].includes(userRole)&&( <Link
                   to="#"
                   onClick={(e) => {
                     Modal.confirm({
@@ -283,7 +284,7 @@ const Client = ({
                   }}
                 >
                   Supprimer
-                </Link>
+                </Link>)}
               </>
             }
           >

@@ -17,6 +17,21 @@ import {
 } from "../redux/reservations/reservationSlice";
 import { getVehiculeCount } from "../redux/vehicule/vehiculeSlice";
 
+const menuPermissions = {
+  reservations: ["owner", "admin", "agent_support"],
+  commandes: ["owner", "admin", "agent_support"],
+  vehicules: ["owner", "admin", "agent_support"],
+  clients: ["owner", "admin", "agent_support"],
+  chauffeurs: ["owner", "admin", "agent_support"],
+  admins: ["owner"],
+  agents: ["owner"],
+  balance: ["owner"],
+  historique: ["owner", "admin"],
+  maintenance: ["owner"],
+  calcule: ["owner"],
+  support: ["owner", "admin", "agent_support"],
+};
+
 const MenuItems = ({ darkMode, toggleCollapsed, topMenu }) => {
   const dispatch = useDispatch();
   const reservationCount = useSelector((state) => state?.reservations?.count);
@@ -83,350 +98,223 @@ const MenuItems = ({ darkMode, toggleCollapsed, topMenu }) => {
     }
   }, [userRole]);
 
+  const canView = (item) => menuPermissions[item]?.includes(roleUser);
+
   const renderMenuItems = () => {
-    switch (roleUser) {
-      case "owner":
-      case "admin":
-      case "driver":
-        return (
+    if (roleUser === "owner" || roleUser === "admin" || roleUser === "agent_support") {
+      // Build Gestion submenu items
+      const gestionMenuItems = [
+        canView("reservations") && (
+          <Menu.Item key="reservations">
+            <NavLink onClick={toggleCollapsed} to={`${path}/reservations/view`}>
+              Reservations
+            </NavLink>
+          </Menu.Item>
+        ),
+        canView("commandes") && (
+          <Menu.Item key="commandes">
+            <NavLink onClick={toggleCollapsed} to={`${path}/commandes/view`}>
+              Commandes
+            </NavLink>
+          </Menu.Item>
+        ),
+        canView("vehicules") && (
+          <Menu.Item key="ProjectCreate">
+            <NavLink onClick={toggleCollapsed} to={`${path}/Vehicules/view`}>
+              Véhicule
+              {vehiculeCount > 0 && (
+                <span className="reservation_notification">
+                  {vehiculeCount > 99 ? "99+" : vehiculeCount}
+                </span>
+              )}
+            </NavLink>
+          </Menu.Item>
+        ),
+        canView("clients") && (
+          <Menu.Item key="projectDetails">
+            <NavLink onClick={toggleCollapsed} to={`${path}/clients/list`}>
+              Clients
+            </NavLink>
+          </Menu.Item>
+        ),
+        canView("chauffeurs") && (
+          <Menu.Item key="projectDetail">
+            <NavLink onClick={toggleCollapsed} to={`${path}/Livreurs/list`}>
+              Chauffeurs
+              {driverCount > 0 && (
+                <span className="reservation_notification">
+                  {driverCount > 99 ? "99+" : driverCount}
+                </span>
+              )}
+            </NavLink>
+          </Menu.Item>
+        ),
+      ].filter(Boolean);
+
+      // Build Utilisateurs submenu items
+      const utilisateursMenuItems = [
+        canView("admins") && currentUser.user_role === "owner" && (
+          <Menu.Item key="view">
+            <NavLink onClick={toggleCollapsed} to={`${path}/Admins/view`}>
+              Admin
+            </NavLink>
+          </Menu.Item>
+        ),
+        canView("agents") && currentUser.user_role === "owner" && (
+          <Menu.Item key="views">
+            <NavLink onClick={toggleCollapsed} to={`${path}/Agents/view`}>
+              Agent
+            </NavLink>
+          </Menu.Item>
+        ),
+        
+        <Menu.Item key="track">
+          <NavLink onClick={toggleCollapsed} to={`${path}/track/view`}>
+            Logistique
+          </NavLink>
+        </Menu.Item>,
+      ].filter(Boolean);
+
+      // Build Finance submenu items
+      const financeMenuItems = [
+        canView("balance") && currentUser.user_role === "owner" && (
+          <Menu.Item key="view">
+            <NavLink onClick={toggleCollapsed} to={`${path}/balance/view`}>
+              Balance
+            </NavLink>
+          </Menu.Item>
+        ),
+        canView("historique") && (
+          <Menu.Item key="views">
+            <NavLink onClick={toggleCollapsed} to={`${path}/Historique/view`}>
+              Historique
+            </NavLink>
+          </Menu.Item>
+        ),
+      ].filter(Boolean);
+
+      // Build Support submenu items
+      const supportMenuItems = [
+        <Menu.Item key="projectDetails">
+          <NavLink onClick={toggleCollapsed} to={`${path}/Ticket/clients`}>
+            Clients
+          </NavLink>
+        </Menu.Item>,
+        <Menu.Item key="projectDetail">
+          <NavLink onClick={toggleCollapsed} to={`${path}/Ticket/Livreurs`}>
+            Chauffeurs
+          </NavLink>
+        </Menu.Item>,
+      ].filter(Boolean);
+
+      // Build Paramètres submenu items
+      const parametresMenuItems = [
+        canView("maintenance") && currentUser.user_role === "owner" && (
+          <Menu.Item key="view">
+            <NavLink onClick={toggleCollapsed} to={`${path}/Maintenance/view`}>
+              Maintenance
+            </NavLink>
+          </Menu.Item>
+        ),
+        canView("calcule") && currentUser.user_role === "owner" && (
           <>
-            {userRole !== "driver" && (
-              <Menu.Item
-                key="home"
-                icon={!topMenu && <FeatherIcon icon="home" />}
-                title="Dashboard"
-              >
-                <NavLink
-                  key="dashboard"
-                  onClick={toggleCollapsed}
-                  to={`${path}`}
-                >
-                  Dashboard
-                </NavLink>
-              </Menu.Item>
-            )}
-            {userRole === "driver" && (
-              <Menu.Item
-                key="homee"
-                icon={!topMenu && <FeatherIcon icon="home" />}
-                title="Dashboard"
-              >
-                <NavLink
-                  key="dashboardd"
-                  onClick={toggleCollapsed}
-                  to={`${path}/stats/dashboard`}
-                >
-                  Dashboard
-                </NavLink>
-              </Menu.Item>
-            )}
-            {userRole !== "driver" && (
-              <SubMenu
-                key="Project"
-                icon={!topMenu && <FeatherIcon icon="sliders" />}
-                title="Gestion"
-              >
-                <Menu.Item key="reservations">
-                  <NavLink
-                    onClick={toggleCollapsed}
-                    to={`${path}/reservations/view`}
-                  >
-                    Reservations
-                  </NavLink>
-                </Menu.Item>
-
-                <Menu.Item key="commandes">
-                  <NavLink
-                    onClick={toggleCollapsed}
-                    to={`${path}/commandes/view`}
-                  >
-                    Commandes
-                  </NavLink>
-                </Menu.Item>
-
-                <Menu.Item key="ProjectCreate">
-                  <NavLink
-                    onClick={toggleCollapsed}
-                    to={`${path}/Vehicules/view`}
-                  >
-                    Véhicule
-                    {vehiculeCount > 0 && (
-                      <span className="reservation_notification">
-                        {vehiculeCount > 99 ? "99+" : vehiculeCount}
-                      </span>
-                    )}
-                  </NavLink>
-                </Menu.Item>
-                <Menu.Item key="projectDetails">
-                  <NavLink
-                    onClick={toggleCollapsed}
-                    to={`${path}/clients/list`}
-                  >
-                    Clients
-                  </NavLink>
-                </Menu.Item>
-                <Menu.Item key="projectDetail">
-                  <NavLink
-                    onClick={toggleCollapsed}
-                    to={`${path}/Livreurs/list`}
-                  >
-                    Chauffeurs
-                    {driverCount > 0 && (
-                      <span className="reservation_notification">
-                        {driverCount > 99 ? "99+" : driverCount}
-                      </span>
-                    )}
-                  </NavLink>
-                </Menu.Item>
-              </SubMenu>
-            )}
-            {userRole !== "driver" && (
-              <SubMenu
-                key="utilisateurs"
-                icon={!topMenu && <FeatherIcon icon="users" />}
-                title="utilisateurs"
-              >
-                {currentUser.user_role === "owner" && (
-                  <>
-                    <Menu.Item key="view">
-                      <NavLink
-                        onClick={toggleCollapsed}
-                        to={`${path}/Admins/view`}
-                      >
-                        Admin
-                      </NavLink>
-                    </Menu.Item>
-                    <Menu.Item key="views">
-                      <NavLink
-                        onClick={toggleCollapsed}
-                        to={`${path}/Agents/view`}
-                      >
-                        Agent
-                      </NavLink>
-                    </Menu.Item>
-                  </>
-                )}
-
-                <Menu.Item key="track">
-                  <NavLink onClick={toggleCollapsed} to={`${path}/track/view`}>
-                    Logistique
-                  </NavLink>
-                </Menu.Item>
-                {/* <Menu.Item key="newDriver">
-                  <NavLink
-                    onClick={toggleCollapsed}
-                    to={`${path}/newDriver/view`}
-                  >
-                    New Driver
-                  </NavLink>
-                </Menu.Item> */}
-              </SubMenu>
-            )}
-            <SubMenu
-              key="Finance"
-              icon={!topMenu && <FeatherIcon icon="dollar-sign" />}
-              title="Finance"
-            >
-              {currentUser.user_role === "owner" && (
-                <Menu.Item key="view">
-                  <NavLink
-                    onClick={toggleCollapsed}
-                    to={`${path}/balance/view`}
-                  >
-                    Balance
-                  </NavLink>
-                </Menu.Item>
-              )}
-              {currentUser.user_role === "driver" && (
-                <Menu.Item key="view">
-                  <NavLink
-                    onClick={toggleCollapsed}
-                    to={`${path}/driver/balance`}
-                  >
-                    Balance
-                  </NavLink>
-                </Menu.Item>
-              )}
-              <Menu.Item key="views">
-                <NavLink
-                  onClick={toggleCollapsed}
-                  to={`${path}/Historique/view`}
-                >
-                  Historique
-                </NavLink>
-              </Menu.Item>
-            </SubMenu>
-            {currentUser.user_role !== "driver" && (
-              <SubMenu
-                key="Problem"
-                icon={!topMenu && <FeatherIcon icon="tool" />}
-                title="Support"
-              >
-                <Menu.Item key="projectDetails">
-                  <NavLink
-                    onClick={toggleCollapsed}
-                    to={`${path}/Ticket/clients`}
-                  >
-                    Clients
-                  </NavLink>
-                </Menu.Item>
-                <Menu.Item key="projectDetail">
-                  <NavLink
-                    onClick={toggleCollapsed}
-                    to={`${path}/Ticket/Livreurs`}
-                  >
-                    Chauffeurs
-                  </NavLink>
-                </Menu.Item>
-              </SubMenu>
-            )}
-            {userRole !== "driver" && (
-              <SubMenu
-                key="Settings"
-                icon={!topMenu && <FeatherIcon icon="settings" />}
-                title="Paramètres"
-              >
-                {currentUser.user_role !== "driver" && (
-                  <Menu.Item key="view">
-                    <NavLink
-                      onClick={toggleCollapsed}
-                      to={`${path}/Maintenance/view`}
-                    >
-                      Maintenance
-                    </NavLink>
-                  </Menu.Item>
-                )}
-                {currentUser.user_role === "owner" && (
-                  <>
-                    <Menu.Item key="params">
-                      <NavLink
-                        onClick={toggleCollapsed}
-                        to={`${path}/param/view`}
-                      >
-                        Calcule de temps d’attente
-                      </NavLink>
-                    </Menu.Item>
-                    <Menu.Item key="views">
-                      <NavLink
-                        onClick={toggleCollapsed}
-                        to={`${path}/Calcule/view`}
-                      >
-                        Calcul des prix
-                      </NavLink>
-                    </Menu.Item>
-                  </>
-                )}
-              </SubMenu>
-            )}
-            <Menu.Item
-              key="logout"
-              icon={!topMenu && <FeatherIcon icon="log-out" />}
-              title="logout"
-              onClick={() => handleLogOut()}
-            >
-              <NavLink
-                onClick={toggleCollapsed}
-                to={`${path}/project/view/list`}
-              >
-                Déconnecter
+            <Menu.Item key="params">
+              <NavLink onClick={toggleCollapsed} to={`${path}/param/view`}>
+                Calcule de temps d’attente
+              </NavLink>
+            </Menu.Item>
+            <Menu.Item key="views">
+              <NavLink onClick={toggleCollapsed} to={`${path}/Calcule/view`}>
+                Calcul des prix
               </NavLink>
             </Menu.Item>
           </>
-        );
-      case "company":
-      case "agent":
-        return (
-          <>
-            {/* Render specific menu items for company/agent */}{" "}
-            <Menu.Item
-              key="home"
-              icon={!topMenu && <FeatherIcon icon="home" />}
-              title="Dashboard"
+        ),
+      ].filter(Boolean);
+
+      return (
+        <>
+          <Menu.Item
+            key="home"
+            icon={!topMenu && <FeatherIcon icon="home" />}
+            title="Dashboard"
+          >
+            <NavLink
+              key="dashboard"
+              onClick={toggleCollapsed}
+              to={`${path}`}
             >
-              <NavLink key="dashboard" onClick={toggleCollapsed} to={`${path}`}>
-                Dashboard
-              </NavLink>
-            </Menu.Item>
+              Dashboard
+            </NavLink>
+          </Menu.Item>
+
+          {gestionMenuItems.length > 0 && (
             <SubMenu
               key="Project"
               icon={!topMenu && <FeatherIcon icon="sliders" />}
               title="Gestion"
             >
-              <Menu.Item key="commandes">
-                <NavLink
-                  onClick={toggleCollapsed}
-                  to={`${path}/commandes/view`}
-                >
-                  Commandes
-                </NavLink>
-              </Menu.Item>
-              <Menu.Item key="ProjectCreate">
-                <NavLink
-                  onClick={toggleCollapsed}
-                  to={`${path}/Vehicules/view`}
-                >
-                  Véhicule
-                </NavLink>
-              </Menu.Item>
-              <Menu.Item key="projectDetail">
-                <NavLink onClick={toggleCollapsed} to={`${path}/Livreurs/list`}>
-                  Chauffeurs
-                </NavLink>
-              </Menu.Item>
+              {gestionMenuItems}
             </SubMenu>
+          )}
+
+          {utilisateursMenuItems.length > 0 && (
             <SubMenu
               key="utilisateurs"
               icon={!topMenu && <FeatherIcon icon="users" />}
               title="utilisateurs"
             >
-              <Menu.Item key="views">
-                <NavLink onClick={toggleCollapsed} to={`${path}/Agents/view`}>
-                  Agent
-                </NavLink>
-              </Menu.Item>
-              <Menu.Item key="track">
-                <NavLink onClick={toggleCollapsed} to={`${path}/track/view`}>
-                  Logistique
-                </NavLink>
-              </Menu.Item>
+              {utilisateursMenuItems}
             </SubMenu>
+          )}
+
+          {financeMenuItems.length > 0 && (
             <SubMenu
               key="Finance"
               icon={!topMenu && <FeatherIcon icon="dollar-sign" />}
               title="Finance"
             >
-              <Menu.Item key="view">
-                <NavLink onClick={toggleCollapsed} to={`${path}/balance/view`}>
-                  Balance
-                </NavLink>
-              </Menu.Item>
-              <Menu.Item key="views">
-                <NavLink
-                  onClick={toggleCollapsed}
-                  to={`${path}/Historique/view`}
-                >
-                  Historique
-                </NavLink>
-              </Menu.Item>
+              {financeMenuItems}
             </SubMenu>
-            <Menu.Item
-              key="logout"
-              icon={!topMenu && <FeatherIcon icon="log-out" />}
-              title="logout"
-              onClick={() => handleLogOut()}
+          )}
+
+          {canView("support") && supportMenuItems.length > 0 && (
+            <SubMenu
+              key="Problem"
+              icon={!topMenu && <FeatherIcon icon="tool" />}
+              title="Support"
             >
-              <NavLink
-                onClick={toggleCollapsed}
-                to={`${path}/project/view/list`}
-              >
-                Déconnecter
-              </NavLink>
-            </Menu.Item>
-          </>
-        );
-      default:
-        return null; // Render nothing if the role is not recognized
+              {supportMenuItems}
+            </SubMenu>
+          )}
+
+          {parametresMenuItems.length > 0 && (
+            <SubMenu
+              key="Settings"
+              icon={!topMenu && <FeatherIcon icon="settings" />}
+              title="Paramètres"
+            >
+              {parametresMenuItems}
+            </SubMenu>
+          )}
+
+          <Menu.Item
+            key="logout"
+            icon={!topMenu && <FeatherIcon icon="log-out" />}
+            title="logout"
+            onClick={() => handleLogOut()}
+          >
+            <NavLink
+              onClick={toggleCollapsed}
+              to={`${path}/project/view/list`}
+            >
+              Déconnecter
+            </NavLink>
+          </Menu.Item>
+        </>
+      );
     }
+    return null; // Render nothing if the role is not recognized
   };
 
   return (

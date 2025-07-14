@@ -502,6 +502,7 @@ export const loginUserTodash = createAsyncThunk(
         response?.data?.user?.user_role === "owner" ||
         response?.data?.user?.user_role === "agent" ||
         response?.data?.user?.user_role === "admin" ||
+        response?.data?.user?.user_role === "agent_support" ||
         (response?.data?.user?.user_role === "driver" &&
           response?.data?.user?.pro) ||
         response?.data?.user?.user_role === "company"

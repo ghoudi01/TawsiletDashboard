@@ -12,6 +12,7 @@ const RedirectByRole = () => {
     switch (user.user_role) {
       case "admin":
       case "owner":
+      case "agent_support":
         history.replace("/admin/dashboard"); // or your admin dashboard
         break;
       case "agent_dispatch":
