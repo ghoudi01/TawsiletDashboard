@@ -18,7 +18,7 @@ const CompanyPerformanceChart = ({ data, isOwner }) => {
 
     return data.map((company) => ({
       name: company.companyId?.name,
-      orders: company.details.nbrCredit + company.details.nbrLivraison,
+      orders: company?.details?.nbrCredit + company?.details?.nbrLivraison,
       revenue: company.details.revenusDesVentes,
       profit: company.details.beneficeNet,
     }));

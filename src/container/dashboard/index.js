@@ -56,6 +56,9 @@ const Dashboard = () => {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(100);
 
+  // Loader state for Aperçus
+  const [loadingApercus, setLoadingApercus] = useState(true);
+
   // Fetch current user
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -85,12 +88,14 @@ const Dashboard = () => {
   // Fetch clients
   useEffect(() => {
     const fetchClients = async () => {
+      setLoadingApercus(true);
       const jwt = localStorage.getItem("token");
       const { data } = await axios.get(`${API_BASE}usersbyrole/client`, {
         params: { page: pageClient, pageSize: pageSizeClient, text: "" },
         headers: { Authorization: `Bearer ${jwt}` },
       });
       setClients(data);
+      setLoadingApercus(false);
     };
     fetchClients();
   }, [pageClient, pageSizeClient]);
@@ -151,6 +156,7 @@ const Dashboard = () => {
   // Fetch chart data (counts)
   useEffect(() => {
     const fetchChartData = async () => {
+      setLoadingApercus(true);
       const jwt = localStorage.getItem("token");
       // Users count
       const usersCountRes = await axios.post(`${API_BASE}users/count`, {}, {
@@ -164,9 +170,33 @@ const Dashboard = () => {
         ...usersCountRes.data,
         commandData: commandStatusRes.data,
       });
+      setLoadingApercus(false);
     };
     fetchChartData();
   }, [dateFilter]);
+
+  // Fetch vehicule count with pagination
+  useEffect(() => {
+    const fetchVehiculeCount = async () => {
+      const jwt = localStorage.getItem("token");
+      try {
+        const { data } = await axios.get(`${API_BASE}vehicules`, {
+          params: {
+            "pagination[page]": 1,
+            "pagination[pageSize]": 1,
+          },
+          headers: { Authorization: `Bearer ${jwt}` },
+        });
+        setChartData((prev) => ({
+          ...prev,
+          vehiculeCount: data?.meta?.pagination?.total || 0,
+        }));
+      } catch (error) {
+        // Optionally handle error
+      }
+    };
+    fetchVehiculeCount();
+  }, []);
 
   // Helpers
   const translateEtatToFrench = (etat) => {
@@ -248,131 +278,80 @@ const Dashboard = () => {
   };
   const originalLabels = ["Pending", "Completed", "Canceled", "Failed"];
   const frenchLabels = originalLabels.map((label) => translateToFrench(label));
-
-  // Render
+   // Render
   return (
     <ChartContainer>
       <PageHeader
         ghost
         title="Logistique Dashboard"
-        buttons={[
-          <div key="6" className="page-header-actions">
-            <CalendarButtonPageHeader key="1" />
-          </div>,
-        ]}
+        
       />
       <Main>
         <Row gutter={25}>
           <Col lg={24} xs={24}>
             <Cards title="Aperçus" size={"large"}>
-              <Row justify={"space-between"}>
-                {currentUser?.user_role === "owner" ||
-                currentUser?.user_role === "admin" ? (
-                  <>
-                    <Col md={6} xs={12}>
-                      <NavLink to="/admin/clients/list" style={{ color: "unset" }}>
-                        <ChartHeaderItem>
-                          <img src={DashChartClientIcon} alt="" />
-                          <div>
-                            <Counter
-                              endValue={clients?.pagination?.total || 0}
-                              incrementDuration={3}
-                            />
-                            <span>Client</span>
-                          </div>
-                        </ChartHeaderItem>
-                      </NavLink>
-                    </Col>
-                    <Col md={6} xs={12}>
-                      <NavLink to="/admin/commandes/view" style={{ color: "unset" }}>
-                        <ChartHeaderItem>
-                          <img src={dashCommandCountIcon} alt="" />
-                          <div>
-                            <Counter
-                              endValue={commandsCount?.pagination?.total || 0}
-                              incrementDuration={3}
-                            />
-                            <span>Commande</span>
-                          </div>
-                        </ChartHeaderItem>
-                      </NavLink>
-                    </Col>
-                    <Col md={6} xs={12}>
-                      <NavLink to="/admin/Livreurs/list" style={{ color: "unset" }}>
-                        <ChartHeaderItem>
-                          <img src={DashDriverCountIcon} alt="" />
-                          <div>
-                            <Counter
-                              endValue={drivers?.pagination?.total || 0}
-                              incrementDuration={3}
-                            />
-                            <span>Chauffeur</span>
-                          </div>
-                        </ChartHeaderItem>
-                      </NavLink>
-                    </Col>
-                  </>
-                ) : (
-                  <>
-                    <Col md={6} xs={12}>
-                      <NavLink to="/admin/Agents/view" style={{ color: "unset" }}>
-                        <ChartHeaderItem>
-                          <img src={DashChartClientIcon} alt="" />
-                          <div>
-                            <Counter
-                              endValue={chartData.agentCount || 0}
-                              incrementDuration={3}
-                            />
-                            <span>Agent</span>
-                          </div>
-                        </ChartHeaderItem>
-                      </NavLink>
-                    </Col>
-                    <Col md={6} xs={12}>
-                      <NavLink to="/admin/commandes/view" style={{ color: "unset" }}>
-                        <ChartHeaderItem>
-                          <img src={dashCommandCountIcon} alt="" />
-                          <div>
-                            <Counter
-                              endValue={chartData?.commandCount || 0}
-                              incrementDuration={3}
-                            />
-                            <span>Commande</span>
-                          </div>
-                        </ChartHeaderItem>
-                      </NavLink>
-                    </Col>
-                    <Col md={6} xs={12}>
-                      <NavLink to="/admin/Vehicules/view" style={{ color: "unset" }}>
-                        <ChartHeaderItem>
-                          <img src={DashSocCountIcon} alt="" />
-                          <div>
-                            <Counter
-                              endValue={chartData.vehiculeCount || 0}
-                              incrementDuration={3}
-                            />
-                            <span>Véhicule</span>
-                          </div>
-                        </ChartHeaderItem>
-                      </NavLink>
-                    </Col>
-                    <Col md={6} xs={12}>
-                      <NavLink to="/admin/Livreurs/list" style={{ color: "unset" }}>
-                        <ChartHeaderItem>
-                          <img src={DashDriverCountIcon} alt="" />
-                          <div>
-                            <Counter
-                              endValue={chartData.driverCount || 0}
-                              incrementDuration={3}
-                            />
-                            <span>Chauffeur</span>
-                          </div>
-                        </ChartHeaderItem>
-                      </NavLink>
-                    </Col>
-                  </>
-                )}
-              </Row>
+              {loadingApercus ? (
+                <Skeleton active paragraph={{ rows: 1 }} />
+              ) : (
+                <Row justify={"space-between"}>
+                  <Col md={6} xs={12}>
+                    <NavLink to="/admin/clients/list" style={{ color: "unset" }}>
+                      <ChartHeaderItem>
+                        <img src={DashChartClientIcon} alt="" />
+                        <div>
+                          <Counter
+                            endValue={clients?.pagination?.total || 0}
+                            incrementDuration={3}
+                          />
+                          <span>Client</span>
+                        </div>
+                      </ChartHeaderItem>
+                    </NavLink>
+                  </Col>
+                  <Col md={6} xs={12}>
+                    <NavLink to="/admin/commandes/view" style={{ color: "unset" }}>
+                      <ChartHeaderItem>
+                        <img src={dashCommandCountIcon} alt="" />
+                        <div>
+                          <Counter
+                            endValue={chartData?.commandCount || 0}
+                            incrementDuration={1}
+                          />
+                          <span>Commande</span>
+                        </div>
+                      </ChartHeaderItem>
+                    </NavLink>
+                  </Col>
+                  <Col md={6} xs={12}>
+                    <NavLink to="/admin/Vehicules/view" style={{ color: "unset" }}>
+                      <ChartHeaderItem>
+                        <img src={DashSocCountIcon} alt="" />
+                        <div>
+                          <Counter
+                            endValue={chartData.vehiculeCount || 0}
+                            incrementDuration={1}
+                          />
+                          <span>Véhicule</span>
+                        </div>
+                      </ChartHeaderItem>
+                    </NavLink>
+                  </Col>
+                  <Col md={6} xs={12}>
+                    <NavLink to="/admin/Livreurs/list" style={{ color: "unset" }}>
+                      <ChartHeaderItem>
+                        <img src={DashDriverCountIcon} alt="" />
+                        <div>
+                          <Counter
+                            endValue={chartData.driverCount || 0}
+                            incrementDuration={1}
+                          />
+                          <span>Chauffeur</span>
+                        </div>
+                      </ChartHeaderItem>
+                    </NavLink>
+                  </Col>
+                </Row>
+              )}
             </Cards>
           </Col>
         </Row>

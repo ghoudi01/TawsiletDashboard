@@ -23,7 +23,7 @@ const ACCEPTED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
  * @param {string} props.defaultDriverId - Default driver ID for the transaction
  */
 function AddHistorique({ visible, onCancel, defaultAmount, defaultDriverId }) {
-  console.log("defaultDriverId",defaultDriverId)
+ 
   const dispatch = useDispatch();
   const drivers = useSelector((state) => state?.user?.drivers?.results ?? []);
   const currentUser = useSelector((state) => state.user.currentUser);
@@ -130,7 +130,7 @@ function AddHistorique({ visible, onCancel, defaultAmount, defaultDriverId }) {
   };
 
   const handleSubmit = async () => {
-    console.log("formState",formState)
+   
     if (!formState.selectedDriverId || !formState.montant) {
       message.error("Veuillez remplir tous les champs requis");
       return;
@@ -152,7 +152,8 @@ function AddHistorique({ visible, onCancel, defaultAmount, defaultDriverId }) {
       sold: formState.montant,
       transactionType: formState.type ? "incomes" : "outcomes",
       payType: formState.transactionType,
-      evidence: fileId?.id
+      evidence: fileId?.id,
+      debit:Math.max(parseFloat(defaultAmount)-parseFloat(formState.montant),0)
     };
 
     try {

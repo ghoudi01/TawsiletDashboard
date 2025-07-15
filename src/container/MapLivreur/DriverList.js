@@ -80,27 +80,39 @@ const DriverList = ({
         setIsLoadingDetails(true);
         try {
           const driverIds = driversList.map(driver => driver.id).filter(Boolean);
-           
-          const params = new URLSearchParams();
-          
-          driverIds.forEach((id, index) => {
-            params.append(`filters[documentId][$in][${index}]`, id);
-          });
-          
-          params.append('populate[0]', 'vehicule');
-          params.append('populate[1]', 'profilePicture');
-          
-          const response = await axios.get(
-            `${process.env.REACT_APP_BACKUP_URL}users/?${params.toString()}`
-          );
 
+          // Helper to chunk array into batches of 100
+          const chunkArray = (array, size) => {
+            const result = [];
+            for (let i = 0; i < array.length; i += size) {
+              result.push(array.slice(i, i + size));
+            }
+            return result;
+          };
+
+          const idChunks = chunkArray(driverIds, 100);
+          let allDetails = [];
+
+          for (const chunk of idChunks) {
+            const params = new URLSearchParams();
+            chunk.forEach((id, index) => {
+              params.append(`filters[documentId][$in][${index}]`, id);
+            });
+            params.append('populate[0]', 'vehicule');
+            params.append('populate[1]', 'profilePicture');
+
+            const response = await axios.get(
+              `${process.env.REACT_APP_BACKUP_URL}users/?${params.toString()}`
+            );
+            allDetails = allDetails.concat(response.data);
+          }
 
           // Create a map of driver details
-          const detailsMap = response.data.reduce((acc, driver) => {
+          const detailsMap = allDetails.reduce((acc, driver) => {
             acc[driver.documentId] = driver;
             return acc;
           }, {});
-           
+
           // Combine driversList with their details and filter out non-existent ones
           const combined = driversList
             .map(driver => ({
@@ -112,8 +124,7 @@ const DriverList = ({
               }
             }))
             .filter(driver => driver?.details?.id!==undefined); // Only keep drivers that exist in both systems
-           
-          
+
           setCombinedDrivers(combined);
         } catch (error) {
           console.error("Error fetching driver details:", error);
@@ -124,10 +135,10 @@ const DriverList = ({
     };
 
     fetchAllDriverDetails();
-  }, [driversList, ping]); // Added ping as a dependency
+  }, []); // Added ping as a dependency
 
   const filteredDrivers = combinedDrivers.filter(driver => {
-   
+
      // Text filter
     if (filterText) {
       const details = driver.details;
@@ -141,13 +152,13 @@ const DriverList = ({
       );
       if (!matchesText) return false;
     }
-   
+
     if (statusFilter !== 'all') {
       const isActive = driver.details?.isActive;
       const isFree = driver.details?.isFree;
-      
-      
-      
+
+
+
       switch (statusFilter) {
         case 'disponible':
           return isActive && isFree;
@@ -238,15 +249,15 @@ const DriverList = ({
               setZoomSelected={setZoomSelected}
               asideActive={asideActive}
               onClick={() => {
-                
+
                 setModalDriver(driver);
-              
+
               }}
             />
           ))}
         </div>
       </DriverListContainer>
-      
+
     </DriverListParent>
   );
 };
@@ -264,7 +275,7 @@ const DriverListContainer = styled.div`
     padding: 0;
     box-sizing: border-box;
   }
- 
+
   background-color: rgba(250, 250, 250, 1);
   position: relative;
   max-width: 350px;

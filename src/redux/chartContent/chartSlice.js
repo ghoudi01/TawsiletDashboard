@@ -66,12 +66,12 @@ export const getUsersCount = createAsyncThunk("usersChart/Count", async () => {
 // **************************** finance tab ********************************************
 export const getBalance = createAsyncThunk(
   "balance/get",
-  async ({ periodeFilter }) => {
+  async ({ filterText, sortOption }) => {
     try {
       const response = await axios.post(
         `${process.env.REACT_APP_BACKUP_URL}balance`,
         {
-          periodeFilter: periodeFilter,
+          filterText, sortOption
         },
         {
           headers: {

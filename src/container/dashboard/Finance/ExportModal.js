@@ -36,7 +36,7 @@ const ExportModal = ({ visible, onCancel, data, period }) => {
     const headers = ['Company,Orders,Revenue,Profit,Commission'];
     
     const rows = data.companies.map(company => 
-      `"${company.companyId.name}",${company.details.nbrCredit + company.details.nbrLivraison},${company.details.revenusDesVentes},${company.details.beneficeNet},${company.details.beneficeNet * 0.2}`
+      `"${company.companyId.name}",${company?.details?.nbrCredit + company?.details?.nbrLivraison},${company.details.revenusDesVentes},${company.details.beneficeNet},${company.details.beneficeNet * 0.2}`
     );
     
     return [

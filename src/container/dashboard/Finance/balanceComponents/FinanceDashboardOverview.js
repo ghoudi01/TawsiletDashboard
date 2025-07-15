@@ -39,7 +39,7 @@ const FinanceDashboardOverview = ({
       <Suspense fallback={<LoadingOutlined style={{ fontSize: 24 }} spin />}>
         {activeTab === "overview" && (
           <Row gutter={[24, 24]} style={{ marginTop: 24 }}>
-            <Col lg={16} xs={24}>
+            <Col lg={24} xs={24}>
               <Cards title="Revenue Overview">
                 <AverageSalesRevenue
                   data={companies}
@@ -49,33 +49,7 @@ const FinanceDashboardOverview = ({
                 />
               </Cards>
             </Col>
-            <Col lg={8} xs={24}>
-              <Cards title="Performance Summary">
-                <Space direction="vertical" size={24} style={{ width: "100%" }}>
-                  <StatCard
-                    title="Order Completion Rate"
-                    value="92.5"
-                    icon={<ShoppingCartOutlined />}
-                    color="#1890ff"
-                    suffix="%"
-                  />
-                  <StatCard
-                    title="Avg. Order Value"
-                    value={(salesRevenue / totalOrders).toFixed(2)}
-                    icon={<DollarOutlined />}
-                    color="#52c41a"
-                    suffix="TND"
-                  />
-                  <StatCard
-                    title="Profit Margin"
-                    value={((netProfit / salesRevenue) * 100).toFixed(1)}
-                    icon={<DollarOutlined />}
-                    color="#faad14"
-                    suffix="%"
-                  />
-                </Space>
-              </Cards>
-            </Col>
+            
           </Row>
         )}
  

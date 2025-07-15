@@ -1,81 +1,48 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Skeleton, Table } from "antd";
-import { NavLink, Link } from "react-router-dom";
+import { Skeleton, Table, Select, Input } from "antd";
+import { Link } from "react-router-dom";
 import FeatherIcon from "feather-icons-react";
 import { useDispatch, useSelector } from "react-redux";
 import { LadingPages } from "../../style";
 import { Cards } from "../../../../components/cards/frame/cards-frame";
 import { getBalance } from "../../../../redux/chartContent/chartSlice";
 
-// Static content for the "more" dropdown
-const moreContent = (
-  <>
-    <NavLink to="#">
-      <FeatherIcon size={16} icon="printer" />
-      <span>Printer</span>
-    </NavLink>
-    <NavLink to="#">
-      <FeatherIcon size={16} icon="book-open" />
-      <span>PDF</span>
-    </NavLink>
-    <NavLink to="#">
-      <FeatherIcon size={16} icon="file-text" />
-      <span>Google Sheets</span>
-    </NavLink>
-    <NavLink to="#">
-      <FeatherIcon size={16} icon="x" />
-      <span>Excel (XLSX)</span>
-    </NavLink>
-    <NavLink to="#">
-      <FeatherIcon size={16} icon="file" />
-      <span>CSV</span>
-    </NavLink>
-  </>
-);
+const { Option } = Select;
+ 
 
-function TopLandingPages({ setperiodeFilter, settaille, setsharedData, periodeFilter }) {
-  const [landingFilter, setLandingFilter] = useState(periodeFilter); // Simplified state for filter
-  const [selectedCompanyId, setSelectedCompanyId] = useState(null);
-  const [companies,setCompanies]=useState([])
-  // Redux state and dispatch
+function TopLandingPages({  setsharedData,sharedData }) {
+  const [selectedDriverId, setSelectedDriverId] = useState(null);
+  const [drivers, setDrivers] = useState([]);
+  const [sortOption, setSortOption] = useState("commission_desc"); // e.g. commission_desc, commission_asc, lastTransaction_desc, lastTransaction_asc
+  const [filterText, setFilterText] = useState("");
+
   const dispatch = useDispatch();
   const { data: balanceData, loading, error } = useSelector((state) => state.balance);
 
-  // Fetch balance data when the landing filter changes
   useEffect(() => {
-    
-    dispatch(getBalance({ periodeFilter: landingFilter })).then((res) => {
-       
-      if (res.payload?.companies && Array.isArray(res.payload.companies)) {
-        setCompanies(res.payload.companies)
-        const sharedData = res.payload.companies.find((el) =>{
-         
-        return  el?.companyId?.id === selectedCompanyId
-        });
- 
-        setsharedData(sharedData || null);
+
+    if(sharedData==null)
+    dispatch(getBalance({ filterText, sortOption })).then((res) => {
+      if (res.payload?.drivers && Array.isArray(res.payload.drivers)) {
+        setDrivers(res.payload.drivers);
       }
     });
-    setperiodeFilter(landingFilter);
-  }, [landingFilter, dispatch, selectedCompanyId, setsharedData, setperiodeFilter]);
+  }, [dispatch, selectedDriverId,  filterText, sortOption,sharedData]);
 
-  // Handle filter change
-  const handleFilterChange = useCallback((value) => {
-    setLandingFilter(value);
-  }, []);
+ 
 
-  // Handle row click to set selected company
-  const handleRowClick = useCallback((company) => {
-    settaille(12);
-    setsharedData(company);
-    
-    setSelectedCompanyId(company?.driver?.id);
-  }, [settaille, setsharedData]);
+  const handleRowClick = (driver) => {
+   
+    setsharedData(driver);
+    setSelectedDriverId(driver?.driver?.id);
+  } 
 
-  // Table columns for main data
-  const landingColumns = [
+  // Filtering and sorting logic
+  // Remove getFilteredSortedDrivers, use drivers directly
+
+  const driverColumns = [
     {
-      title: "Nom de l'entreprise",
+      title: "Nom du livreur",
       dataIndex: "name",
       key: "name",
     },
@@ -99,85 +66,103 @@ function TopLandingPages({ setperiodeFilter, settaille, setsharedData, periodeFi
       dataIndex: "commission",
       key: "commission",
     },
+    {
+      title: "Débit Total",
+      dataIndex: "debitTotal",
+      key: "debitTotal",
+    },
   ];
 
- 
-
- 
- 
-  // Table data with expandable rows
-  const landingData = companies?.map((company) => ({
-    key: company?.companyId?.id,
+  const driverData = drivers?.map((driver) => ({
+    key: driver?.driverId?.id,
     name: (
-      <Link to="#" className="page-title" onClick={() => handleRowClick(company)}>
-        {company?.companyId?.firstName+" "+company?.companyId?.lastName}
+      <Link to="#" className="page-title" onClick={() => handleRowClick(driver)}>
+        {driver?.driverId?.firstName + " " + driver?.driverId?.lastName}
       </Link>
     ),
     nbrTotal: (
-      <span style={{ cursor: "pointer", width: "100%" }} onClick={() => handleRowClick(company)}>
-        {company?.details?.nbrLivraison}
+      <span style={{ cursor: "pointer", width: "100%" }} onClick={() => handleRowClick(driver)}>
+        {driver?.details?.nbrLivraison}
       </span>
     ),
     revenusDesVentes: (
-      <span style={{ cursor: "pointer", width: "100%", whiteSpace: "nowrap" }} onClick={() => handleRowClick(company)}>
-        {`${company?.details?.revenusDesVentes?.toFixed(2)} TND`}
+      <span style={{ cursor: "pointer", width: "100%", whiteSpace: "nowrap" }} onClick={() => handleRowClick(driver)}>
+        {`${driver?.details?.revenusDesVentes?.toFixed(2)} TND`}
       </span>
     ),
     beneficeNet: (
-      <span style={{ cursor: "pointer", width: "100%" }} onClick={() => handleRowClick(company)}>
-        {company?.details?.beneficeNet?.toFixed(2)+" TND"}
+      <span style={{ cursor: "pointer", width: "100%" }} onClick={() => handleRowClick(driver)}>
+        {driver?.details?.beneficeNet?.toFixed(2) + " TND"}
       </span>
     ),
     commission: (
-      <span style={{ cursor: "pointer", width: "100%", whiteSpace: "nowrap" }} onClick={() => handleRowClick(company)}>
-        {(company?.details?.revenusDesVentes-company?.details?.beneficeNet).toFixed(2)+" TND"}
+      <span style={{ cursor: "pointer", width: "100%", whiteSpace: "nowrap" }} onClick={() => handleRowClick(driver)}>
+        {(driver?.details?.revenusDesVentes - driver?.details?.beneficeNet).toFixed(2) + " TND"}
       </span>
     ),
-    children: company?.subDrivers?.length > 0 ? company.subDrivers.map((subDriver) => {
-      
-      return ({
-      key: `${subDriver?.driver?.id}`,
-      name: subDriver?.driver?.firstName + " " + subDriver?.driver?.lastName,
-      nbrTotal: subDriver?.nbrTotal || 0,
-      revenusDesVentes: `${(subDriver?.revenusDesVentes || 0).toFixed(2)} TND`,
-      beneficeNet: `${(subDriver?.beneficeNet || 0).toFixed(2)}%`,
-      commission: `${(subDriver?.rejectionRate || 0).toFixed(2)}%`,
-    })}) : null,
+    debitTotal: (
+      driver?.details?.debitTotal !== undefined && driver?.details?.debitTotal !== null ? (
+        <span style={{ cursor: "pointer", width: "100%" }} onClick={() => handleRowClick(driver)}>
+          {driver?.details?.debitTotal.toFixed(2) + " TND"}
+        </span>
+      ) : (
+        <span style={{ color: '#bbb' }}>-</span>
+      )
+    ),
+    children:
+      driver?.subDrivers?.length > 0
+        ? driver.subDrivers.map((subDriver) => ({
+            key: `${subDriver?.driver?.id}`,
+            name: subDriver?.driver?.firstName + " " + subDriver?.driver?.lastName,
+            nbrTotal: subDriver?.nbrTotal || 0,
+            revenusDesVentes: `${(subDriver?.revenusDesVentes || 0).toFixed(2)} TND`,
+            beneficeNet: `${(subDriver?.beneficeNet || 0).toFixed(2)}%`,
+            commission: `${(subDriver?.rejectionRate || 0).toFixed(2)}%`,
+          }))
+        : null,
   }));
+
+  // UI for sort and filter
+  const sortAndFilterUI = (
+    <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+      <Select
+        value={sortOption}
+        style={{ width: 260 }}
+        onChange={setSortOption}
+        placeholder="Trier par"
+      >
+        <Option value="commission_asc">Commission Ascendant</Option>
+        <Option value="commission_desc">Commission Descendant</Option>
+        <Option value="lastTransaction_asc">Dernière Transaction Ascendant</Option>
+        <Option value="lastTransaction_desc">Dernière Transaction Descendant</Option>
+      </Select>
+      <Input
+        style={{ width: 200 }}
+        placeholder="Filtrer par nom..."
+        value={filterText}
+        onChange={e => setFilterText(e.target.value)}
+        allowClear
+      />
+    </div>
+  );
 
   return (
     <div className="full-width-table">
       <Cards
-        isbutton={
-          <div className="card-nav">
-            <ul>
-              {["today", "week", "month", "year", "all"].map((filter) => (
-                <li key={filter} className={landingFilter === filter ? "active" : "deactivate"}>
-                  <Link onClick={() => handleFilterChange(filter)} to="#">
-                    {filter === "today" && "Aujourd'hui"}
-                    {filter === "week" && "Semaine"}
-                    {filter === "month" && "Mois"}
-                    {filter === "year" && "Année"}
-                    {filter === "all" && "Tous"}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        }
-        title="Activiter des sociétés"
+        isbutton={sortAndFilterUI}
+        title="Activité des livreurs"
         size="large"
       >
         <LadingPages>
           <div className="table-bordered table-responsive">
-           {loading ? (
+            {loading ? (
               <Skeleton active />
             ) : error ? (
               <p>Error: {error.message || "Failed to fetch data."}</p>
             ) : (
               <Table
-                columns={landingColumns}
-                dataSource={landingData}
+                columns={driverColumns}
+                dataSource={driverData}
                 pagination={false}
                 size="small"
                 expandable={{
@@ -185,7 +170,7 @@ function TopLandingPages({ setperiodeFilter, settaille, setsharedData, periodeFi
                   expandRowByClick: true,
                 }}
               />
-            )}  
+            )}
           </div>
         </LadingPages>
       </Cards>

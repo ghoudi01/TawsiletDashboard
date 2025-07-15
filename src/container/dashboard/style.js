@@ -651,7 +651,7 @@ const OverviewCard = Styled.div`
         position: absolute;
         content: '';
         width: 100%;
-        height: 215px;
+        height: 53%;
         background:${(props) =>
           props.color === "true"
             ? " linear-gradient(180.5deg, rgb(0, 128, 128) 8.5%, rgb(174, 206, 100) 118.2%)"
