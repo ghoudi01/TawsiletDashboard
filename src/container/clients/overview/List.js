@@ -147,16 +147,7 @@ const Client = ({
         </ProjectListTitle>
       ),
     },
-    // {
-    //   id: "numéro de carte d'identité",
-    //   title: "numéro de carte d'identité",
-    //   dataIndex: "numéro de carte d'identité",
-    //   render: (text, record) => (
-    //     <ProjectListTitle>
-    //       <p>{record.cin}</p>
-    //     </ProjectListTitle>
-    //   ),
-    // },
+   
 
     { id: "action", title: "", dataIndex: "action" },
     {
@@ -217,35 +208,37 @@ const Client = ({
         cin: value?.cin,
         blocked: value?.blocked,
         action: (
-          <SelectGm
-            options={selectOptions}
-            placeholder={value?.blocked === false ? "Activer" : "Désactiver"}
-            onSelect={(e) => {
-              console.log(e)
-              Modal.confirm({
-                title: "Confirmation D'action",
-                content:
-                  "Etes vous sure de vouloir changer le statut de cet client?",
-                okText: "Oui",
-                okType: "danger",
-                cancelText: "Annuler",
-                onOk() {
-                  dispatch(
-                    updateUser({
-                      id: value.id,
-                      user: { blocked:e.value==="Activer"?false :true },
-                    })
-                  ).then(() => {
-                   
-                  });
-                },
-                onCancel() {
-              
-                },
-              });
-            }}
-            active={value.blocked}
-          />
+          [ "owner","agent_support"].includes(userRole) ? (
+            <SelectGm
+              options={selectOptions}
+              placeholder={value?.blocked === false ? "Activer" : "Désactiver"}
+              onSelect={(e) => {
+                console.log(e)
+                Modal.confirm({
+                  title: "Confirmation D'action",
+                  content:
+                    "Etes vous sure de vouloir changer le statut de cet client?",
+                  okText: "Oui",
+                  okType: "danger",
+                  cancelText: "Annuler",
+                  onOk() {
+                    dispatch(
+                      updateUser({
+                        id: value.id,
+                        user: { blocked:e.value==="Activer"?false :true },
+                      })
+                    ).then(() => {
+                     
+                    });
+                  },
+                  onCancel() {
+                
+                  },
+                });
+              }}
+              active={value.blocked}
+            />
+          ) : null
         ),
         more: (
           <Dropdown
@@ -262,7 +255,7 @@ const Client = ({
                   Voir
                 </Link>
   
-               {["owner","admin"].includes(userRole)&&( <Link
+               {[ "owner","agent_support"].includes(userRole)&&( <Link
                   to="#"
                   onClick={(e) => {
                     Modal.confirm({

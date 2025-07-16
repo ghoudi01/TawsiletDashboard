@@ -340,9 +340,9 @@ if(checked===false)
           <Switch
             checked={record?.pro}
             onChange={(checked) => {
-              handlerUpdatePro(checked,record)
-            
+              handlerUpdatePro(checked, record)
             }}
+            disabled={![ "owner","agent_support"].includes}
           />
         </ProjectListTitle>
       ),
@@ -381,7 +381,7 @@ if(checked===false)
         className="wide-dropdwon"
         content={
           <>
-           {["owner","admin"].includes(userRole)&&( <Link
+           {[ "owner","agent_support"].includes(userRole)&&( <Link
               onClick={() => {
                 setOpenAdd(true);
                 setDriverDetais(value);
@@ -390,7 +390,7 @@ if(checked===false)
             >
               Assigner Voiture
             </Link>)}
-          {!value?.pro&&["owner","admin"].includes(userRole)&&(  <Link
+          {!value?.pro&&[ "owner","agent_support"].includes(userRole)&&(  <Link
               onClick={() => {
                 setOpenAssignParent(true);
                 setDriverDetais(value);
@@ -408,7 +408,7 @@ if(checked===false)
             >
               Afficher
             </Link>
-           {["owner","admin"].includes(userRole)&&( <Link
+           {[ "owner","agent_support"].includes&&( <Link
               onClick={() => {
                 setOpenUpdate(true);
                 setmodalId(value.id);
@@ -417,7 +417,7 @@ if(checked===false)
             >
               Modifier
             </Link>)}
-            {["owner","admin"].includes(userRole) && (
+            {["owner"].includes(userRole) && (
               <Link
                 to="#"
                 onClick={async (e) => {

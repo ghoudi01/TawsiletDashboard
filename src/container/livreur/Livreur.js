@@ -97,7 +97,7 @@ function Livreur({ match, usersList }) {
               setShouldExportPdf={setShouldExportPdf}
               setShouldExportExcel={setShouldExportExcel}
             />,
-           (["owner", "agent","admin"].includes(currentUser?.user_role)  && <Button
+           ([ "owner","agent_support"].includes(currentUser?.user_role)  && <Button
               key="1"
               type="primary"
               size="default"

@@ -19,6 +19,8 @@ const List = lazy(() => import("./overview/ListVehicule"));
 function Project({ match }) {
   // const vehicules = useSelector((state) => state.headervehicules);
   const vehicules = useSelector((state) => state?.vehicules.vehicules);
+  const userRole = useSelector((state) => state?.user?.currentUser?.user_role);
+
   const meta = useSelector((state) => state?.vehicules.meta);
   const [shouldPrint, setShouldPrint] = useState(false);
   const [shouldExportPdf, setShouldExportPdf] = useState(false);
@@ -68,15 +70,17 @@ function Project({ match }) {
               setShouldExportPdf={setShouldExportPdf}
               setShouldExportExcel={setShouldExportExcel}
             />,
-            <Button
-              onClick={() => showModal()}
-              type="1"
-              size="default"
-              className="btn_ADD"
-            >
-              <FeatherIcon icon="plus" size={16} />
-              Créer un nouveau vehicule
-            </Button>,
+            [ "owner","agent_support"].includes(userRole) && (
+              <Button
+                onClick={() => showModal()}
+                type="1"
+                size="default"
+                className="btn_ADD"
+              >
+                <FeatherIcon icon="plus" size={16} />
+                Créer un nouveau vehicule
+              </Button>
+            ),
           ]}
         />
       </ProjectHeader>

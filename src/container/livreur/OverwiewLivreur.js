@@ -24,7 +24,8 @@ import {
   StarOutlined,
 } from "@ant-design/icons";
 import ViewVehicule from "../vehicules/overview/ViewVehicule";
-
+import { useDispatch, useSelector } from "react-redux";
+ 
 import "./../livreur/overview/viewCompany.css";
 import { capitalize } from "../../utility/utility";
 
@@ -32,6 +33,7 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
   const thumbnailPluginInstance = thumbnailPlugin();
   const [pdfViewer, setPdfViewer] = useState(false);
   const [pdfUrl, setPdfUrl] = useState("");
+  
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [refusText, setRefusText] = useState("");
   const [driver, setDriver] = useState(null);
@@ -39,6 +41,7 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
   const [loading, setLoading] = useState(false);
   const [vehiculeModalOpen, setVehiculeModalOpen] = useState(false);
   const [selectedVehicule, setSelectedVehicule] = useState(null);
+  const userRole = useSelector((state) => state?.user?.currentUser?.user_role);
 
   const selectOptions = [
     { value: "valid", label: "Valider" },
@@ -329,7 +332,7 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
                     <span>({reviews?.length} avis)</span>
                   </div>
                 </div>
-                <div className="driver-actions">
+                {[ "owner","agent_support"].includes(userRole)&&(<div className="driver-actions">
                   <SelectGmVehicule
                     options={selectOptions}
                     cssClass="vehiculeSelect"
@@ -341,7 +344,7 @@ const OverwiewLivreur = ({ open, setOpen, driverDetais, setPing, ping }) => {
                     onSelect={handleValidationChange}
                     active={driver?.validation?.validation_state}
                   />
-                </div>
+                </div>)}
               </div>
 
               <Divider orientation="left" className="section-divider">

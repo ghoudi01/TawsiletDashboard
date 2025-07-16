@@ -452,8 +452,8 @@ useEffect(() => {
               >
                 Voir
               </Link>
-              <Link
-                onClick={() => {
+              {[ "owner","agent_support"].includes(currentRole)&&(<Link
+                onClick={() => {  
                   showModalUpdate();
                   setSelectedId(value?.id);
                   setSelecteData(value);
@@ -461,9 +461,9 @@ useEffect(() => {
                 type="1"
               >
                 Modifier
-              </Link>
+              </Link>)}
 
-              {(currentRole === "owner" || currentRole === "admin") && (
+              {currentRole === "owner" && (
                 <Link
                   to="#"
                   onClick={() => {

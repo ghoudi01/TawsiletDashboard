@@ -241,7 +241,8 @@ function AddHistorique({ visible, onCancel, defaultAmount, defaultDriverId }) {
               value={formState.montant}
               onChange={(e) => setFormState(prev => ({ ...prev, montant: e.target.value }))}
               type="number"
-              prefix="€"
+              prefix="DT"
+              disabled={true}
               style={{ width: "100%" }}
             />
           </Form.Item>

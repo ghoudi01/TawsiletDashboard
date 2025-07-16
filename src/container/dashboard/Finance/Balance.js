@@ -80,8 +80,8 @@ const Balance = () => {
 
   
 
-         {current?.user_role === "owner" ? (
-            <>
+       
+            
               <Col md={sharedData!=null?12:24} lg={sharedData!=null?12:24} xs={24}>
                 <Suspense 
                   fallback={
@@ -110,8 +110,7 @@ const Balance = () => {
                   
                 </Col>
               ) : null}
-            </>
-          ) : null}  
+         
         </Row>  
       <FinanceDashboardOverview
           activeTab={activeTab}

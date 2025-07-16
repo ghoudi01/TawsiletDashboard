@@ -177,7 +177,7 @@ const Admin = () => {
         <ProtectedRoute
           path={`${path}/balance`}
           component={BalanceRoutes}
-          allowedRoles={["owner"]}
+          allowedRoles={["owner","admin"]}
         />
         <ProtectedRoute
           path={`${path}/Historique`}
