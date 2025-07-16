@@ -183,10 +183,12 @@ const Dashboard = () => {
         const { data } = await axios.get(`${API_BASE}vehicules`, {
           params: {
             "pagination[page]": 1,
-            "pagination[pageSize]": 1,
+            "pagination[pageSize]": 100,
           },
           headers: { Authorization: `Bearer ${jwt}` },
         });
+        console.log("data",data?.meta)
+      
         setChartData((prev) => ({
           ...prev,
           vehiculeCount: data?.meta?.pagination?.total || 0,

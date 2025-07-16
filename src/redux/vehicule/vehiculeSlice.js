@@ -298,8 +298,7 @@ export const vehiculeSlice = createSlice({
     [getVehiculeCount.fulfilled]: (state, action) => {
       state.status = "success";
       state.isLoading = false;
-
-      state.count = action?.payload?.data?.data?.length;
+      state.count = action?.payload?.data?.meta?.pagination?.total || 0;
     },
     [getVehiculeCount.rejected]: (state) => {
       state.status = "fail";
