@@ -40,7 +40,6 @@ const Dashboard = () => {
     companyCount: 0,
     driverCount: 0,
     agentCount: 0,
-    vehiculeCount: 0,
     commandData: {},
   });
   const [state, setState] = useState({
@@ -55,6 +54,7 @@ const Dashboard = () => {
   const [pageSizeClient] = useState(100);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(100);
+  const [vehiculeCount, setVehiculeCount] = useState(0);
 
   // Loader state for Aperçus
   const [loadingApercus, setLoadingApercus] = useState(true);
@@ -166,10 +166,10 @@ const Dashboard = () => {
       const commandStatusRes = await axios.post(`${API_BASE}command/count`, { data: { dateFilter } }, {
         headers: { Authorization: `Bearer ${jwt}` },
       });
-      setChartData({
+      setChartData((prev) => ({
         ...usersCountRes.data,
         commandData: commandStatusRes.data,
-      });
+      }));
       setLoadingApercus(false);
     };
     fetchChartData();
@@ -187,12 +187,7 @@ const Dashboard = () => {
           },
           headers: { Authorization: `Bearer ${jwt}` },
         });
-        console.log("data",data?.meta)
-      
-        setChartData((prev) => ({
-          ...prev,
-          vehiculeCount: data?.meta?.pagination?.total || 0,
-        }));
+        setVehiculeCount(data?.meta?.pagination?.total|| 0);
       } catch (error) {
         // Optionally handle error
       }
@@ -281,6 +276,7 @@ const Dashboard = () => {
   const originalLabels = ["Pending", "Completed", "Canceled", "Failed"];
   const frenchLabels = originalLabels.map((label) => translateToFrench(label));
    // Render
+
   return (
     <ChartContainer>
       <PageHeader
@@ -330,8 +326,8 @@ const Dashboard = () => {
                         <img src={DashSocCountIcon} alt="" />
                         <div>
                           <Counter
-                            endValue={chartData.vehiculeCount || 0}
-                            incrementDuration={1}
+                            endValue={vehiculeCount}
+                            incrementDuration={3}
                           />
                           <span>Véhicule</span>
                         </div>
