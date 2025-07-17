@@ -49,8 +49,11 @@ function Project({ match }) {
   const [textFilter, setTextFilter] = useState("");
 
   const [activeFilter, setActiveFilter] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const handleFilterClick = (filter) => {
     setActiveFilter(filter);
+    setFilterStatus(filter);
+    setCurrentPage(1); // Reset to first page
   };
   return (
     <>
@@ -147,6 +150,8 @@ function Project({ match }) {
                 shouldExportPdf={shouldExportPdf}
                 setShouldExportExcel={setShouldExportExcel}
                 shouldExportExcel={shouldExportExcel}
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
               />
             </div>
           </Col>
