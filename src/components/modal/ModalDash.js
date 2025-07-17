@@ -190,7 +190,7 @@ function ModalDash({ record, open, setOpen, setSelectedId, ping, setPing }) {
               <div className="modal__adresse_details_ramassage">
                 <div>
                   {" "}
-                  <h3 className="modal_content_title">Adresse de ramassage:</h3>
+                  <h3 className="modal_content_title">Adresse de départ:</h3>
                   <h3>{record?.pickUpAddress?.Address}</h3>
                 </div>
                 <div>

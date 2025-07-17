@@ -216,12 +216,12 @@ const Dashboard = () => {
   const data = [
     currentUser?.user_role === "owner" || currentUser?.user_role === "admin"
       ? {
-          etat: translateEtatToFrench("Pending"),
+          etat: "En Cour",
           value: chartData?.commandData?.pendingCount || 0,
           percentage: Math.floor(
             (chartData?.commandData?.pendingCount / chartData?.commandCount) * 100
           ),
-          color: "#53B483",
+          color: "#EED653",
         }
       : null,
     {
@@ -230,7 +230,7 @@ const Dashboard = () => {
       percentage: Math.floor(
         (chartData?.commandData?.completedCount / chartData?.commandCount) * 100
       ),
-      color: "#FF6384",
+      color: "#53B483",
     },
     {
       etat: translateEtatToFrench("Canceled"),

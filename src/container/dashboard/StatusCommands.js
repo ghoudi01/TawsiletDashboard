@@ -112,7 +112,7 @@ const StatusCommand = ({
 
     {
       id: "pickupAddress",
-      title: "Adresse de ramassage",
+      title: "Adresse de départ",
       dataIndex: "pickupAddress",
       render: (text, record, i) => (
         <ProjectListTitle>
@@ -125,7 +125,7 @@ const StatusCommand = ({
 
     {
       id: "deliveryAddress",
-      title: "Adressse de dépot",
+      title: "Adressse d'arrivée",
       dataIndex: "deliveryAddress",
       render: (text, record) => (
         <span className="date-finished">{record?.deliveryAddress}</span>

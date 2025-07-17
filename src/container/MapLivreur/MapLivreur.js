@@ -55,7 +55,7 @@ const MapLivreur = () => {
           location: {
             latitude: driver?.latitude || null,
             longitude: driver?.longitude || null,
-            isFree: driver?.isFree || false,
+            isFree: driver?.isFree || true,
             isActive: driver?.isActive || false,
             lastSeen: driver?.lastSeen,
             lastUpdated: driver?.lastUpdated,

@@ -15,6 +15,11 @@ function Maintenance() {
     { value: "Maintenance", label: "Maintenance" },
   ];
 
+  const appSelectOptions = [
+    { value: "Activer", label: "Activer" },
+    { value: "Maintenance", label: "Maintenance" },
+  ];
+
   const [activeDate, setActiveDate] = useState(null);
   const [loadingActiveDate, setLoadingActiveDate] = useState(false);
 
@@ -98,6 +103,86 @@ function Maintenance() {
     });
   };
 
+  const handleAppActive = () => {
+    Modal.confirm({
+      title: "Confirmer le changement",
+      content: `Confirmez la désactivation de l'application mobile?`,
+      okText: "Désactiver",
+      okType: "danger",
+      cancelText: "Annuler",
+      async onOk() {
+        const jwt = localStorage.getItem("token");
+        try {
+          await axios.put(
+            `${process.env.REACT_APP_BACKUP_URL}parameters/uhevts0oaweghxiwdvc58pei`,
+            {
+              data: {
+                app_maintenance: true,
+              },
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${jwt}`,
+              },
+            }
+          );
+          notification.success({
+            message: "Mode maintenance activé pour l'application mobile",
+            description: "L'application mobile est maintenant en mode maintenance.",
+          });
+        } catch (error) {
+          notification.error({
+            message: "Erreur lors de l'activation du mode maintenance pour l'application mobile",
+            description:
+              error?.response?.data?.error?.message ||
+              "Impossible d'activer le mode maintenance pour l'application mobile.",
+          });
+        }
+      },
+      onCancel() {},
+    });
+  };
+
+  const handleAppDeactive = () => {
+    Modal.confirm({
+      title: "Confirmer le changement",
+      content: `Confirmez l'activation de l'application mobile?`,
+      okText: "Activer",
+      okType: "danger",
+      cancelText: "Annuler",
+      async onOk() {
+        const jwt = localStorage.getItem("token");
+        try {
+          await axios.put(
+            `${process.env.REACT_APP_BACKUP_URL}parameters/uhevts0oaweghxiwdvc58pei`,
+            {
+              data: {
+                app_maintenance: false,
+              },
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${jwt}`,
+              },
+            }
+          );
+          notification.success({
+            message: "Mode maintenance désactivé pour l'application mobile",
+            description: "L'application mobile est maintenant active.",
+          });
+        } catch (error) {
+          notification.error({
+            message: "Erreur lors de la désactivation du mode maintenance pour l'application mobile",
+            description:
+              error?.response?.data?.error?.message ||
+              "Impossible de désactiver le mode maintenance pour l'application mobile.",
+          });
+        }
+      },
+      onCancel() {},
+    });
+  };
+
   const handleActiveDateUpdate = async () => {
     if (!activeDate) {
       notification.warning({
@@ -171,6 +256,32 @@ function Maintenance() {
                         handleActive();
                       } else if (e.value === "Activer") {
                         handleDeactive();
+                      }
+                    }}
+                  />
+                </Col>
+              </div>
+              {/* New section for App Maintenance Mode */}
+              <div style={{ marginTop: 32 }}>
+                <h1 style={{ fontSize: "1.1rem" }}>
+                  Mode de maintenance application mobile
+                </h1>
+                <h3 style={{ fontSize: "0.875rem", lineHeight: "1.5rem" }}>
+                  Vous pouvez activer ou désactiver le mode maintenance pour l'application mobile.
+                </h3>
+                <Col sm={24} xs={24}>
+                  <h1 style={{ fontSize: "1rem", paddingTop: "1rem" }}>Mode</h1>
+                </Col>
+                <Col sm={24} xs={24}>
+                  <SelectGm
+                    placeholder="Activer"
+                    options={appSelectOptions}
+                    style={{ width: 150 }}
+                    onSelect={(e) => {
+                      if (e.value === "Maintenance") {
+                        handleAppActive();
+                      } else if (e.value === "Activer") {
+                        handleAppDeactive();
                       }
                     }}
                   />

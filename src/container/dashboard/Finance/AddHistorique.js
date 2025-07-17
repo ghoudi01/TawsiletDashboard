@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { AutoComplete, Button, Modal, Input, Upload, Form, Select, Space, Typography, message } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { getDriver } from "../../../redux/User/userSlice";
+import { getDriver, getDriverById } from "../../../redux/User/userSlice";
 import { addHistorique, getHistorique } from "../../../redux/chartContent/chartSlice";
 import axios from "axios";
 
@@ -61,17 +61,30 @@ function AddHistorique({ visible, onCancel, defaultAmount, defaultDriverId }) {
 
   // Update selectedLabel when defaultDriverId changes or drivers are loaded
   useEffect(() => {
-    if (defaultDriverId && drivers.length > 0) {
+    if (defaultDriverId) {
       const driver = drivers.find(d => d.id === defaultDriverId);
       if (driver) {
         setFormState(prev => ({
           ...prev,
           selectedLabel: `${driver.lastName} ${driver.firstName} (${driver.email})`,
-          selectedDriverId:driver.id
+          selectedDriverId: driver.id
         }));
+      } else {
+        // If driver not found, fetch it by ID
+        dispatch(getDriverById({ id: defaultDriverId }))
+          .then((res) => {
+            const fetched = res?.payload;
+            if (fetched && fetched.id) {
+              setFormState(prev => ({
+                ...prev,
+                selectedLabel: `${fetched.lastName} ${fetched.firstName} (${fetched.email})`,
+                selectedDriverId: fetched.id
+              }));
+            }
+          });
       }
     }
-  }, [defaultDriverId, drivers]);
+  }, [defaultDriverId, drivers, dispatch]);
 
   // Update montant when defaultAmount changes
   useEffect(() => {

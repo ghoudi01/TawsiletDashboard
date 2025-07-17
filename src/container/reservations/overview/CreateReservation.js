@@ -601,7 +601,7 @@ function CreateReservation({ visible, onCancel, setPing, ping }) {
               </Autocomplete>
               {/* <Input
                 defaultValue={newreservation.data.pickUpAddress.Adress}
-                placeholder="adresse de ramassage.."
+                placeholder="Adresse de départ.."
                 onChange={(e) => {
                   setInputErrors({ ...Inputerrors, pickUpAddress: null });
                   setNewreservation({
