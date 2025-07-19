@@ -55,13 +55,16 @@ function Commandes({ match }) {
     current: 1,
     pageSize: 10,
   });
+  
+ 
 
   const onHandlePageChange = async (pagination) => {
+    
     try {
       await dispatch(
         //on change Pagination Number
         getCommands({
-          pagination: {
+          Pagination: {
             page: pagination.current,
             pageSize: pagination.pageSize,
           },
