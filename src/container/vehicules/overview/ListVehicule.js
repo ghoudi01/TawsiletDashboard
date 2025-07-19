@@ -32,6 +32,8 @@ const Vehicules = ({
   shouldExportPdf,
   setShouldExportExcel,
   shouldExportExcel,
+  currentPage,
+  setCurrentPage,
 }) => {
   const [selectedId, setSelectedId] = useState();
   const [selectedata, setSelecteData] = useState();
@@ -79,9 +81,11 @@ const Vehicules = ({
   };
 
   const onShowSizeChange = (current, pageSize) => {
+    setCurrentPage(current);
     setState((prevState) => ({
       ...prevState,
       current,
+      page: current,
       pageSize,
     }));
   };
@@ -89,6 +93,7 @@ const Vehicules = ({
    const { current, pageSize } = pagination;
 
    // Update pagination state
+   setCurrentPage(current);
    setState((prev) => ({
      ...prev,
      page: current,
@@ -133,6 +138,15 @@ useEffect(() => {
 
   fetchData();
 }, [dispatch, textFilter, filterStatus, ping, state.page, state.pageSize]);
+  useEffect(() => {
+    if (currentPage !== undefined && currentPage !== state.page) {
+      setState((prev) => ({
+        ...prev,
+        page: currentPage,
+        current: currentPage,
+      }));
+    }
+  }, [currentPage]);
   useEffect(() => {
     if (shouldPrint) {
       printTable();
@@ -452,8 +466,8 @@ useEffect(() => {
               >
                 Voir
               </Link>
-              <Link
-                onClick={() => {
+              {[ "owner","agent_support"].includes(currentRole)&&(<Link
+                onClick={() => {  
                   showModalUpdate();
                   setSelectedId(value?.id);
                   setSelecteData(value);
@@ -461,9 +475,9 @@ useEffect(() => {
                 type="1"
               >
                 Modifier
-              </Link>
+              </Link>)}
 
-              {(currentRole === "owner" || currentRole === "admin") && (
+              {currentRole === "owner" && (
                 <Link
                   to="#"
                   onClick={() => {
@@ -526,6 +540,15 @@ useEffect(() => {
                 pageSizeOptions: ["5", "10", "20", "50"],
                 showSizeChanger: true,
                 onShowSizeChange: onShowSizeChange,
+                onChange: (page, pageSize) => {
+                  setCurrentPage(page);
+                  setState((prev) => ({
+                    ...prev,
+                    page,
+                    current: page,
+                    pageSize,
+                  }));
+                },
               }}
               dataSource={dataSource}
               columns={columns}

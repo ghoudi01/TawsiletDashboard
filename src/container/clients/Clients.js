@@ -1,26 +1,20 @@
-import React, { lazy, useState, Suspense, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { Row, Col, Spin, Select } from "antd";
-import { Switch, NavLink, Route, Link } from "react-router-dom";
+import React, { lazy, useState } from "react";
+import { useSelector } from "react-redux";
+import { Row, Col } from "antd";
 import FeatherIcon from "feather-icons-react";
 import propTypes from "prop-types";
-// import CreateProject from "./overview/CreateProject";
-import { ProjectHeader,    } from "./style";
+import { ProjectHeader } from "./style";
 import { Button } from "../../components/buttons/buttons";
 import { ExportButtonPageHeader } from "../../components/buttons/export-button/export-button";
-
 import { Main } from "../styled";
 import { PageHeader } from "../../components/page-headers/page-headers";
 import CreateUserModal from "./CreateUserModal";
+
 const List = lazy(() => import("./overview/List"));
 
 function Clients({ match }) {
-  // const dispatch = useDispatch();
-  //   useEffect(() => {
-  //     dispatch(getReservations());
-  //   }, []);
+  const userRole = useSelector((state) => state?.user?.currentUser?.user_role);
 
-  // const searchData = useSelector((state) => state.headerSearchData);
   const clientsCount = useSelector(
     (store) => store?.user?.clients?.pageInfo?.total
   );
@@ -28,27 +22,22 @@ function Clients({ match }) {
   const [shouldPrint, setShouldPrint] = useState(false);
   const [shouldExportPdf, setShouldExportPdf] = useState(false);
   const [shouldExportExcel, setShouldExportExcel] = useState(false);
-  //------------------------------ modal add user ------------------------------------------------------------------
-
   const [state, setState] = useState({
     visible: false,
   });
-  const { notData, visible } = state;
+  const { visible } = state;
   const showModal = (x) => {
     setState({
       ...state,
       visible: x,
     });
   };
-
   const onCancel = () => {
     setState({
       ...state,
       visible: false,
     });
   };
-
-  //----------------------------------------------------------------------------------------------------------------
   const [text, settext] = useState("");
   return (
     <>
@@ -64,13 +53,11 @@ function Clients({ match }) {
               >
                 <input
                   onChange={(e) => settext(e.target.value)}
-                  // dataSource={notData}
                   className="data_search_input"
                   placeholder="Rechercher ..."
-                  patterns
                 />
               </div>
-              <>{clientsCount} Clients </>{" "}
+              {clientsCount} Clients
             </div>
           }
           buttons={[
@@ -80,22 +67,23 @@ function Clients({ match }) {
               setShouldExportPdf={setShouldExportPdf}
               setShouldExportExcel={setShouldExportExcel}
             />,
-            <Button
-              key="1"
-              type="primary"
-              size="default"
-              className="btn_ADD"
-              onClick={() => showModal(true)}
-            >
-              <FeatherIcon icon="plus" size={16} /> Ajouter un nouveau client
-            </Button>,
+            [ "owner","agent_support"].includes(userRole)&& (
+              <Button
+                key="1"
+                type="primary"
+                size="default"
+                className="btn_ADD"
+                onClick={() => showModal(true)}
+              >
+                <FeatherIcon icon="plus" size={16} /> Ajouter un nouveau client
+              </Button>
+            ),
           ]}
         />
       </ProjectHeader>
       <Main>
         <Row gutter={25}>
           <Col xs={24}>
-           
             <div>
               <List
                 text={text}

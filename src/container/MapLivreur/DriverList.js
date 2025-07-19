@@ -156,16 +156,16 @@ const DriverList = ({
     if (statusFilter !== 'all') {
       const isActive = driver.details?.isActive;
       const isFree = driver.details?.isFree;
-
-
+     
+       
 
       switch (statusFilter) {
         case 'disponible':
-          return isActive && isFree;
+          return isActive==true && isFree==true;
         case 'en_cours':
-          return !isFree;
+          return isFree==false;
         case 'offline':
-          return !isActive;
+          return isActive==false;
         default:
           return true;
       }

@@ -25,7 +25,7 @@ const menuPermissions = {
   chauffeurs: ["owner", "admin", "agent_support"],
   admins: ["owner"],
   agents: ["owner"],
-  balance: ["owner"],
+  balance: ["owner","admin"],
   historique: ["owner", "admin"],
   maintenance: ["owner"],
   calcule: ["owner"],
@@ -177,7 +177,7 @@ const MenuItems = ({ darkMode, toggleCollapsed, topMenu }) => {
 
       // Build Finance submenu items
       const financeMenuItems = [
-        canView("balance") && currentUser.user_role === "owner" && (
+        canView("balance") && (
           <Menu.Item key="view">
             <NavLink onClick={toggleCollapsed} to={`${path}/balance/view`}>
               Balance

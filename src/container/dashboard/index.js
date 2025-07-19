@@ -21,6 +21,7 @@ import Addagent from "../agent/Addagent";
 import Addadmin from "../admin/Addadmin";
 import { NavLink } from "react-router-dom/cjs/react-router-dom.min";
 import axios from "axios";
+import { CarOutlined } from "@ant-design/icons";
 
 const API_BASE = process.env.REACT_APP_BACKUP_URL || "https://api.tawsilet.com/api/";
 
@@ -215,12 +216,12 @@ const Dashboard = () => {
   const data = [
     currentUser?.user_role === "owner" || currentUser?.user_role === "admin"
       ? {
-          etat: translateEtatToFrench("Pending"),
+          etat: "En Cour",
           value: chartData?.commandData?.pendingCount || 0,
           percentage: Math.floor(
             (chartData?.commandData?.pendingCount / chartData?.commandCount) * 100
           ),
-          color: "#53B483",
+          color: "#EED653",
         }
       : null,
     {
@@ -229,7 +230,7 @@ const Dashboard = () => {
       percentage: Math.floor(
         (chartData?.commandData?.completedCount / chartData?.commandCount) * 100
       ),
-      color: "#FF6384",
+      color: "#53B483",
     },
     {
       etat: translateEtatToFrench("Canceled"),
@@ -323,7 +324,8 @@ const Dashboard = () => {
                   <Col md={6} xs={12}>
                     <NavLink to="/admin/Vehicules/view" style={{ color: "unset" }}>
                       <ChartHeaderItem>
-                        <img src={DashSocCountIcon} alt="" />
+                        {/* Replace image with Ant Design car icon */}
+                        <CarOutlined style={{ fontSize: 48, color: '#59B4D1', background: '#EAF6FC', borderRadius: 12, padding: 8 }} />
                         <div>
                           <Counter
                             endValue={vehiculeCount}

@@ -12,6 +12,8 @@ function DailyOverview({ sharedData, settaille ,setsharedData}) {
   const { rtl } = useSelector((state) => ({
     rtl: state.ChangeLayoutMode.rtlData,
   }));
+  const userRole = useSelector((state) => state?.user?.currentUser?.user_role);
+
 
   // Early return if sharedData or sharedData.details is missing
   if (!sharedData || !sharedData.details) {
@@ -128,7 +130,7 @@ function DailyOverview({ sharedData, settaille ,setsharedData}) {
           suffix="TND"
           valueStyle={{ color: netBalance <= 0 ? "#08979c" : "#cf1322", fontWeight: 600, fontSize: 28 }}
         />
-        {Math.round(netBalance) !== 0 && (
+        {userRole=="owner"&& Math.round(netBalance) !== 0 && (
           <AntButton
             type={netBalance <= 0 ? "primary" : "default"}
             style={{ marginTop: 12, color: netBalance <= 0 ? "#08979c" : "#cf1322", borderColor: netBalance <= 0 ? "#08979c" : "#cf1322" }}

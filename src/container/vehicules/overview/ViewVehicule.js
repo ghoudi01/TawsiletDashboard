@@ -13,13 +13,7 @@ import axios from "axios";
 import { fetchVehicleTypes } from "../../../utility/vehicleTypeUtils";
 
 const { Title, Text } = Typography;
-// Remove hardcoded type object and typeOptions
-// const type = { "1": "Éco", "2": "Berline", "3": "Van" };
-// const typeOptions = Object.entries(type).map(([id, name]) => ({
-//   value: id,
-//   label: name,
-// }));
-
+ 
 
 function ViewVehicule({ visible, onCancel, record, userRole, recorddata }) {
   const [pdfViewer, setPdfViewer] = useState(false);
@@ -28,6 +22,9 @@ function ViewVehicule({ visible, onCancel, record, userRole, recorddata }) {
   const [loading, setLoading] = useState(false);
   const [vehicleTypes, setVehicleTypes] = useState({});
   const [typeOptions, setTypeOptions] = useState([]);
+  const currentRole = useSelector(
+    (state) => state?.user?.currentUser?.user_role
+  );
    const [selectOptions] = useState([
     { value: "valid", label: "Valider" },
     { value: "invalid", label: "Réfuser" },
@@ -170,9 +167,7 @@ function ViewVehicule({ visible, onCancel, record, userRole, recorddata }) {
             <div className="header-section">
               <div className="title-section">
                 <Title level={4} className="company-name">
-                  {["owner", "admin", "agent", "company"].includes(currentUser?.user_role)
-                    ? data?.company_id?.name
-                    : ""}
+               
                   {data?.validation?.validation_state === "valid" && (
                     <Tag color="green" style={{ marginLeft: 8 }}>
                       Validé
@@ -181,7 +176,7 @@ function ViewVehicule({ visible, onCancel, record, userRole, recorddata }) {
                 </Title>
                 <Text type="secondary">Informations du véhicule</Text>
               </div>
-              {(userRole === "owner" || userRole === "admin") && (
+              {[ "owner","agent_support"].includes(currentRole) && (
                 <SelectGmVehicule
                   options={selectOptions}
                   placeholder={data?.validation?.validation_state === "valid" ? "valider" : "Refuser"}
@@ -203,7 +198,6 @@ function ViewVehicule({ visible, onCancel, record, userRole, recorddata }) {
                         cancelText: "Annuler",
                         async onOk() {
                           try {
-                            
                             setLoading(true);
                             const jwt = localStorage.getItem("token");
                             await axios.put(
@@ -223,7 +217,7 @@ function ViewVehicule({ visible, onCancel, record, userRole, recorddata }) {
                                 id: data.driver.id,
                                 user: { pro: true },
                               })
-                              
+                               
                             )
 
                             message.success("Statut mis à jour avec succès!");
@@ -300,6 +294,7 @@ function ViewVehicule({ visible, onCancel, record, userRole, recorddata }) {
                     }
                   }}
                   active={data?.validation?.validation_state}
+                  disabled={![ "owner","agent_support"].includes(currentRole)}
                 />
               )}
             </div>
@@ -345,7 +340,7 @@ function ViewVehicule({ visible, onCancel, record, userRole, recorddata }) {
               </div>
               <div className="detail-item">
                 <Text type="secondary">Type</Text>
-                {userRole === "owner" || userRole === "admin" ? (
+                {[ "owner","agent_support"].includes(currentRole)  ? (
                   <Select
                     value={data?.type?.id?.toString()}
                     options={typeOptions}
@@ -353,6 +348,7 @@ function ViewVehicule({ visible, onCancel, record, userRole, recorddata }) {
                     style={{ width: "100%" }}
                     placeholder="Sélectionner un type"
                     loading={loading}
+                
                   />
                 ) : (
                   <Text strong>{vehicleTypes[data?.type?.id?.toString()] || "-"}</Text>
