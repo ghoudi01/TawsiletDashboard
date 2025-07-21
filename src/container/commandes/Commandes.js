@@ -114,13 +114,36 @@ function Commandes({ match }) {
           <Link to="#" onClick={() => handleFilterClick("")}>
             {" "}
             <li
+           
+
               onClick={() => {
-                const updatedFilters = { ...filters };
-                delete updatedFilters["commandStatus"];
-                dispatch(setCommandsFilter(updatedFilters));
+                 handleFilterClick("Tous");
+                 
+                dispatch(setCommandsFilter({
+               
+                  commandStatus: {
+                    in: [
+                      "Pending",
+                      "Dispatched_to_partner",
+                      "Assigned_to_driver",
+                      "Driver_on_route_to_pickup",
+                      "Arrived_at_pickup",
+                      "Picked_up",
+                      "On_route_to_delivery",
+                      "Arrived_at_delivery",
+                      "Delivered",
+                      "Completed",
+                      "Canceled_by_client",
+                      "Canceled_by_partner",
+                      "Failed_pickup",
+                      "Failed_delivery",
+                      "Go_to_pickup"
+                    ]
+                  }
+                }));
               }}
               className={
-                !filters?.commandStatus ? "slected_filter_status_bg" : ""
+                activeFilter === "Tous" ?  "slected_filter_status_bg" : ""
               }
             >
               Tous
@@ -136,13 +159,17 @@ function Commandes({ match }) {
                   ...filters,
                   commandStatus: {
                     in: [
+                      "Pending",
+                      "Dispatched_to_partner",
                       "Assigned_to_driver",
                       "Driver_on_route_to_pickup",
                       "Arrived_at_pickup",
                       "Picked_up",
                       "On_route_to_delivery",
                       "Arrived_at_delivery",
-                      "Delivered",
+                       
+                      "Go_to_pickup"
+                      
                     ],
                   },
                 })

@@ -179,6 +179,9 @@ export const getCommands = createAsyncThunk(
           params["filters[commandStatus][$in]"] = status
         })
       }
+      else {
+        
+      }
       // if(filters.commandStatus){
       //   params.filters["commandStatus"] = filters.commandStatus
       // }
