@@ -174,14 +174,12 @@ export const getCommands = createAsyncThunk(
       }
    
       if(filters.commandStatus.in){
-        filters.commandStatus.in.forEach(status => {
+        filters.commandStatus.in.forEach((status,index) => {
           console.log("status",status)
-          params["filters[commandStatus][$in]"] = status
+          params["filters[commandStatus][$in]["+index+"]"] = status
         })
       }
-      else {
-        
-      }
+      
       // if(filters.commandStatus){
       //   params.filters["commandStatus"] = filters.commandStatus
       // }
