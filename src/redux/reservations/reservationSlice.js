@@ -171,6 +171,8 @@ export const getCommands = createAsyncThunk(
         "populate[2]":"client",
         "filters[driver][$notNull]":true,
         "filters[client][$notNull]":true,
+        "sort": "createdAt:desc"
+
       }
    
       if(filters.commandStatus.in){
