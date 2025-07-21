@@ -162,20 +162,31 @@ export const getCommands = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
+
+      let params = {
+        "pagination[page]": Pagination.page,
+        "pagination[pageSize]": Pagination.pageSize,
+        "populate[0]":"pickUpAddress",
+        "populate[1]":"dropOfAddress",
+        "populate[2]":"client",
+        "filters[driver][$notNull]":true,
+        "filters[client][$notNull]":true,
+      }
+   
+      if(filters.commandStatus.in){
+        filters.commandStatus.in.forEach(status => {
+          console.log("status",status)
+          params["filters[commandStatus][$in]"] = status
+        })
+      }
+      // if(filters.commandStatus){
+      //   params.filters["commandStatus"] = filters.commandStatus
+      // }
       const jwt = localStorage.getItem("token");
       const response = await axios.get(
         `${process.env.REACT_APP_BACKUP_URL}commands`,
         {
-          params: {
-            "pagination[page]": Pagination.page,
-            "pagination[pageSize]": Pagination.pageSize,
-            "populate[0]":"pickUpAddress",
-            "populate[1]":"dropOfAddress",
-            "populate[2]":"client",
-            "filters[driver][$notNull]":true,
-            "filters[client][$notNull]":true,
-            ...filters
-          },
+          params,
           headers: {
             Authorization: `Bearer ${jwt}`,
           },

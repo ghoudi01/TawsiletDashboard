@@ -25,6 +25,7 @@ function Commandes({ match }) {
   const currentUser = useSelector((state) => state?.user?.currentUser);
 
   useEffect(() => {
+   
     dispatch(
       getCommands({
         Pagination: { page: 1, pageSize: 10 },
@@ -125,27 +126,7 @@ function Commandes({ match }) {
               Tous
             </li>{" "}
           </Link>
-          <Link
-            to="#"
-            onClick={() => {
-              handleFilterClick("Dispatching");
-              dispatch(
-                setCommandsFilter({
-                  ...filters,
-                  commandStatus: { eq: "Dispatched_to_partner" },
-                })
-              );
-            }}
-          >
-            {" "}
-            <li
-              className={
-                activeFilter === "Dispatching" ? "slected_filter_status_bg" : ""
-              }
-            >
-              En attente
-            </li>
-          </Link>
+        
           <Link
             to="#"
             onClick={() => {
@@ -187,8 +168,8 @@ function Commandes({ match }) {
                   commandStatus: {
                     in: [
                       "Canceled_by_client",
-                      "Failed_pickup",
-                      "Failed_delivery",
+                      "Canceled_by_partner",
+                       
                     ],
                   },
                 })
@@ -211,7 +192,7 @@ function Commandes({ match }) {
               dispatch(
                 setCommandsFilter({
                   ...filters,
-                  commandStatus: { eq: "Completed" },
+                  commandStatus: { in: ["Completed"] },
                 })
               );
             }}

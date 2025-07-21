@@ -114,6 +114,7 @@ export const GET_COMMAND_DETAILS_BY_ID = gql`
     totalPrice
     payType
     createdAt
+     
     updatedAt
    carType
     pickUpAddress {

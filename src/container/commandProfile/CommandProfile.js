@@ -17,6 +17,9 @@ import CommandStatus from "../../utility/enums/commandStatus";
 import { useDispatch, useSelector } from "react-redux";
 import { getCommandDetailsById } from "../../redux/reservations/reservationSlice";
 import ReserveModal from "../reservations/overview/ReserveModal";
+import { database } from "../../config/firebase";
+import { ref, onValue } from "firebase/database";
+
 const CAR_TYPES = {
   "1": "Éco",
   "2": "Berline ",
@@ -82,6 +85,16 @@ const handleStatusText = (value) => {
   }
 };
 
+const DRIVER_STATUSES_WITH_POSITION = [
+  "Assigned_to_driver",
+  "Driver_on_route_to_pickup",
+  "Arrived_at_pickup",
+  "Picked_up",
+  "On_route_to_delivery",
+  "Arrived_at_delivery",
+  "Delivered",
+];
+
 const CommandProfile = ({ match }) => {
   const { id } = match.params;
   const [ping, setPing] = useState(false);
@@ -96,6 +109,7 @@ const CommandProfile = ({ match }) => {
   const [directionsResponse, setDirectionsResponse] = useState(null);
   const [openAdd, setOpenAdd] = useState(false);
   const [openReserver, setOpenReserver] = useState(false);
+  const [driverPosition, setDriverPosition] = useState(null);
 
   const onCancel = () => {
     setOpenAdd(false);
@@ -140,7 +154,7 @@ const CommandProfile = ({ match }) => {
   }
 
   const dispatch = useDispatch();
-
+console.log("command",command?.vehicule_id)
   useEffect(() => {
     dispatch(getCommandDetailsById(id))
       .then(() => {
@@ -157,6 +171,32 @@ const CommandProfile = ({ match }) => {
       })
       .catch((err) => console.log(err));
   }, [id, ping, dispatch]);
+
+  useEffect(() => {
+    let unsubscribe;
+    if (
+      command?.driver?.documentId &&
+      DRIVER_STATUSES_WITH_POSITION.includes(command?.commandStatus)
+    ) {
+      const driverRef = ref(database, `drivers/${command.driver.documentId}`);
+      unsubscribe = onValue(driverRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data && data.latitude && data.longitude) {
+          setDriverPosition({
+            lat: parseFloat(data.latitude),
+            lng: parseFloat(data.longitude),
+          });
+        } else {
+          setDriverPosition(null);
+        }
+      });
+    } else {
+      setDriverPosition(null);
+    }
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [command?.driver?.documentId, command?.commandStatus]);
 
   const [map, setMap] = React.useState(null);
    return (
@@ -221,6 +261,16 @@ const CommandProfile = ({ match }) => {
                         strokeWeight: 4,
                         strokeColor: "#E524DA",
                       },
+                    }}
+                  />
+                )}
+                {/* Driver real-time marker */}
+                {driverPosition && (
+                  <Marker
+                    position={driverPosition}
+                    icon={{
+                      url: require("../../static/img/GreenEco.png"),
+                      scaledSize: new window.google.maps.Size(40, 40),
                     }}
                   />
                 )}
@@ -610,30 +660,18 @@ const CommandProfile = ({ match }) => {
                 </h4>
               </CardContainer>
               <Divider />
-              <CardContainer
-                style={{ paddingBottom: 20, border: "none", boxShadow: "none" }}
-              >
-                <p
-                  style={{
-                    textTransform: "capitalize",
-                    color: "#4B527E",
-                    fontWeight: 500,
-                  }}
-                >
-                  type de vehicule:
-                </p>
-
-                <h4 className="grayText">{CAR_TYPES[command?.carType]}</h4>
-               
-              </CardContainer>
+             
             </div>
           ) : null}
-           <Divider />
+            
           <CardContainer style={{ gap: 0, border: "none", boxShadow: "none" }}>
-            {(command?.commandStatus === "Failed_pickup" ||
-              command?.commandStatus === "Failed_delivery" ||
+            {(command?.commandStatus === "Canceled_by_partner" ||
               command?.commandStatus === "Canceled_by_client") && (
               <>
+              <p>Annulé par :</p>
+              <h4 className="grayText">
+                 { command?.commandStatus === "Canceled_by_partner" ?"Chauffeur ":"Client"}
+              </h4>
                 <p>Raison d'annulation :</p>
 
                 <h4 className="grayText">

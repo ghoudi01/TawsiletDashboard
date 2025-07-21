@@ -36,6 +36,7 @@ const Client = ({
   shouldExportPdf,
   setShouldExportExcel,
   shouldExportExcel,
+  activeStatus, // new prop
 }) => {
   const dispatch = useDispatch();
   const users = useSelector((state) => state?.user?.clients?.results);
@@ -75,15 +76,21 @@ const Client = ({
   };
 
   useEffect(() => {
+    let blocked;
+    if (activeStatus === "active") blocked = false;
+    else if (activeStatus === "unactive") blocked = true;
+    else blocked = undefined;
+    const params = {
+      page: 1,
+      pageSize: 10,
+      text: text,
+    };
+    if (blocked !== undefined) params.blocked = blocked;
     dispatch(
-      getClients({
-        page: 1,
-        pageSize: 10,
-        text: text,
-      })  
+      getClients(params)
     ); // Dispatch the action to get users
     setState({ data: users, current: 1, pageSize: 10 });
-  }, [dispatch, text]);
+  }, [dispatch, text, activeStatus]);
 
   const columns = [
     {
@@ -181,12 +188,18 @@ const Client = ({
   };
 
   const onHandleChange = (pagination) => {
+    let blocked;
+    if (activeStatus === "active") blocked = false;
+    else if (activeStatus === "unactive") blocked = true;
+    else blocked = undefined;
+    const params = {
+      page: pagination.current,
+      pageSize: pagination.pageSize,
+      text: text,
+    };
+    if (blocked !== undefined) params.blocked = blocked;
     dispatch(
-      getClients({
-        page: pagination.current,
-        pageSize: pagination.pageSize,
-        text: text,
-      })
+      getClients(params)
     );
     setState((prevState) => ({
       ...prevState,

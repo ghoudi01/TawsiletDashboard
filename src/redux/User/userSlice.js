@@ -367,7 +367,7 @@ export const getCars = createAsyncThunk("cars/all", async () => {
 });
 
 export const getClients = createAsyncThunk("clients/all", async (params) => {
-  const { page = 1, pageSize = 10, text = "" } = params;
+  const { page = 1, pageSize = 10, text = "", blocked=false } = params;
   try {
     const jwt = localStorage.getItem("token");
   
@@ -378,6 +378,7 @@ export const getClients = createAsyncThunk("clients/all", async (params) => {
           page: page,
           pageSize: pageSize,
           text: text,
+          blocked: blocked,
         },
         headers: {
           Authorization: `Bearer ${jwt}`,

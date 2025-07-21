@@ -30,7 +30,7 @@ const Reservations = ({
   shouldExportPdf,
   setShouldExportExcel,
   shouldExportExcel,
-  reservations,
+  
   meta,
   onHandlePageChange,
 }) => {
@@ -39,6 +39,8 @@ const Reservations = ({
   //   (state) => state?.reservations?.commands?.nodes
   // );
   // const meta = useSelector((state) => state?.reservations?.commands?.pageInfo);
+  const reservations = useSelector((state) => state?.reservations?.commands?.data);
+console.log("reservations",reservations.length)
   const currentId = useSelector((state) => state?.user?.currentUser?.id);
   const currentUser = useSelector((state) => state?.user?.currentUser);
   const role = useSelector((state) => state?.user?.currentUser?.user_role);

@@ -773,10 +773,26 @@ ChartjsPieChart.propTypes = {
 const ChartjsDonutChart = (props) => {
   const { labels, datasets, options, height } = props;
   const { ref } = useChartData();
-  const data = {
+
+  const isObjectData =
+    datasets && datasets[0] && datasets[0].data && datasets[0].data.length > 0 && typeof datasets[0].data[0] === 'object' && datasets[0].data[0] !== null;
+
+  const chartData = {
     labels,
-    datasets,
+    datasets: isObjectData
+      ? datasets.map((d) => ({
+          ...d,
+          data: d.data.map((item) => item.value),
+        }))
+      : datasets,
   };
+
+  const total =
+    datasets && datasets.length > 0 && datasets[0].data && datasets[0].data.length > 0
+      ? isObjectData
+        ? datasets[0].data.reduce((acc, item) => acc + (item.value || 0), 0)
+        : datasets[0].data.reduce((a, b) => a + b, 0)
+      : 0;
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
@@ -793,11 +809,9 @@ const ChartjsDonutChart = (props) => {
         }}
       >
         Total Commande
-        <h1 style={{ fontSize: 36 }}>
-          {datasets[0].data.reduce((a, b) => a + b, 0)}
-        </h1>
+        <h1 style={{ fontSize: 36 }}>{total}</h1>
       </p>
-      <Doughnut ref={ref} data={data} height={height} options={options} />
+      <Doughnut ref={ref} data={chartData} height={height} options={options} />
     </div>
   );
 };

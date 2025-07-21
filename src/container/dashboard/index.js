@@ -383,12 +383,7 @@ const Dashboard = () => {
                           labels={frenchLabels}
                           datasets={[
                             {
-                              data: [
-                                allCommands?.filter((command) => commandStatuses.includes(command.commandStatus)).length || 0,
-                                allCommands?.filter((command) => command.commandStatus === "Canceled_by_client").length || 0,
-                                allCommands?.filter((command) => command.commandStatus === "Completed").length || 0,
-                                (chartData?.commandData?.failedPickupCount || 0) + (chartData?.commandData?.failedDeliveryCount || 0),
-                              ],
+                              data: data,
                               backgroundColor: ["#53B483", "#59B4D1", "#FF6384"],
                             },
                           ]}

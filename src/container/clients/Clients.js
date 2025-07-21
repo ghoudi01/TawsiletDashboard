@@ -1,6 +1,6 @@
 import React, { lazy, useState } from "react";
 import { useSelector } from "react-redux";
-import { Row, Col } from "antd";
+import { Row, Col, Select } from "antd";
 import FeatherIcon from "feather-icons-react";
 import propTypes from "prop-types";
 import { ProjectHeader } from "./style";
@@ -39,6 +39,7 @@ function Clients({ match }) {
     });
   };
   const [text, settext] = useState("");
+  const [activeStatus, setActiveStatus] = useState("all"); // all, active, unactive
   return (
     <>
       <ProjectHeader>
@@ -57,6 +58,16 @@ function Clients({ match }) {
                   placeholder="Rechercher ..."
                 />
               </div>
+              <Select
+                value={activeStatus}
+                style={{ width: 150, marginRight: "1vw" }}
+                onChange={setActiveStatus}
+                options={[
+                  { value: "all", label: "Tous" },
+                  { value: "active", label: "Actifs" },
+                  { value: "unactive", label: "Inactifs" },
+                ]}
+              />
               {clientsCount} Clients
             </div>
           }
@@ -87,6 +98,7 @@ function Clients({ match }) {
             <div>
               <List
                 text={text}
+                activeStatus={activeStatus}
                 shouldPrint={shouldPrint}
                 setShouldPrint={setShouldPrint}
                 setShouldExportPdf={setShouldExportPdf}
