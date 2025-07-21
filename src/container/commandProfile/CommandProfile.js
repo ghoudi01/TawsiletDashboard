@@ -93,6 +93,8 @@ const DRIVER_STATUSES_WITH_POSITION = [
   "On_route_to_delivery",
   "Arrived_at_delivery",
   "Delivered",
+  "Go_to_pickup",
+  
 ];
 
 const CommandProfile = ({ match }) => {
@@ -154,8 +156,7 @@ const CommandProfile = ({ match }) => {
   }
 
   const dispatch = useDispatch();
-console.log("command",command?.vehicule_id)
-  useEffect(() => {
+   useEffect(() => {
     dispatch(getCommandDetailsById(id))
       .then(() => {
          calculateRoute({
@@ -171,16 +172,21 @@ console.log("command",command?.vehicule_id)
       })
       .catch((err) => console.log(err));
   }, [id, ping, dispatch]);
-
-  useEffect(() => {
-    let unsubscribe;
+  
+   useEffect(() => {
+     let unsubscribe;
+     console.log( command?.driver?.documentId &&
+      DRIVER_STATUSES_WITH_POSITION.includes(command?.commandStatus))
     if (
       command?.driver?.documentId &&
       DRIVER_STATUSES_WITH_POSITION.includes(command?.commandStatus)
     ) {
+       
       const driverRef = ref(database, `drivers/${command.driver.documentId}`);
       unsubscribe = onValue(driverRef, (snapshot) => {
+         
         const data = snapshot.val();
+        console.log("data",data)
         if (data && data.latitude && data.longitude) {
           setDriverPosition({
             lat: parseFloat(data.latitude),
