@@ -184,9 +184,9 @@ const CommandProfile = ({ match }) => {
        
       const driverRef = ref(database, `drivers/${command.driver.documentId}`);
       unsubscribe = onValue(driverRef, (snapshot) => {
-         
+         console.log(`drivers/${command.driver.documentId}`)
         const data = snapshot.val();
-        console.log("data",data)
+       
         if (data && data.latitude && data.longitude) {
           setDriverPosition({
             lat: parseFloat(data.latitude),

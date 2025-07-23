@@ -34,6 +34,7 @@ const CalculeRoutes = lazy(() => import("./Calcule"));
 const MaintenanceRoutes = lazy(() => import("./Maintenance"));
 const BalanceRoutes = lazy(() => import("./Balance"));
 const Historique = lazy(() => import("./Historique"));
+const MapUser = lazy(() => import("../../container/MapUser/MapUser"));
 
 const Admin = () => {
   const { path } = useRouteMatch();
@@ -198,6 +199,11 @@ const Admin = () => {
           path={`${path}/detailsTickete`}
           component={TicketDetail}
           allowedRoles={["owner", "admin","agent_support"]}
+        />
+        <ProtectedRoute
+          path={`${path}/MapUser/view`}
+          component={MapUser}
+          allowedRoles={["owner", "admin", "agent_support"]}
         />
       </Suspense>
     </>

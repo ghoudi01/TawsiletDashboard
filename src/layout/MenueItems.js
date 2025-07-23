@@ -167,7 +167,14 @@ const MenuItems = ({ darkMode, toggleCollapsed, topMenu }) => {
             </NavLink>
           </Menu.Item>
         ),
-        
+        // Add MapUser menu item for user map
+        (roleUser === "owner" || roleUser === "admin" || roleUser === "agent_support") && (
+          <Menu.Item key="mapuser">
+            <NavLink onClick={toggleCollapsed} to={`${path}/MapUser/view`}>
+              Carte Utilisateurs
+            </NavLink>
+          </Menu.Item>
+        ),
         <Menu.Item key="track">
           <NavLink onClick={toggleCollapsed} to={`${path}/track/view`}>
             Logistique
