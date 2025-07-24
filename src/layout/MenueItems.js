@@ -160,6 +160,14 @@ const MenuItems = ({ darkMode, toggleCollapsed, topMenu }) => {
             </NavLink>
           </Menu.Item>
         ),
+        // Add Red Zones menu item for owner
+        canView("admins") && currentUser.user_role === "owner" && (
+          <Menu.Item key="redzones">
+            <NavLink onClick={toggleCollapsed} to={`${path}/RedZones/view`}>
+              Red Zones
+            </NavLink>
+          </Menu.Item>
+        ),
         canView("agents") && currentUser.user_role === "owner" && (
           <Menu.Item key="views">
             <NavLink onClick={toggleCollapsed} to={`${path}/Agents/view`}>
