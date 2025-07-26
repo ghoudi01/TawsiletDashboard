@@ -11,7 +11,7 @@ import ArrowLeft from "../../static/img/icon/arrow-left.svg";
 import AssigneDriver from "../commandes/overview/AssigneDriver";
 import ReactStars from "react-rating-stars-component";
 
-import { Button, Collapse, Image, Spin } from "antd";
+import { Button, Collapse, Image, Spin, Tag } from "antd";
 import styled from "styled-components";
 import CommandStatus from "../../utility/enums/commandStatus";
 import { useDispatch, useSelector } from "react-redux";
@@ -19,6 +19,7 @@ import { getCommandDetailsById } from "../../redux/reservations/reservationSlice
 import ReserveModal from "../reservations/overview/ReserveModal";
 import { database } from "../../config/firebase";
 import { ref, onValue } from "firebase/database";
+import OverviewModal from "../clients/OverviewModal";
 
 const CAR_TYPES = {
   "1": "Éco",
@@ -112,6 +113,8 @@ const CommandProfile = ({ match }) => {
   const [openAdd, setOpenAdd] = useState(false);
   const [openReserver, setOpenReserver] = useState(false);
   const [driverPosition, setDriverPosition] = useState(null);
+  const [clientModalOpen, setClientModalOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState(null);
 
   const onCancel = () => {
     setOpenAdd(false);
@@ -393,8 +396,14 @@ const CommandProfile = ({ match }) => {
               {/* <h2>Client:</h2> */}
               <CardBody style={{ flexWrap: "nowrap" }}>
                 <Image.PreviewGroup movable={true}>
-                  <div className="titel-img">
-                    {/* <h3 className="company_details_main_title">Face Gauche</h3> */}
+                  <div
+                    className="titel-img"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => {
+                      setSelectedClient(command?.client);
+                      setClientModalOpen(true);
+                    }}
+                  >
                     <Image
                       className="roundImage"
                       alt="Client pic"
@@ -418,9 +427,19 @@ const CommandProfile = ({ match }) => {
                     alignItems: "flex-start",
                     overflow: "hidden",
                     gap: 2,
+                    cursor: "pointer",
+                  }}
+                  onClick={() => {
+                    setSelectedClient(command?.client);
+                    setClientModalOpen(true);
                   }}
                 >
-                  <h4>Coordonnées de Client:</h4>
+                  <h4 style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    Coordonnées de Client:
+                    {command?.client?.trusted && (
+                      <Tag color="gold" style={{ marginLeft: 8 }}>Trusted</Tag>
+                    )}
+                  </h4>
                   <p>
                     Nom: {command?.client?.firstName}{" "}
                     {command?.client?.lastName}
@@ -708,6 +727,7 @@ const CommandProfile = ({ match }) => {
           setPing={setPing}
         />
       )}
+      <OverviewModal open={clientModalOpen} setOpen={setClientModalOpen} modalId={selectedClient} />
     </div>
   );
 };

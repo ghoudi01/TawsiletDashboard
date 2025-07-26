@@ -76,11 +76,10 @@ const DriverMarker = ({ driverId, location, onSelect, isSelected }) => {
       scaledSize: new window.google.maps.Size(40, 40),
     };
   };
-
-  return (
+   return (
     <>
     <Marker
-  icon={getCarIcon(isActive, isFree,vehicule?.type?.id)}
+  icon={getCarIcon(isActive, isFree,vehicule?.type[0]?.id)}
   position={{
     lat: parseFloat(latitude),
     lng: parseFloat(longitude),

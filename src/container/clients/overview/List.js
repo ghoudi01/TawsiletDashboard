@@ -150,11 +150,44 @@ const Client = ({
       dataIndex: "Adresse e-mail",
       render: (text, record) => (
         <ProjectListTitle>
-          <p>{record?.email}</p>
+          <p style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {record?.email}
+            {record?.womanValidation?.validation_state === "waiting" && (
+              <FeatherIcon icon="alert-circle" color="#faad14" size={18} />
+            )}
+          </p>
         </ProjectListTitle>
       ),
     },
-   
+    {
+      id: "trusted",
+      title: "Trusted",
+      dataIndex: "trusted",
+      render: (text, record) => (
+        <span
+          style={{ cursor: ["owner", "agent_support"].includes(userRole) ? "pointer" : "default", color: record.trusted ? '#faad14' : '#d9d9d9', fontSize: 20 }}
+          onClick={() => {
+            if (["owner", "agent_support"].includes(userRole)) {
+              Modal.confirm({
+                title: `Confirmation D'action`,
+                content: `Etes vous sure de vouloir ${record.trusted ? "retirer la confiance de" : "marquer comme client de confiance"} ce client ?`,
+                okText: "Oui",
+                okType: "danger",
+                cancelText: "Annuler",
+                onOk() {
+                  dispatch(updateUser({
+                    id: record.id,
+                    user: { trusted: !record.trusted },
+                  }));
+                },
+              });
+            }
+          }}
+        >
+          <FeatherIcon icon={record.trusted ? "star" : "star"} fill={record.trusted ? "#faad14" : "none"} stroke={record.trusted ? "#faad14" : "#d9d9d9"} />
+        </span>
+      ),
+    },
 
     { id: "action", title: "", dataIndex: "action" },
     {
@@ -219,7 +252,9 @@ const Client = ({
         phoneNumber: value?.phoneNumber,
         email: value?.email,
         cin: value?.cin,
+        womanValidation: value?.womanValidation,
         blocked: value?.blocked,
+        trusted: value?.trusted,
         action: (
           [ "owner","agent_support"].includes(userRole) ? (
             <SelectGm

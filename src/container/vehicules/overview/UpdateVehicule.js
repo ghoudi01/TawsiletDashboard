@@ -127,6 +127,19 @@ function UpdateVehicule({
       payload.data.assurancePictures = updatevehicule?.data?.assurancePictures?.id;
       payload.data.grayCardPictures = updatevehicule?.data?.grayCardPictures?.id;
       payload.data.grayCardPictureBack = updatevehicule?.data?.grayCardPictureBack?.id;
+      // Ensure type and possible_types are arrays of IDs
+      if (Array.isArray(updatevehicule?.data?.type)) {
+        payload.data.type = updatevehicule.data.type;
+      } else if (updatevehicule?.data?.type) {
+        payload.data.type = [updatevehicule.data.type];
+      } else {
+        payload.data.type = [];
+      }
+      if (Array.isArray(updatevehicule?.data?.possible_types)) {
+        payload.data.possible_types = updatevehicule.data.possible_types;
+      } else {
+        payload.data.possible_types = [];
+      }
     }
 
     dispatch(
@@ -143,7 +156,6 @@ function UpdateVehicule({
   useEffect(() => {
     if (visible) {
     if (recorddata) {
-     
        setupdatevehicule({
         loaded:true,
         data: {
@@ -153,7 +165,15 @@ function UpdateVehicule({
           color: recorddata?.color,
           matriculation: recorddata?.matriculation,
           assuranceDate: recorddata?.assuranceDate,
-          type: recorddata?.type?.id,
+          // type can be array or single id
+          type: Array.isArray(recorddata?.type)
+            ? recorddata.type.map(t => t.id?.toString())
+            : recorddata?.type?.id
+              ? [recorddata.type.id.toString()]
+              : [],
+          possible_types: Array.isArray(recorddata?.possible_types)
+            ? recorddata.possible_types.map(t => t.id?.toString())
+            : [],
           vehiculePictureface1: recorddata?.vehiculePictureface1,
           vehiculePictureface2: recorddata?.vehiculePictureface2,
           vehiculePictureface3:recorddata?.vehiculePictureface3,
@@ -161,10 +181,8 @@ function UpdateVehicule({
           assurancePictures:recorddata?.assurancePictures,
           grayCardPictures: recorddata?.grayCardPictures,
           grayCardPictureBack: recorddata?.grayCardPictureBack,
-     
         },
       });
-  
     }}
     else {
       setupdatevehicule({})
@@ -557,19 +575,49 @@ function UpdateVehicule({
               <div className="mb-25">
                 <Form.Item
                   name="type"
-                  label="Type"
+                  label="Active types"
                   validateStatus={addVehiculeErrors.type ? "error" : ""}
                   help={addVehiculeErrors.type}
                 >
                   <Select
-                    placeholder="Sélectionnez le type de véhicule"
-                    value={updatevehicule?.data?.type}
+                    mode="multiple"
+                    placeholder="Sélectionnez le(s) type(s) de véhicule"
+                    value={Array.isArray(updatevehicule?.data?.type) ? updatevehicule.data.type : updatevehicule?.data?.type ? [updatevehicule.data.type] : []}
                     onChange={(value) => {
                       setupdatevehicule({
                         ...updatevehicule,
                         data: {
                           ...updatevehicule.data,
                           type: value,
+                        },
+                      });
+                    }}
+                  >
+                    {Object.entries(vehicleTypes).map(([key, value]) => (
+                      <Select.Option key={key} value={key}>
+                        {value}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              </div>
+              <div className="mb-25">
+                <Form.Item
+                  name="possible_types"
+                  label="Possible types"
+                  validateStatus={addVehiculeErrors.possible_types ? "error" : ""}
+                  help={addVehiculeErrors.possible_types}
+                >
+                  <Select
+                    mode="multiple"
+                    placeholder="Sélectionnez le(s) type(s) possible(s)"
+                    value={Array.isArray(updatevehicule?.data?.possible_types) ? updatevehicule.data.possible_types : []}
+                    onChange={(value) => {
+                      setupdatevehicule({
+                        ...updatevehicule,
+                        data: {
+                          ...updatevehicule.data,
+                          possible_types: value,
                         },
                       });
                     }}

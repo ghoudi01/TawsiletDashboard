@@ -57,7 +57,7 @@ function ViewVehicule({ visible, onCancel, record, userRole, recorddata }) {
       setLoading(true);
       axios
         .get(
-          `${process.env.REACT_APP_BACKUP_URL}vehicules/${recorddata.documentId}?populate[0]=validation&populate[1]=vehiculePictureface1&populate[2]=vehiculePictureface2&populate[3]=vehiculePictureface3&populate[4]=vehiculePictureface4&populate[5]=assurancePictures&populate[6]=grayCardPictures&populate[7]=driver&populate[8]=type&populate[9]=grayCardPictureBack`,
+          `${process.env.REACT_APP_BACKUP_URL}vehicules/${recorddata.documentId}?populate[0]=validation&populate[1]=vehiculePictureface1&populate[2]=vehiculePictureface2&populate[3]=vehiculePictureface3&populate[4]=vehiculePictureface4&populate[5]=assurancePictures&populate[6]=grayCardPictures&populate[7]=driver&populate[8]=type&populate[9]=grayCardPictureBack&populate[10]=possible_types`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -97,7 +97,37 @@ function ViewVehicule({ visible, onCancel, record, userRole, recorddata }) {
     onCancel(false);
   };
 
-  const handleTypeChange = async (newTypeId) => {
+  const handleTypeChange = async (newTypeIds) => {
+     try {
+      const jwt = localStorage.getItem("token");
+      await axios.put(
+        `${process.env.REACT_APP_BACKUP_URL}vehicules/${recorddata.documentId}`,
+        {
+          data: {
+            type: newTypeIds, // now an array
+          },
+        },
+        {
+          headers: { Authorization: `Bearer ${jwt}` },
+        }
+      );
+      message.success("Type(s) de véhicule mis à jour avec succès!");
+      // Refresh data
+      const res = await axios.get(
+        `${process.env.REACT_APP_BACKUP_URL}vehicules/${recorddata.documentId}?populate[0]=validation&populate[1]=vehiculePictureface1&populate[2]=vehiculePictureface2&populate[3]=vehiculePictureface3&populate[4]=vehiculePictureface4&populate[5]=assurancePictures&populate[6]=grayCardPictures&populate[7]=driver&populate[8]=type&populate[9]=grayCardPictureBack&&populate[10]=possible_types`,
+        {
+          headers: { Authorization: `Bearer ${jwt}` },
+        }
+      );
+     setVehiculeData(res.data);
+    } catch (error) {
+      message.error("Erreur lors de la mise à jour du/des type(s) de véhicule.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePossibleTypesChange = async (newPossibleTypeIds) => {
     setLoading(true);
     try {
       const jwt = localStorage.getItem("token");
@@ -105,24 +135,24 @@ function ViewVehicule({ visible, onCancel, record, userRole, recorddata }) {
         `${process.env.REACT_APP_BACKUP_URL}vehicules/${recorddata.documentId}`,
         {
           data: {
-            type: newTypeId,
+            possible_types: newPossibleTypeIds, // array of ids
           },
         },
         {
           headers: { Authorization: `Bearer ${jwt}` },
         }
       );
-      message.success("Type de véhicule mis à jour avec succès!");
+      message.success("Type(s) possible(s) mis à jour avec succès!");
       // Refresh data
       const res = await axios.get(
-        `${process.env.REACT_APP_BACKUP_URL}vehicules/${recorddata.documentId}?populate[0]=validation&populate[1]=vehiculePictureface1&populate[2]=vehiculePictureface2&populate[3]=vehiculePictureface3&populate[4]=vehiculePictureface4&populate[5]=assurancePictures&populate[6]=grayCardPictures&populate[7]=driver&populate[8]=type&populate[9]=grayCardPictureBack`,
+        `${process.env.REACT_APP_BACKUP_URL}vehicules/${recorddata.documentId}?populate[0]=validation&populate[1]=vehiculePictureface1&populate[2]=vehiculePictureface2&populate[3]=vehiculePictureface3&populate[4]=vehiculePictureface4&populate[5]=assurancePictures&populate[6]=grayCardPictures&populate[7]=driver&populate[8]=type&populate[9]=grayCardPictureBack&&populate[10]=possible_types`,
         {
           headers: { Authorization: `Bearer ${jwt}` },
         }
       );
       setVehiculeData(res.data);
     } catch (error) {
-      message.error("Erreur lors de la mise à jour du type de véhicule.");
+      message.error("Erreur lors de la mise à jour du/des type(s) possible(s) de véhicule.");
     } finally {
       setLoading(false);
     }
@@ -145,9 +175,8 @@ function ViewVehicule({ visible, onCancel, record, userRole, recorddata }) {
   }
 
   const data = vehiculeData?.data;
-  
-
-  return (
+  console.log("data",data?.possible_types)
+   return (
     <>
       <Modal
         title={<Title level={3} style={{ margin: 0 }}>{`Véhicule N°${record}`}</Title>}
@@ -339,19 +368,43 @@ function ViewVehicule({ visible, onCancel, record, userRole, recorddata }) {
                 <Text strong>{data?.matriculation || "-"}</Text>
               </div>
               <div className="detail-item">
-                <Text type="secondary">Type</Text>
+                <Text type="secondary">Active types</Text>
                 {[ "owner","agent_support"].includes(currentRole)  ? (
                   <Select
-                    value={data?.type?.id?.toString()}
+                    mode="multiple"
+                    value={Array.isArray(data?.type) ? data.type.map(t => t.id?.toString()) : data?.type?.id ? [data.type.id.toString()] : []}
                     options={typeOptions}
-                    onSelect={handleTypeChange}
+                    onChange={handleTypeChange}
                     style={{ width: "100%" }}
-                    placeholder="Sélectionner un type"
+                    placeholder="Sélectionner un ou plusieurs types"
                     loading={loading}
-                
                   />
                 ) : (
-                  <Text strong>{vehicleTypes[data?.type?.id?.toString()] || "-"}</Text>
+                  <Text strong>
+                    {Array.isArray(data?.type)
+                      ? data.type.map(t => vehicleTypes[t.id?.toString()] || "-").join(", ")
+                      : vehicleTypes[data?.type?.id?.toString()] || "-"}
+                  </Text>
+                )}
+              </div>
+              <div className="detail-item">
+                <Text type="secondary">Possible types</Text>
+                {["owner","agent_support"].includes(currentRole) ? (
+                  <Select
+                    mode="multiple"
+                    value={Array.isArray(data?.possible_types) ? data.possible_types.map(t => t.id?.toString()) : []}
+                    options={typeOptions}
+                    onChange={handlePossibleTypesChange}
+                    style={{ width: "100%" }}
+                    placeholder="Sélectionner un ou plusieurs types possibles"
+                    loading={loading}
+                  />
+                ) : (
+                  <Text>
+                    {Array.isArray(data?.possible_types) && data.possible_types.length > 0
+                      ? data.possible_types.map(t => t.name_fr).join(", ")
+                      : "-"}
+                  </Text>
                 )}
               </div>
               <div className="detail-item">

@@ -47,7 +47,7 @@ function Commandes({ match }) {
   const [shouldExportPdf, setShouldExportPdf] = useState(false);
   const [shouldExportExcel, setShouldExportExcel] = useState(false);
   const [dateSortBy, setDateSortBy] = useState("createdAt:desc");
-  const [activeFilter, setActiveFilter] = useState("");
+  const [activeFilter, setActiveFilter] = useState("Tous");
   // const searchData = useSelector((state) => state.headerSearchData);
   const [createModal, setCreateModal] = useState(false);
 
@@ -111,7 +111,7 @@ function Commandes({ match }) {
      
       >
         <ul>
-          <Link to="#" onClick={() => handleFilterClick("")}>
+          <Link to="#">
             {" "}
             <li
            
