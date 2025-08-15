@@ -11,6 +11,7 @@ const CommandStatus = {
     COMPLETED: 'Completed',
     CANCELED_BY_CLIENT: 'Canceled_by_client',
     CANCELED_BY_PARTNER: 'Canceled_by_partner',
+    CANCELED_BY_ADMIN: 'Canceled_by_admin',
     FAILED_PICKUP: 'Failed_pickup',
     FAILED_DELIVERY: 'Failed_delivery',
   };

@@ -130,6 +130,7 @@ export const getCommandDetailsById = createAsyncThunk(
   "commandDetailsById/get",
   async (id, { rejectWithValue }) => {
     try {
+      console.log("id",id)
       const { data } = await client.query({
         query: GET_COMMAND_DETAILS_BY_ID,
         variables: { documentId: id },

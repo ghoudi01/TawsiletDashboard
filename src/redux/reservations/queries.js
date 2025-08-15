@@ -140,7 +140,7 @@ export const GET_COMMAND_DETAILS_BY_ID = gql`
       email
       phoneNumber
       trusted
-      id
+         
       profilePicture {
         url
         formats

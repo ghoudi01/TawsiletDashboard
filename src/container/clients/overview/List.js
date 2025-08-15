@@ -27,6 +27,10 @@ import OverviewModal from "../OverviewModal";
 import DeleteModal from "../DeleteModal";
 import SelectGm from "../../../selectGm/SelectGm";
 import Loader from "../../../components/loaderLine/Loader";
+import axios from "axios";
+import CommandStatus from "../../../utility/enums/commandStatus";
+import { database } from "../../../config/firebase";
+import { ref, query, orderByChild, equalTo, get, update as fbUpdate } from "firebase/database";
 
 const Client = ({
   text,
@@ -270,14 +274,93 @@ const Client = ({
                   okType: "danger",
                   cancelText: "Annuler",
                   onOk() {
-                    dispatch(
-                      updateUser({
-                        id: value.id,
-                        user: { blocked:e.value==="Activer"?false :true },
-                      })
-                    ).then(() => {
-                     
-                    });
+                    const block = e.value!=="Activer";
+                    const run = async () => {
+                      try {
+                        // 1) Update user blocked status
+                        await dispatch(
+                          updateUser({
+                            id: value.id,
+                            user: { blocked: block },
+                          })
+                        );
+
+                        if (block) {
+                          // 2) If blocking, cancel all non-final commands of this client
+                          const jwt = localStorage.getItem("token");
+                          const resp = await axios.get(
+                            `${process.env.REACT_APP_BACKUP_URL}commands`,
+                            {
+                              params: {
+                                // Strapi-style filter: commands for this client
+                                "filters[client][$eq]": value.id,
+                                // pull necessary bits if needed later
+                                "populate[0]": "pickUpAddress",
+                                "populate[1]": "dropOfAddress",
+                              },
+                              headers: { Authorization: `Bearer ${jwt}` },
+                            }
+                          );
+
+                          const list = resp?.data?.data || [];
+                          const FINAL_STATUSES = [
+                            CommandStatus.COMPLETED,
+                            CommandStatus.CANCELED_BY_CLIENT,
+                            CommandStatus.CANCELED_BY_PARTNER,
+                          ];
+
+                          // Iterate and cancel
+                          for (const cmd of list) {
+                            const status = cmd?.commandStatus || cmd?.data?.commandStatus;
+                            const docId = cmd?.documentId || cmd?.data?.documentId || cmd?.id;
+                            if (!FINAL_STATUSES.includes(status) && docId) {
+                              try {
+                                // Backend status update
+                                await axios.put(
+                                  `${process.env.REACT_APP_BACKUP_URL}commands/${docId}`,
+                                  { data: { commandStatus: "Canceled_by_client" } },
+                                  { headers: { Authorization: `Bearer ${jwt}` } }
+                                );
+
+                                // Firebase: locate rideRequests by requestId present on the command; fallback to orderId query
+                                try {
+                                  const requestId = cmd?.requestId || cmd?.data?.requestId;
+                                  if (requestId) {
+                                    await fbUpdate(
+                                      ref(database, `rideRequests/${requestId}`),
+                                      { status: "Canceled_by_client",commandStatus: "Canceled_by_client" }
+                                    );
+                                  } else {
+                                    const rq = query(
+                                      ref(database, "rideRequests"),
+                                      orderByChild("orderId"),
+                                      equalTo(docId)
+                                    );
+                                    const snap = await get(rq);
+                                    if (snap.exists()) {
+                                      const updates = {};
+                                      snap.forEach((child) => {
+                                        updates[`rideRequests/${child.key}/status`] = "Canceled_by_client";
+                                      });
+                                      if (Object.keys(updates).length) {
+                                        await fbUpdate(ref(database), updates);
+                                      }
+                                    }
+                                  }
+                                } catch (fbErr) {
+                                  console.warn("Firebase update skipped:", fbErr?.message || fbErr);
+                                }
+                              } catch (err) {
+                                console.error("Failed to cancel command", docId, err);
+                              }
+                            }
+                          }
+                        }
+                      } catch (err) {
+                        console.error("Error updating user/commands:", err);
+                      }
+                    };
+                    run();
                   },
                   onCancel() {
                 

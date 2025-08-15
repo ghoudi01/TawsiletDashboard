@@ -20,6 +20,7 @@ import ReserveModal from "../reservations/overview/ReserveModal";
 import { database } from "../../config/firebase";
 import { ref, onValue } from "firebase/database";
 import OverviewModal from "../clients/OverviewModal";
+import { getPrices } from "../../redux/pricing/settingSlice";
 
 const CAR_TYPES = {
   "1": "Éco",
@@ -115,6 +116,45 @@ const CommandProfile = ({ match }) => {
   const [driverPosition, setDriverPosition] = useState(null);
   const [clientModalOpen, setClientModalOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
+  const dispatch = useDispatch();
+  // Settings from store to resolve carType label from settings list
+  const settingsList = useSelector(
+    (state) => state?.setting?.prices?.data || []
+  );
+  console.log("command?.carType", command?.carType);
+  // Find the matching settings item for the current command carType
+  const carTypeSetting = React.useMemo(() => {
+    if (!command?.carType || !Array.isArray(settingsList)) return null;
+    try {
+      return (
+        settingsList.find(
+          (s) =>
+            String(s?.id) === String(command?.carType) ||
+            String(s?.attributes?.id) === String(command?.carType)
+        ) || null
+      );
+    } catch (e) {
+      return null;
+    }
+  }, [settingsList, command?.carType]);
+  // Resolve a human-readable label for the car type
+  const carTypeLabel = React.useMemo(() => {
+    if (!carTypeSetting) return null;
+    const attrs = carTypeSetting?.attributes || carTypeSetting;
+    return (
+      attrs?.name_fr ||
+      attrs?.name ||
+      (command?.carType && CAR_TYPES[String(command?.carType)]) ||
+      null
+    );
+  }, [carTypeSetting, command?.carType]);
+console.log("carTypeLabel", carTypeLabel);
+  // Ensure settings are loaded so we can resolve carType from settings
+  useEffect(() => {
+    if (!settingsList || settingsList.length === 0) {
+      dispatch(getPrices());
+    }
+  }, [dispatch, settingsList?.length]);
 
   const onCancel = () => {
     setOpenAdd(false);
@@ -158,9 +198,9 @@ const CommandProfile = ({ match }) => {
   
   }
 
-  const dispatch = useDispatch();
+  
    useEffect(() => {
-    dispatch(getCommandDetailsById(id))
+    dispatch(getCommandDetailsById( ))
       .then(() => {
          calculateRoute({
           depart: {
@@ -608,25 +648,7 @@ const CommandProfile = ({ match }) => {
                 </div>
               </CardContainer>
             )}
-            <CardContainer>
-              {/* <h2>Société:</h2> */}
-              <CardBody
-                style={{ justifyContent: "space-between", paddingRight: 20 }}
-              >
-              
-                <div>
-                  <p>Tel: </p>
-                  <h4>{command?.company_id?.owner?.phoneNumber}</h4>
-                </div>
-                <div>
-                  <p>Email:</p> <h4>{command?.company_id?.owner?.email}</h4>
-                </div>
-                <div>
-                  <p>Addresse:</p>
-                  <h4>{command?.company_id?.address}</h4>
-                </div>
-              </CardBody>
-            </CardContainer>
+           
           </div>
         </DetailsLeft>
 
@@ -666,6 +688,12 @@ const CommandProfile = ({ match }) => {
                 </h4>
                 <p>Durée du voyage:</p>
                 <h4 className="grayText"> {command?.duration}</h4>
+                <p>Type de véhicule:</p>
+                <h4 className="grayText">
+                  {carTypeLabel ||
+                    (command?.carType && CAR_TYPES[String(command?.carType)]) ||
+                    "-"}
+                </h4>
                 <p>Date de départ</p>
             
               </CardContainer>
@@ -722,7 +750,7 @@ const CommandProfile = ({ match }) => {
           open={openReserver}
           setOpen={setOpenReserver}
           ping={ping}
-          carType={command?.carType}
+          carType={carTypeLabel ?? command?.carType}
           refNumber={command?.refNumber}
           setPing={setPing}
         />
