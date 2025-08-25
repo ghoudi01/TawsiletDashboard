@@ -200,7 +200,7 @@ console.log("carTypeLabel", carTypeLabel);
 
   
    useEffect(() => {
-    dispatch(getCommandDetailsById( ))
+    dispatch(getCommandDetailsById(id ))
       .then(() => {
          calculateRoute({
           depart: {
