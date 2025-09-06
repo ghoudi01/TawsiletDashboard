@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Row, Col, InputNumber, Button, notification, Card, Typography, Space } from "antd";
+import { Row, Col, InputNumber, Button, notification, Card, Typography, Space, Switch } from "antd";
 import { PageHeader } from "../../../components/page-headers/page-headers";
 import { Main } from "../../styled";
 import { Cards } from "../../../components/cards/frame/cards-frame";
@@ -14,6 +14,8 @@ function Param() {
     WAITING_TIME_GRACE_PERIOD: 1,
     START_CHARGE_AFTERT_TIME: 1,
     min_radius_search: 1,
+    isReservationActive: false,
+    isDangerActive: false,
   });
 
   const handleChange = (key, value) => {
@@ -62,6 +64,8 @@ function Param() {
             WAITING_TIME_GRACE_PERIOD: inputData.WAITING_TIME_GRACE_PERIOD,
             START_CHARGE_AFTERT_TIME: inputData.START_CHARGE_AFTERT_TIME,
             min_radius_search: inputData.min_radius_search,
+            isReservationActive: inputData.isReservationActive,
+            isDangerActive: inputData.isDangerActive,
           },
         },
         {
@@ -150,6 +154,26 @@ function Param() {
                           value={params.min_radius_search}
                           onChange={(val) => handleChange("min_radius_search", val)}
                           style={{ width: '100%', marginTop: 8 }}
+                          size="large"
+                        />
+                      </div>
+
+                      <div>
+                        <Text strong>Réservation active</Text>
+                        <Switch
+                          checked={params.isReservationActive}
+                          onChange={(checked) => handleChange("isReservationActive", checked)}
+                          style={{ marginTop: 8 }}
+                          size="large"
+                        />
+                      </div>
+
+                      <div>
+                        <Text strong>Mode danger actif</Text>
+                        <Switch
+                          checked={params.isDangerActive}
+                          onChange={(checked) => handleChange("isDangerActive", checked)}
+                          style={{ marginTop: 8 }}
                           size="large"
                         />
                       </div>
