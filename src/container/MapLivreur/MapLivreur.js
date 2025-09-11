@@ -49,14 +49,14 @@ const MapLivreur = () => {
       if (firebaseData) {
  
         const drivers = Object.entries(firebaseData).map(([id, driver]) => {
-       
+          
           return ({
           id,
           location: {
             latitude: driver?.latitude || null,
             longitude: driver?.longitude || null,
-            isFree: driver?.isFree || true,
-            isActive: driver?.isActive || false,
+            isFree: driver?.isFree ,
+            isActive: driver?.isActive,
             lastSeen: driver?.lastSeen,
             lastUpdated: driver?.lastUpdated,
             heading: driver?.heading || 0

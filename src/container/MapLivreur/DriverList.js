@@ -112,17 +112,20 @@ const DriverList = ({
             acc[driver.documentId] = driver;
             return acc;
           }, {});
-
+ 
           // Combine driversList with their details and filter out non-existent ones
           const combined = driversList
-            .map(driver => ({
+            .map(driver =>{
+               
+              return {
               ...driver,
               details: {
                 ...detailsMap[driver.id],
                 isActive: driver.location.isActive,
                 isFree: driver.location.isFree
               }
-            }))
+
+            }})
             .filter(driver => driver?.details?.id!==undefined); // Only keep drivers that exist in both systems
 
           setCombinedDrivers(combined);
@@ -239,7 +242,9 @@ const DriverList = ({
           </ReloadContainer>
         </div>
         <div className="divWithScrollbar">
-          {filteredDrivers.map((driver, i) => (
+          {filteredDrivers.map((driver, i) => {
+          
+            return(
             <DriverItem
               key={i}
               driver={driver}
@@ -254,7 +259,7 @@ const DriverList = ({
 
               }}
             />
-          ))}
+          )})}
         </div>
       </DriverListContainer>
 

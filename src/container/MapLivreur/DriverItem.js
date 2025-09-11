@@ -10,7 +10,7 @@ const DriverItem = ({
   asideActive,
   onClick,
 }) => {
- 
+  
   const getCarIcon = (isActive, isFree) => {
     
     if (!isFree) {

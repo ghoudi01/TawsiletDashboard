@@ -29,7 +29,7 @@ function Calcule() {
         errors[propertyName] = `${propertyName} est requis`;
       } else if (propertyName === "places_numbers" && !validNumberRegex.test(value)) {
         errors[propertyName] = `${propertyName} doit être un nombre valide`;
-      } else if (["min_course", "prix_klm", "prix_minute", "commission", "reservation_price"].includes(propertyName) && !validNumberRegex.test(value)) {
+      } else if (["min_course", "prix_klm", "prix_minute", "commission", "reservation_price", "multiply_range"].includes(propertyName) && !validNumberRegex.test(value)) {
         errors[propertyName] = `${propertyName} doit être un nombre valide`;
       } else if (propertyName === "soon" && typeof value !== "boolean") {
         errors[propertyName] = `${propertyName} doit être un booléen`;
@@ -56,6 +56,7 @@ function Calcule() {
           prix_minute: priceData.prix_minute,
           commission: priceData.commission,
           reservation_price: priceData.reservation_price,
+          multiply_range: priceData.multiply_range || 0,
           name_ar: priceData.name_ar || "",
           name_fr: priceData.name_fr || "",
           name_en: priceData.name_en || "",
@@ -833,10 +834,69 @@ function Calcule() {
     },
     {
       id: 12,
+      Distance: "Seuil de multiplication (km)",
+      Course: isLoading ? (
+        <Spin />
+      ) : editingIndexes[`${priceId}-12`] ? (
+        <div className="price_value_input">
+          <Input
+            pattern="[0-9]+"
+            type="text"
+            required
+            size="sm"
+            value={newPrices[priceId]?.multiply_range}
+            className="price_change_input"
+            onChange={(e) =>
+              setNewPrices((prevPrices) => ({
+                ...prevPrices,
+                [priceId]: {
+                  ...prevPrices[priceId],
+                  multiply_range: e.target.value,
+                },
+              }))
+            }
+          />
+          {inputErrors?.multiply_range && (
+            <span style={{ color: "red" }}>{inputErrors?.multiply_range}</span>
+          )}
+        </div>
+      ) : (
+        `${newPrices[priceId]?.multiply_range || 0} km (prix ×2 après ce seuil)`
+      ),
+      update: (
+        <div className="edit_price">
+          {editingIndexes[`${priceId}-12`] ? (
+            <div className="edit_price_actions">
+              <FeatherIcon
+                icon="check"
+                size={22}
+                stroke={"green"}
+                onClick={() => handlePriceUpdate(priceId, 12, "multiply_range")}
+              />
+              <FeatherIcon
+                icon="x-circle"
+                size={22}
+                stroke={"red"}
+                onClick={() => handleEditClick(priceId, 12)}
+              />
+            </div>
+          ) : (
+            <FeatherIcon
+              icon="edit-3"
+              size={22}
+              stroke={"gray"}
+              onClick={() => handleEditClick(priceId, 12)}
+            />
+          )}
+        </div>
+      ),
+    },
+    {
+      id: 13,
       Distance: "Bientôt Disponible",
       Course: isLoading ? (
         <Spin />
-      ) : editingIndexes[`${priceId}-10`] ? (
+      ) : editingIndexes[`${priceId}-13`] ? (
         <div className="price_value_input">
           <select
             value={newPrices[priceId]?.soon ? "true" : "false"}
@@ -864,19 +924,19 @@ function Calcule() {
       ),
       update: (
         <div className="edit_price">
-          {editingIndexes[`${priceId}-10`] ? (
+          {editingIndexes[`${priceId}-13`] ? (
             <div className="edit_price_actions">
               <FeatherIcon
                 icon="check"
                 size={22}
                 stroke={"green"}
-                onClick={() => handlePriceUpdate(priceId, 10, "soon")}
+                onClick={() => handlePriceUpdate(priceId, 13, "soon")}
               />
               <FeatherIcon
                 icon="x-circle"
                 size={22}
                 stroke={"red"}
-                onClick={() => handleEditClick(priceId, 10)}
+                onClick={() => handleEditClick(priceId, 13)}
               />
             </div>
           ) : (
@@ -884,18 +944,18 @@ function Calcule() {
               icon="edit-3"
               size={22}
               stroke={"gray"}
-              onClick={() => handleEditClick(priceId, 10)}
+              onClick={() => handleEditClick(priceId, 13)}
             />
           )}
         </div>
       ),
     },
     {
-      id: 13,
+      id: 14,
       Distance: "Afficher",
       Course: isLoading ? (
         <Spin />
-      ) : editingIndexes[`${priceId}-11`] ? (
+      ) : editingIndexes[`${priceId}-14`] ? (
         <div className="price_value_input">
           <select
             value={newPrices[priceId]?.show ? "true" : "false"}
@@ -923,19 +983,19 @@ function Calcule() {
       ),
       update: (
         <div className="edit_price">
-          {editingIndexes[`${priceId}-11`] ? (
+          {editingIndexes[`${priceId}-14`] ? (
             <div className="edit_price_actions">
               <FeatherIcon
                 icon="check"
                 size={22}
                 stroke={"green"}
-                onClick={() => handlePriceUpdate(priceId, 11, "show")}
+                onClick={() => handlePriceUpdate(priceId, 14, "show")}
               />
               <FeatherIcon
                 icon="x-circle"
                 size={22}
                 stroke={"red"}
-                onClick={() => handleEditClick(priceId, 11)}
+                onClick={() => handleEditClick(priceId, 14)}
               />
             </div>
           ) : (
@@ -943,7 +1003,7 @@ function Calcule() {
               icon="edit-3"
               size={22}
               stroke={"gray"}
-              onClick={() => handleEditClick(priceId, 11)}
+              onClick={() => handleEditClick(priceId, 14)}
             />
           )}
         </div>
