@@ -71,10 +71,6 @@ const Analytics = () => {
           setVehicleFilter(saved.vehicleFilter);
           setVehiclePending(saved.vehicleFilter);
         }
-        if (Array.isArray(saved.companyFilter)) {
-          setCompanyFilter(saved.companyFilter);
-          setCompanyPending(saved.companyFilter);
-        }
         if (typeof saved.showDrivers === "boolean") setShowDrivers(saved.showDrivers);
         if (typeof saved.showUsers === "boolean") setShowUsers(saved.showUsers);
         if (typeof saved.showRequests === "boolean") setShowRequests(saved.showRequests);
@@ -405,22 +401,15 @@ const Analytics = () => {
       .filter(Boolean);
   }, [filteredRequests, statusFilter, vehicleFilter]);
 
-  const getDriverCompanyName = useCallback((id) => {
-    const d = driverDetails?.[id] || driverDetails?.[String(id)];
-    return (d?.company_id?.name || d?.companies?.[0]?.name || "");
-  }, [driverDetails]);
-
   const mapDrivers = useMemo(() => {
     return drivers
       .filter((d) => d?.isActive)
       .map((d) => {
         if (!d?.latitude || !d?.longitude) return null;
-        const comp = getDriverCompanyName(d.id);
-        if (companyFilter.length && !companyFilter.includes(comp || "")) return null;
-        return { id: d.id, lat: Number(d.latitude), lng: Number(d.longitude), isFree: d.isFree, isActive: d.isActive, heading: d.heading || d.angle || 0, company: comp };
+        return { id: d.id, lat: Number(d.latitude), lng: Number(d.longitude), isFree: d.isFree, isActive: d.isActive, heading: d.heading || d.angle || 0 };
       })
       .filter(Boolean);
-  }, [drivers, companyFilter, getDriverCompanyName]);
+  }, [drivers]);
 
   const mapUsers = useMemo(() => {
     return users
@@ -645,15 +634,6 @@ const Analytics = () => {
                 value={vehiclePending}
                 onChange={setVehiclePending}
                 options={availableVehicles.map((s) => ({ label: s, value: s }))}
-              />
-              <Select
-                mode="multiple"
-                allowClear
-                style={{ minWidth: 220 }}
-                placeholder="Filtre société"
-                value={companyPending}
-                onChange={setCompanyPending}
-                options={availableCompanies.map((s) => ({ label: s, value: s }))}
               />
               <Tooltip title="Activer la heatmap des requêtes">
                 <span>
