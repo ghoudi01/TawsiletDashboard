@@ -890,12 +890,9 @@ function statusTheme(s) {
   const key = String(s || "").toLowerCase();
   const themes = {
     searching: { bg: "#f97316", fg: "#ffffff" },
-    pending: { bg: "#f59e0b", fg: "#ffffff" },
-    assigned_to_driver: { bg: "#3b82f6", fg: "#ffffff" },
-    completed: { bg: "#16a34a", fg: "#ffffff" },
-    canceled_by_client: { bg: "#ef4444", fg: "#ffffff" },
-    canceled_by_partner: { bg: "#ef4444", fg: "#ffffff" },
-    delivered: { bg: "#22c55e", fg: "#ffffff" },
+    accepted: { bg: "#16a34a", fg: "#ffffff" },
+    not_found: { bg: "#6b7280", fg: "#ffffff" },
+    canceled_search: { bg: "#ef4444", fg: "#ffffff" },
   };
   return themes[key] || { bg: "#6b7280", fg: "#ffffff" };
 }
