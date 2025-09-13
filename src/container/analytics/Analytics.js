@@ -29,12 +29,7 @@ const Container = styled.div`
   }
 `;
 
-const dateRanges = [
-  { label: "24h", value: "24h" },
-  { label: "7j", value: "7d" },
-  { label: "30j", value: "30d" },
-  { label: "Tout", value: "all" },
-];
+// date range removed per request
 
 const DEFAULT_CENTER = { lat: 34.8566, lng: 9.3522 };
 
@@ -43,7 +38,7 @@ const Analytics = () => {
   const [drivers, setDrivers] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [range, setRange] = useState("7d");
+  // date range removed per request
   const [showDrivers, setShowDrivers] = useState(true);
   const [showRequests, setShowRequests] = useState(true);
   const [showUsers, setShowUsers] = useState(true);
@@ -52,12 +47,12 @@ const Analytics = () => {
   // committed filters used for data rendering
   const [statusFilter, setStatusFilter] = useState(["searching"]);
   const [vehicleFilter, setVehicleFilter] = useState([]);
-  const [companyFilter, setCompanyFilter] = useState([]);
+  // company filter removed per request
 
   // pending filters used for debounced UI
   const [statusPending, setStatusPending] = useState(statusFilter);
   const [vehiclePending, setVehiclePending] = useState(vehicleFilter);
-  const [companyPending, setCompanyPending] = useState(companyFilter);
+  // company filter removed per request
 
   const [driverCompletions, setDriverCompletions] = useState({});
   const [driverDetails, setDriverDetails] = useState({}); // map of id or documentId -> user
@@ -93,19 +88,18 @@ const Analytics = () => {
     const prefs = {
       statusFilter,
       vehicleFilter,
-      companyFilter,
       showDrivers,
       showUsers,
       showRequests,
       showHeatmap,
     };
     try { localStorage.setItem("analyticsPrefs", JSON.stringify(prefs)); } catch {}
-  }, [statusFilter, vehicleFilter, companyFilter, showDrivers, showUsers, showRequests, showHeatmap]);
+  }, [statusFilter, vehicleFilter, showDrivers, showUsers, showRequests, showHeatmap]);
 
   // sync pending when committed changes externally (e.g., loaded)
   useEffect(() => setStatusPending(statusFilter), [statusFilter]);
   useEffect(() => setVehiclePending(vehicleFilter), [vehicleFilter]);
-  useEffect(() => setCompanyPending(companyFilter), [companyFilter]);
+  // company filter removed per request
 
   // debounce pending -> committed
   useEffect(() => {
@@ -116,10 +110,7 @@ const Analytics = () => {
     const t = setTimeout(() => setVehicleFilter(vehiclePending), 300);
     return () => clearTimeout(t);
   }, [vehiclePending]);
-  useEffect(() => {
-    const t = setTimeout(() => setCompanyFilter(companyPending), 300);
-    return () => clearTimeout(t);
-  }, [companyPending]);
+  // company filter removed per request
 
   useEffect(() => {
     const unsubscribers = [];
@@ -205,27 +196,7 @@ const Analytics = () => {
     run();
   }, []);
 
-  const now = Date.now();
-  const rangeMs = useMemo(() => {
-    switch (range) {
-      case "24h":
-        return 24 * 60 * 60 * 1000;
-      case "7d":
-        return 7 * 24 * 60 * 60 * 1000;
-      case "30d":
-        return 30 * 24 * 60 * 60 * 1000;
-      default:
-        return Infinity;
-    }
-  }, [range]);
-
-  const filteredRequests = useMemo(() => {
-    return requests.filter((r) => {
-      const createdAt = Number(r.createdAt || 0);
-      if (!createdAt || range === "all") return true;
-      return now - createdAt <= rangeMs;
-    });
-  }, [requests, now, range, rangeMs]);
+  const filteredRequests = requests;
 
   // fetch driver details for drivers present in Firebase by documentId (chunked)
   useEffect(() => {
@@ -274,14 +245,7 @@ const Analytics = () => {
     return Array.from(s);
   }, [requests]);
 
-  const availableCompanies = useMemo(() => {
-    const s = new Set();
-    Object.values(driverDetails || {}).forEach((d) => {
-      const name = d?.company_id?.name || d?.companies?.[0]?.name;
-      if (name) s.add(name);
-    });
-    return Array.from(s);
-  }, [driverDetails]);
+  // company list removed per request
 
   const requestStatusCounts = useMemo(() => {
     const map = {};
@@ -344,11 +308,12 @@ const Analytics = () => {
       title: "Statut",
       dataIndex: "status",
       key: "status",
-      render: (s, record) => (
-        <Tag color={statusColor(s || record.commandStatus || "unknown")}>
-          {s || record.commandStatus || "unknown"}
-        </Tag>
-      ),
+      render: (s, record) => {
+        const st = String(s || record.commandStatus || "unknown");
+        const { bg, fg } = statusTheme(st);
+        const label = st.replace(/_/g, " ");
+        return <Tag style={{ backgroundColor: bg, color: fg, borderColor: bg }}>{label}</Tag>;
+      },
     },
     {
       title: "Pickup",
@@ -579,23 +544,14 @@ const Analytics = () => {
                 <h2>Analytics</h2>
                 <span>Résumé des requêtes, chauffeurs et utilisateurs</span>
               </Col>
-              <Col>
-                <Select
-                  value={range}
-                  onChange={setRange}
-                  options={dateRanges}
-                  style={{ width: 120 }}
-                />
-              </Col>
+
             </Row>
           </Cards>
         </Col>
 
         <Col xs={24} md={8}>
           <Card className="kpi-card" bordered={false}>
-            <Statistic title="Requêtes" value={filteredRequests.length} />
-            <div style={{ height: 8 }} />
-            <small>Total filtré par période</small>
+            <Statistic title="Requêtes" value={requests.length} />
           </Card>
         </Col>
         <Col xs={24} md={8}>
@@ -743,22 +699,7 @@ const Analytics = () => {
                   );
                 })}
               </div>
-              {/* Company totals */}
-              <div>
-                <strong>Sociétés (actifs):</strong>
-                {availableCompanies.slice(0, 8).map((c) => {
-                  const cnt = drivers.filter((d) => d?.isActive && getDriverCompanyName(d.id) === c).length;
-                  const selected = companyFilter.includes(c);
-                  return (
-                    <Tag key={`co-${c}`} color={selected ? "blue" : undefined} style={{ marginLeft: 6 }}>
-                      {c}: {cnt}
-                    </Tag>
-                  );
-                })}
-                {availableCompanies.length > 8 && (
-                  <Tag>+{availableCompanies.length - 8} autres</Tag>
-                )}
-              </div>
+
             </div>
 
             <div className="map-wrap">
@@ -778,13 +719,14 @@ const Analytics = () => {
                             key={`rq-${m.id}`}
                             position={{ lat: m.lat, lng: m.lng }}
                             clusterer={clusterer}
+                            zIndex={100}
                             icon={{
                               path: window.google?.maps?.SymbolPath?.CIRCLE,
-                              fillColor: "#fa8b0c",
-                              scale: 6,
+                              fillColor: "#f97316",
+                              scale: 8,
                               fillOpacity: 1,
-                              strokeWeight: 1,
-                              strokeColor: "#fff",
+                              strokeWeight: 2,
+                              strokeColor: "#1f2937",
                             }}
                           />
                         ))}
@@ -804,14 +746,15 @@ const Analytics = () => {
                             key={`dr-${m.id}`}
                             position={{ lat: m.lat, lng: m.lng }}
                             clusterer={clusterer}
+                            zIndex={200}
                             title={`${getDriverName(m.id)}`}
                             icon={{
                               path: window.google?.maps?.SymbolPath?.FORWARD_CLOSED_ARROW,
-                              fillColor: m.isFree ? "#20C997" : "#f5222d",
-                              scale: 5,
+                              fillColor: m.isFree ? "#16a34a" : "#ef4444",
+                              scale: 6,
                               fillOpacity: 1,
-                              strokeWeight: 1,
-                              strokeColor: "#fff",
+                              strokeWeight: 2,
+                              strokeColor: "#111827",
                               rotation: m.heading || 0,
                             }}
                           />
@@ -829,14 +772,15 @@ const Analytics = () => {
                             key={`u-${u.id}`}
                             position={{ lat: u.lat, lng: u.lng }}
                             clusterer={clusterer}
+                            zIndex={150}
                             title={`Utilisateur ${u.id}`}
                             icon={{
                               path: window.google?.maps?.SymbolPath?.CIRCLE,
-                              fillColor: "#2D99FF",
-                              scale: 5,
+                              fillColor: "#2563eb",
+                              scale: 6,
                               fillOpacity: 1,
-                              strokeWeight: 1,
-                              strokeColor: "#fff",
+                              strokeWeight: 2,
+                              strokeColor: "#111827",
                             }}
                           />
                         ))}
@@ -942,17 +886,18 @@ function fromNow(ts) {
   return `${d}j`;
 }
 
-function statusColor(s) {
-  const map = {
-    searching: "orange",
-    pending: "orange",
-    Assigned_to_driver: "blue",
-    Completed: "green",
-    Canceled_by_client: "red",
-    Canceled_by_partner: "red",
-    unknown: "default",
+function statusTheme(s) {
+  const key = String(s || "").toLowerCase();
+  const themes = {
+    searching: { bg: "#f97316", fg: "#ffffff" },
+    pending: { bg: "#f59e0b", fg: "#ffffff" },
+    assigned_to_driver: { bg: "#3b82f6", fg: "#ffffff" },
+    completed: { bg: "#16a34a", fg: "#ffffff" },
+    canceled_by_client: { bg: "#ef4444", fg: "#ffffff" },
+    canceled_by_partner: { bg: "#ef4444", fg: "#ffffff" },
+    delivered: { bg: "#22c55e", fg: "#ffffff" },
   };
-  return map[s] || "purple";
+  return themes[key] || { bg: "#6b7280", fg: "#ffffff" };
 }
 
 function palette(n) {
