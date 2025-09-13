@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { Row, Col, Card, Statistic, Table, Tag, Select, Spin, Switch, Tooltip } from "antd";
 import styled from "styled-components";
-import { GoogleMap, Marker } from "@react-google-maps/api";
+import { GoogleMap, Marker, HeatmapLayer } from "@react-google-maps/api";
 import { MarkerClusterer } from "@react-google-maps/api";
 import { ref, onValue } from "firebase/database";
 import { database } from "../../config/firebase";
@@ -47,6 +47,10 @@ const Analytics = () => {
   const [showDrivers, setShowDrivers] = useState(true);
   const [showRequests, setShowRequests] = useState(true);
   const [showUsers, setShowUsers] = useState(true);
+  const [showHeatmap, setShowHeatmap] = useState(false);
+  const [statusFilter, setStatusFilter] = useState(["searching"]);
+  const [vehicleFilter, setVehicleFilter] = useState([]);
+  const [companyFilter, setCompanyFilter] = useState([]);
   const [driverCompletions, setDriverCompletions] = useState({});
   const [driverDetails, setDriverDetails] = useState({}); // map of id or documentId -> user
   const [requestDriversCache, setRequestDriversCache] = useState({});
@@ -189,6 +193,30 @@ const Analytics = () => {
     run();
   }, [drivers]);
 
+  const availableStatuses = useMemo(() => {
+    const s = new Set();
+    requests.forEach((r) => s.add(String(r?.status || r?.commandStatus || "unknown")));
+    return Array.from(s);
+  }, [requests]);
+
+  const availableVehicles = useMemo(() => {
+    const s = new Set();
+    requests.forEach((r) => {
+      const v = r?.vehicleType?.label || r?.vehicleType?.key || r?.vehicleType?.id;
+      if (v !== undefined && v !== null) s.add(String(v));
+    });
+    return Array.from(s);
+  }, [requests]);
+
+  const availableCompanies = useMemo(() => {
+    const s = new Set();
+    Object.values(driverDetails || {}).forEach((d) => {
+      const name = d?.company_id?.name || d?.companies?.[0]?.name;
+      if (name) s.add(name);
+    });
+    return Array.from(s);
+  }, [driverDetails]);
+
   const requestStatusCounts = useMemo(() => {
     const map = {};
     filteredRequests.forEach((r) => {
@@ -328,8 +356,15 @@ const Analytics = () => {
   ];
 
   const mapRequests = useMemo(() => {
+    const statusLower = statusFilter.map((s) => String(s).toLowerCase());
     return filteredRequests
-      .filter((r) => String(r?.status || "").toLowerCase() === "searching")
+      .filter((r) => {
+        const st = String(r?.status || r?.commandStatus || "").toLowerCase();
+        const statusMatch = !statusFilter.length || statusLower.includes(st);
+        const veh = r?.vehicleType?.label || r?.vehicleType?.key || r?.vehicleType?.id;
+        const vehicleMatch = !vehicleFilter.length || vehicleFilter.map(String).includes(String(veh));
+        return statusMatch && vehicleMatch;
+      })
       .map((r) => {
         const lat = r?.pickupAddress?.latitude || r?.pickupAddress?.lat;
         const lng = r?.pickupAddress?.longitude || r?.pickupAddress?.lng;
@@ -337,17 +372,24 @@ const Analytics = () => {
         return { id: r.id, lat: Number(lat), lng: Number(lng), status: r.status };
       })
       .filter(Boolean);
-  }, [filteredRequests]);
+  }, [filteredRequests, statusFilter, vehicleFilter]);
+
+  const getDriverCompanyName = useCallback((id) => {
+    const d = driverDetails?.[id] || driverDetails?.[String(id)];
+    return (d?.company_id?.name || d?.companies?.[0]?.name || "");
+  }, [driverDetails]);
 
   const mapDrivers = useMemo(() => {
     return drivers
       .filter((d) => d?.isActive)
       .map((d) => {
         if (!d?.latitude || !d?.longitude) return null;
-        return { id: d.id, lat: Number(d.latitude), lng: Number(d.longitude), isFree: d.isFree, isActive: d.isActive, heading: d.heading || d.angle || 0 };
+        const comp = getDriverCompanyName(d.id);
+        if (companyFilter.length && !companyFilter.includes(comp || "")) return null;
+        return { id: d.id, lat: Number(d.latitude), lng: Number(d.longitude), isFree: d.isFree, isActive: d.isActive, heading: d.heading || d.angle || 0, company: comp };
       })
       .filter(Boolean);
-  }, [drivers]);
+  }, [drivers, companyFilter, getDriverCompanyName]);
 
   const mapUsers = useMemo(() => {
     return users
@@ -371,6 +413,15 @@ const Analytics = () => {
     const name = [d.firstName, d.lastName].filter(Boolean).join(" ") || d.username || d.email;
     return name || id;
   }, [driverDetails]);
+
+  const heatmapData = useMemo(() => {
+    if (!showHeatmap || !window.google?.maps) return [];
+    try {
+      return mapRequests.map((m) => new window.google.maps.LatLng(m.lat, m.lng));
+    } catch {
+      return [];
+    }
+  }, [showHeatmap, mapRequests]);
 
   const fetchDriverDetailsForIds = useCallback(async (ids) => {
     try {
@@ -554,6 +605,40 @@ const Analytics = () => {
               </Tooltip>
             </div>
           }>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 12 }}>
+              <Select
+                mode="multiple"
+                allowClear
+                style={{ minWidth: 200 }}
+                placeholder="Filtre statut"
+                value={statusFilter}
+                onChange={setStatusFilter}
+                options={availableStatuses.map((s) => ({ label: s, value: s }))}
+              />
+              <Select
+                mode="multiple"
+                allowClear
+                style={{ minWidth: 200 }}
+                placeholder="Filtre véhicule"
+                value={vehicleFilter}
+                onChange={setVehicleFilter}
+                options={availableVehicles.map((s) => ({ label: s, value: s }))}
+              />
+              <Select
+                mode="multiple"
+                allowClear
+                style={{ minWidth: 220 }}
+                placeholder="Filtre société"
+                value={companyFilter}
+                onChange={setCompanyFilter}
+                options={availableCompanies.map((s) => ({ label: s, value: s }))}
+              />
+              <Tooltip title="Activer la heatmap des requêtes">
+                <span>
+                  Heatmap <Switch checked={showHeatmap} onChange={setShowHeatmap} />
+                </span>
+              </Tooltip>
+            </div>
             <div className="map-wrap">
               <GoogleMap
                 center={DEFAULT_CENTER}
@@ -562,7 +647,7 @@ const Analytics = () => {
                 onLoad={onLoad}
                 onUnmount={onUnmount}
               >
-                {showRequests && (
+                {showRequests && !showHeatmap && (
                   <MarkerClusterer>
                     {(clusterer) => (
                       <>
@@ -584,6 +669,9 @@ const Analytics = () => {
                       </>
                     )}
                   </MarkerClusterer>
+                )}
+                {showRequests && showHeatmap && heatmapData.length > 0 && (
+                  <HeatmapLayer data={heatmapData} options={{ radius: 30, dissipating: true }} />
                 )}
                 {showDrivers && (
                   <MarkerClusterer>
