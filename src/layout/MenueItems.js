@@ -102,7 +102,6 @@ const MenuItems = ({ darkMode, toggleCollapsed, topMenu }) => {
 
   const renderMenuItems = () => {
     if (roleUser === "owner" || roleUser === "admin" || roleUser === "agent_support") {
-      // Build Gestion submenu items
       const gestionMenuItems = [
         canView("reservations") && (
           <Menu.Item key="reservations">
@@ -151,7 +150,6 @@ const MenuItems = ({ darkMode, toggleCollapsed, topMenu }) => {
         ),
       ].filter(Boolean);
 
-      // Build Utilisateurs submenu items
       const utilisateursMenuItems = [
         canView("admins") && currentUser.user_role === "owner" && (
           <Menu.Item key="view">
@@ -160,7 +158,6 @@ const MenuItems = ({ darkMode, toggleCollapsed, topMenu }) => {
             </NavLink>
           </Menu.Item>
         ),
-        // Add Red Zones menu item for owner
         canView("admins") && currentUser.user_role === "owner" && (
           <Menu.Item key="redzones">
             <NavLink onClick={toggleCollapsed} to={`${path}/RedZones/view`}>
@@ -175,7 +172,6 @@ const MenuItems = ({ darkMode, toggleCollapsed, topMenu }) => {
             </NavLink>
           </Menu.Item>
         ),
-        // Add MapUser menu item for user map
         (roleUser === "owner" || roleUser === "admin" || roleUser === "agent_support") && (
           <Menu.Item key="mapuser">
             <NavLink onClick={toggleCollapsed} to={`${path}/MapUser/view`}>
@@ -190,7 +186,6 @@ const MenuItems = ({ darkMode, toggleCollapsed, topMenu }) => {
         </Menu.Item>,
       ].filter(Boolean);
 
-      // Build Finance submenu items
       const financeMenuItems = [
         canView("balance") && (
           <Menu.Item key="view">
@@ -208,7 +203,6 @@ const MenuItems = ({ darkMode, toggleCollapsed, topMenu }) => {
         ),
       ].filter(Boolean);
 
-      // Build Support submenu items
       const supportMenuItems = [
         <Menu.Item key="projectDetails">
           <NavLink onClick={toggleCollapsed} to={`${path}/Ticket/clients`}>
@@ -222,7 +216,6 @@ const MenuItems = ({ darkMode, toggleCollapsed, topMenu }) => {
         </Menu.Item>,
       ].filter(Boolean);
 
-      // Build Paramètres submenu items
       const parametresMenuItems = [
         canView("maintenance") && currentUser.user_role === "owner" && (
           <Menu.Item key="view">
@@ -260,6 +253,20 @@ const MenuItems = ({ darkMode, toggleCollapsed, topMenu }) => {
               to={`${path}`}
             >
               Dashboard
+            </NavLink>
+          </Menu.Item>
+
+          <Menu.Item
+            key="analytics"
+            icon={!topMenu && <FeatherIcon icon="bar-chart-2" />}
+            title="Analytics"
+          >
+            <NavLink
+              key="analytics"
+              onClick={toggleCollapsed}
+              to={`${path}/Analytics/view`}
+            >
+              Analytics
             </NavLink>
           </Menu.Item>
 
@@ -329,7 +336,7 @@ const MenuItems = ({ darkMode, toggleCollapsed, topMenu }) => {
         </>
       );
     }
-    return null; // Render nothing if the role is not recognized
+    return null;
   };
 
   return (
@@ -338,7 +345,6 @@ const MenuItems = ({ darkMode, toggleCollapsed, topMenu }) => {
       onClick={onClick}
       mode={!topMenu || window.innerWidth <= 991 ? "inline" : "horizontal"}
       theme={darkMode && "dark"}
-      // // eslint-disable-next-line no-nested-ternary
       defaultSelectedKeys={
         !topMenu
           ? [

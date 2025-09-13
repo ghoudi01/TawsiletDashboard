@@ -36,6 +36,7 @@ const BalanceRoutes = lazy(() => import("./Balance"));
 const Historique = lazy(() => import("./Historique"));
 const MapUser = lazy(() => import("../../container/MapUser/MapUser"));
 const RedZoneRoutes = lazy(() => import("./RedZone"));
+const Analytics = lazy(() => import("./Analytics"));
 
 const Admin = () => {
   const { path } = useRouteMatch();
@@ -60,7 +61,6 @@ const Admin = () => {
       }
     }
 
-    // Calculate the validation state based on userValidation
     if (userValidation?.companies?.[0]?.confirmed === null) {
       return "waiting";
     } else if (userValidation?.companies?.[0]?.confirmed) {
@@ -87,7 +87,8 @@ const Admin = () => {
         />
 
         <ProtectedRoute
-          path={`${path}/dashboard`}
+          path={`${path}/dashboard`
+          }
           component={Dashboard}
           allowedRoles={["owner", "admin", "company", "agent","agent_support"]}
         />
@@ -211,6 +212,11 @@ const Admin = () => {
           component={RedZoneRoutes}
           allowedRoles={["owner"]}
         />
+        <ProtectedRoute
+          path={`${path}/Analytics`}
+          component={Analytics}
+          allowedRoles={["owner", "admin", "agent_support"]}
+        />
       </Suspense>
     </>
   );
@@ -225,7 +231,7 @@ const Admin = () => {
           <ValidationOverlay validation={validation} />
         </div>
       ) : (
-        renderRoutes() // Render your authenticated routes
+        renderRoutes()
       )}
     </Switch>
   );

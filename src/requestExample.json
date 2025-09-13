@@ -1,0 +1,72 @@
+{
+  "createdAt": 1757763234447,
+  "distance": 200,
+  "dropAddress": {
+    "address": "X32C+3CV، شارع الحرية، غنوش، Tunisia",
+    "latitude": 33.95002479541059,
+    "longitude": 10.070356093347073
+  },
+  "dropoffAddress": {
+    "address": "X32C+3CV، شارع الحرية، غنوش، Tunisia",
+    "latitude": 33.95002479541059,
+    "longitude": 10.070356093347073
+  },
+  "notifiedDrivers": {
+    "275": false
+  },
+  "pickupAddress": {
+    "address": "X329+7HG, Ghannouch, Tunisia",
+    "latitude": 33.9506686406134,
+    "longitude": 10.06889596581459
+  },
+  "price": 4,
+  "reservation": false,
+  "silencedDrivers": {
+    "275": true
+  },
+  "status": "searching",
+  "time": "1 minute",
+  "user": {
+    "blocked": false,
+    "confirmed": false,
+    "createdAt": "2025-09-06T17:58:54.088Z",
+    "currentToken": "",
+    "device_id": "718a5a85-330f-4838-9a64-7f15e1ccae01",
+    "documentId": "wjm5z84hpf0wqbvrad8lswlq",
+    "email": "example@example.com",
+    "firstName": "John",
+    "id": 3348,
+    "isActive": false,
+    "isFree": true,
+    "lastName": "Doe",
+    "phoneNumber": "+21600000000",
+    "pro": false,
+    "provider": "local",
+    "publishedAt": "2025-09-13T08:32:21.128Z",
+    "role": {
+      "createdAt": "2025-04-04T10:33:52.626Z",
+      "description": "Default role given to authenticated user.",
+      "documentId": "dt4bqqj5xg6usgtr5we7lxc2",
+      "id": 1,
+      "name": "Authenticated",
+      "publishedAt": "2025-04-04T10:33:52.626Z",
+      "type": "authenticated",
+      "updatedAt": "2025-08-23T21:57:15.228Z"
+    },
+    "trusted": false,
+    "updatedAt": "2025-09-13T08:32:21.133Z",
+    "user_role": "client",
+    "username": "John Doe"
+  },
+  "vehicleType": {
+    "icon": {
+      "uri": "https://example.com/icon.png"
+    },
+    "id": 1,
+    "key": 1,
+    "label": "Voiture",
+    "nearby": 4,
+    "reservation_price": 5,
+    "soon": false
+  }
+}
