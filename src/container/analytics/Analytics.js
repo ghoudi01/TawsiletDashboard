@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { Row, Col, Card, Statistic, Table, Tag, Select, Spin, Switch, Tooltip } from "antd";
 import styled from "styled-components";
 import { GoogleMap, Marker, HeatmapLayer } from "@react-google-maps/api";
@@ -48,12 +48,78 @@ const Analytics = () => {
   const [showRequests, setShowRequests] = useState(true);
   const [showUsers, setShowUsers] = useState(true);
   const [showHeatmap, setShowHeatmap] = useState(false);
+
+  // committed filters used for data rendering
   const [statusFilter, setStatusFilter] = useState(["searching"]);
   const [vehicleFilter, setVehicleFilter] = useState([]);
   const [companyFilter, setCompanyFilter] = useState([]);
+
+  // pending filters used for debounced UI
+  const [statusPending, setStatusPending] = useState(statusFilter);
+  const [vehiclePending, setVehiclePending] = useState(vehicleFilter);
+  const [companyPending, setCompanyPending] = useState(companyFilter);
+
   const [driverCompletions, setDriverCompletions] = useState({});
   const [driverDetails, setDriverDetails] = useState({}); // map of id or documentId -> user
   const [requestDriversCache, setRequestDriversCache] = useState({});
+
+  // load persisted preferences
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("analyticsPrefs") || "{}");
+      if (saved) {
+        if (Array.isArray(saved.statusFilter)) {
+          setStatusFilter(saved.statusFilter);
+          setStatusPending(saved.statusFilter);
+        }
+        if (Array.isArray(saved.vehicleFilter)) {
+          setVehicleFilter(saved.vehicleFilter);
+          setVehiclePending(saved.vehicleFilter);
+        }
+        if (Array.isArray(saved.companyFilter)) {
+          setCompanyFilter(saved.companyFilter);
+          setCompanyPending(saved.companyFilter);
+        }
+        if (typeof saved.showDrivers === "boolean") setShowDrivers(saved.showDrivers);
+        if (typeof saved.showUsers === "boolean") setShowUsers(saved.showUsers);
+        if (typeof saved.showRequests === "boolean") setShowRequests(saved.showRequests);
+        if (typeof saved.showHeatmap === "boolean") setShowHeatmap(saved.showHeatmap);
+      }
+    } catch {}
+  }, []);
+
+  // persist preferences (committed)
+  useEffect(() => {
+    const prefs = {
+      statusFilter,
+      vehicleFilter,
+      companyFilter,
+      showDrivers,
+      showUsers,
+      showRequests,
+      showHeatmap,
+    };
+    try { localStorage.setItem("analyticsPrefs", JSON.stringify(prefs)); } catch {}
+  }, [statusFilter, vehicleFilter, companyFilter, showDrivers, showUsers, showRequests, showHeatmap]);
+
+  // sync pending when committed changes externally (e.g., loaded)
+  useEffect(() => setStatusPending(statusFilter), [statusFilter]);
+  useEffect(() => setVehiclePending(vehicleFilter), [vehicleFilter]);
+  useEffect(() => setCompanyPending(companyFilter), [companyFilter]);
+
+  // debounce pending -> committed
+  useEffect(() => {
+    const t = setTimeout(() => setStatusFilter(statusPending), 300);
+    return () => clearTimeout(t);
+  }, [statusPending]);
+  useEffect(() => {
+    const t = setTimeout(() => setVehicleFilter(vehiclePending), 300);
+    return () => clearTimeout(t);
+  }, [vehiclePending]);
+  useEffect(() => {
+    const t = setTimeout(() => setCompanyFilter(companyPending), 300);
+    return () => clearTimeout(t);
+  }, [companyPending]);
 
   useEffect(() => {
     const unsubscribers = [];
@@ -611,8 +677,8 @@ const Analytics = () => {
                 allowClear
                 style={{ minWidth: 200 }}
                 placeholder="Filtre statut"
-                value={statusFilter}
-                onChange={setStatusFilter}
+                value={statusPending}
+                onChange={setStatusPending}
                 options={availableStatuses.map((s) => ({ label: s, value: s }))}
               />
               <Select
@@ -620,8 +686,8 @@ const Analytics = () => {
                 allowClear
                 style={{ minWidth: 200 }}
                 placeholder="Filtre véhicule"
-                value={vehicleFilter}
-                onChange={setVehicleFilter}
+                value={vehiclePending}
+                onChange={setVehiclePending}
                 options={availableVehicles.map((s) => ({ label: s, value: s }))}
               />
               <Select
@@ -629,8 +695,8 @@ const Analytics = () => {
                 allowClear
                 style={{ minWidth: 220 }}
                 placeholder="Filtre société"
-                value={companyFilter}
-                onChange={setCompanyFilter}
+                value={companyPending}
+                onChange={setCompanyPending}
                 options={availableCompanies.map((s) => ({ label: s, value: s }))}
               />
               <Tooltip title="Activer la heatmap des requêtes">
@@ -639,6 +705,62 @@ const Analytics = () => {
                 </span>
               </Tooltip>
             </div>
+            {/* Mini insights */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 16, marginBottom: 8 }}>
+              {/* Status totals */}
+              <div>
+                <strong>Statuts:</strong>
+                {availableStatuses.map((s) => {
+                  const cnt = filteredRequests.filter((r) => {
+                    const st = String(r?.status || r?.commandStatus || "").toLowerCase();
+                    const veh = r?.vehicleType?.label || r?.vehicleType?.key || r?.vehicleType?.id;
+                    const vehicleMatch = !vehicleFilter.length || vehicleFilter.map(String).includes(String(veh));
+                    return st === String(s).toLowerCase() && vehicleMatch;
+                  }).length;
+                  const selected = statusFilter.map(String).includes(String(s));
+                  return (
+                    <Tag key={`st-${s}`} color={selected ? "blue" : undefined} style={{ marginLeft: 6 }}>
+                      {s}: {cnt}
+                    </Tag>
+                  );
+                })}
+              </div>
+              {/* Vehicle totals */}
+              <div>
+                <strong>Véhicules:</strong>
+                {availableVehicles.map((v) => {
+                  const cnt = filteredRequests.filter((r) => {
+                    const st = String(r?.status || r?.commandStatus || "").toLowerCase();
+                    const statusMatch = !statusFilter.length || statusFilter.map((x) => String(x).toLowerCase()).includes(st);
+                    const veh = r?.vehicleType?.label || r?.vehicleType?.key || r?.vehicleType?.id;
+                    return statusMatch && String(veh) === String(v);
+                  }).length;
+                  const selected = vehicleFilter.map(String).includes(String(v));
+                  return (
+                    <Tag key={`vh-${v}`} color={selected ? "blue" : undefined} style={{ marginLeft: 6 }}>
+                      {v}: {cnt}
+                    </Tag>
+                  );
+                })}
+              </div>
+              {/* Company totals */}
+              <div>
+                <strong>Sociétés (actifs):</strong>
+                {availableCompanies.slice(0, 8).map((c) => {
+                  const cnt = drivers.filter((d) => d?.isActive && getDriverCompanyName(d.id) === c).length;
+                  const selected = companyFilter.includes(c);
+                  return (
+                    <Tag key={`co-${c}`} color={selected ? "blue" : undefined} style={{ marginLeft: 6 }}>
+                      {c}: {cnt}
+                    </Tag>
+                  );
+                })}
+                {availableCompanies.length > 8 && (
+                  <Tag>+{availableCompanies.length - 8} autres</Tag>
+                )}
+              </div>
+            </div>
+
             <div className="map-wrap">
               <GoogleMap
                 center={DEFAULT_CENTER}
