@@ -46,7 +46,10 @@ const Analytics = () => {
   const [range, setRange] = useState("7d");
   const [showDrivers, setShowDrivers] = useState(true);
   const [showRequests, setShowRequests] = useState(true);
+  const [showUsers, setShowUsers] = useState(true);
   const [driverCompletions, setDriverCompletions] = useState({});
+  const [driverDetails, setDriverDetails] = useState({}); // map of id or documentId -> user
+  const [requestDriversCache, setRequestDriversCache] = useState({});
 
   useEffect(() => {
     const unsubscribers = [];
@@ -112,12 +115,19 @@ const Analytics = () => {
         });
         const list = data?.data || [];
         const counts = {};
+        const details = {};
         list.forEach((cmd) => {
           const d = cmd?.driver_id;
-          const docId = d?.documentId || d?.id || d?.data?.documentId;
+          const docId = d?.documentId || d?.data?.documentId;
+          const numericId = d?.id;
           if (docId) counts[docId] = (counts[docId] || 0) + 1;
+          if (d) {
+            if (docId) details[docId] = d;
+            if (numericId) details[String(numericId)] = d;
+          }
         });
         setDriverCompletions(counts);
+        setDriverDetails((prev) => ({ ...prev, ...details }));
       } catch (e) {
         // silent
       }
@@ -146,6 +156,38 @@ const Analytics = () => {
       return now - createdAt <= rangeMs;
     });
   }, [requests, now, range, rangeMs]);
+
+  // fetch driver details for drivers present in Firebase by documentId (chunked)
+  useEffect(() => {
+    const jwt = localStorage.getItem("token");
+    if (!jwt || !drivers?.length) return;
+    const ids = Array.from(new Set(drivers.map((d) => d.id).filter(Boolean)));
+    const chunkArray = (array, size) => {
+      const res = [];
+      for (let i = 0; i < array.length; i += size) res.push(array.slice(i, i + size));
+      return res;
+    };
+    const run = async () => {
+      try {
+        const chunks = chunkArray(ids, 100);
+        const merged = {};
+        for (const chunk of chunks) {
+          const params = new URLSearchParams();
+          chunk.forEach((id, idx) => params.append(`filters[documentId][$in][${idx}]`, id));
+          const url = `${process.env.REACT_APP_BACKUP_URL}users?${params.toString()}`;
+          const { data } = await axios.get(url, { headers: { Authorization: `Bearer ${jwt}` } });
+          data.forEach((u) => {
+            if (u?.documentId) merged[u.documentId] = u;
+            if (u?.id) merged[String(u.id)] = u;
+          });
+        }
+        if (Object.keys(merged).length) setDriverDetails((prev) => ({ ...prev, ...merged }));
+      } catch (e) {
+        // silent
+      }
+    };
+    run();
+  }, [drivers]);
 
   const requestStatusCounts = useMemo(() => {
     const map = {};
@@ -243,7 +285,8 @@ const Analytics = () => {
   ];
 
   const driverColumns = [
-    { title: "Driver", dataIndex: "id", key: "id" },
+    { title: "Nom", key: "name", render: (_, r) => getDriverName(r.id) },
+    { title: "ID", dataIndex: "id", key: "id" },
     {
       title: "Actif",
       dataIndex: "isActive",
@@ -286,6 +329,7 @@ const Analytics = () => {
 
   const mapRequests = useMemo(() => {
     return filteredRequests
+      .filter((r) => String(r?.status || "").toLowerCase() === "searching")
       .map((r) => {
         const lat = r?.pickupAddress?.latitude || r?.pickupAddress?.lat;
         const lng = r?.pickupAddress?.longitude || r?.pickupAddress?.lng;
@@ -297,16 +341,108 @@ const Analytics = () => {
 
   const mapDrivers = useMemo(() => {
     return drivers
+      .filter((d) => d?.isActive)
       .map((d) => {
         if (!d?.latitude || !d?.longitude) return null;
-        return { id: d.id, lat: Number(d.latitude), lng: Number(d.longitude), isFree: d.isFree, isActive: d.isActive };
+        return { id: d.id, lat: Number(d.latitude), lng: Number(d.longitude), isFree: d.isFree, isActive: d.isActive, heading: d.heading || d.angle || 0 };
       })
       .filter(Boolean);
   }, [drivers]);
 
+  const mapUsers = useMemo(() => {
+    return users
+      .filter((u) => u && (u.isActive || u.is_active))
+      .map((u) => {
+        const lat = u.latitude || u?.location?.latitude;
+        const lng = u.longitude || u?.location?.longitude;
+        if (!lat || !lng) return null;
+        return { id: u.id, lat: Number(lat), lng: Number(lng) };
+      })
+      .filter(Boolean);
+  }, [users]);
+
   const [map, setMap] = useState(null);
   const onLoad = useCallback((m) => setMap(m), []);
   const onUnmount = useCallback(() => setMap(null), []);
+
+  const getDriverName = useCallback((id) => {
+    const d = driverDetails?.[id] || driverDetails?.[String(id)];
+    if (!d) return id;
+    const name = [d.firstName, d.lastName].filter(Boolean).join(" ") || d.username || d.email;
+    return name || id;
+  }, [driverDetails]);
+
+  const fetchDriverDetailsForIds = useCallback(async (ids) => {
+    try {
+      const jwt = localStorage.getItem("token");
+      if (!jwt || !ids?.length) return;
+      const numeric = ids.filter((id) => /^\d+$/.test(String(id)));
+      const docs = ids.filter((id) => !/^\d+$/.test(String(id)));
+      const merged = {};
+      if (docs.length) {
+        const params = new URLSearchParams();
+        docs.forEach((id, idx) => params.append(`filters[documentId][$in][${idx}]`, id));
+        const { data } = await axios.get(`${process.env.REACT_APP_BACKUP_URL}users?${params.toString()}`, {
+          headers: { Authorization: `Bearer ${jwt}` },
+        });
+        data.forEach((u) => { if (u?.documentId) merged[u.documentId] = u; });
+      }
+      if (numeric.length) {
+        const params = new URLSearchParams();
+        numeric.forEach((id, idx) => params.append(`filters[id][$in][${idx}]`, String(id)));
+        const { data } = await axios.get(`${process.env.REACT_APP_BACKUP_URL}users?${params.toString()}`, {
+          headers: { Authorization: `Bearer ${jwt}` },
+        });
+        data.forEach((u) => { if (u?.id) merged[String(u.id)] = u; });
+      }
+      if (Object.keys(merged).length) setDriverDetails((prev) => ({ ...prev, ...merged }));
+    } catch(e) {}
+  }, [setDriverDetails]);
+
+  const buildRequestDriverRows = useCallback((record) => {
+    const notified = record?.notifiedDrivers || {};
+    const silenced = record?.silencedDrivers || {};
+    const accepted = [];
+    const rejected = [];
+    const silencedOnly = [];
+
+    Object.entries(notified).forEach(([id, val]) => {
+      if (val) accepted.push(id); else rejected.push(id);
+    });
+    const notifiedSet = new Set(Object.keys(notified));
+    Object.keys(silenced).forEach((id) => { if (!notifiedSet.has(id)) silencedOnly.push(id); });
+
+    const rows = [
+      ...accepted.map((id) => ({ id, status: "Accepté" })),
+      ...rejected.map((id) => ({ id, status: "Rejeté" })),
+      ...silencedOnly.map((id) => ({ id, status: "Aucune action" })),
+    ];
+    return rows;
+  }, []);
+
+  const expandedDriversView = useCallback((record) => {
+    const rows = buildRequestDriverRows(record);
+    const columns = [
+      { title: "Chauffeur", key: "name", render: (_, r) => getDriverName(r.id) },
+      { title: "ID", dataIndex: "id", key: "id" },
+      { title: "Statut", dataIndex: "status", key: "status", render: (s) => (
+        <Tag color={s === "Accepté" ? "green" : s === "Rejeté" ? "red" : "orange"}>{s}</Tag>
+      ) },
+    ];
+    return (
+      <div style={{ padding: 12 }}>
+        <Table size="small" rowKey={(r) => `${record.id}-${r.id}`} dataSource={rows} columns={columns} pagination={false} />
+      </div>
+    );
+  }, [buildRequestDriverRows, getDriverName]);
+
+  const onExpandRequest = useCallback((expanded, record) => {
+    if (!expanded) return;
+    const rows = buildRequestDriverRows(record);
+    const ids = rows.map((r) => r.id);
+    const missing = ids.filter((id) => !driverDetails?.[id] && !driverDetails?.[String(id)]);
+    if (missing.length) fetchDriverDetailsForIds(missing);
+  }, [buildRequestDriverRows, driverDetails, fetchDriverDetailsForIds]);
 
   if (loading) {
     return (
@@ -406,7 +542,12 @@ const Analytics = () => {
                   Chauffeurs <Switch checked={showDrivers} onChange={setShowDrivers} />
                 </span>
               </Tooltip>
-              <Tooltip title="Afficher les requêtes">
+              <Tooltip title="Afficher les utilisateurs">
+                <span>
+                  Utilisateurs <Switch checked={showUsers} onChange={setShowUsers} />
+                </span>
+              </Tooltip>
+              <Tooltip title="Afficher les requêtes (searching)">
                 <span>
                   Requêtes <Switch checked={showRequests} onChange={setShowRequests} />
                 </span>
@@ -453,10 +594,36 @@ const Analytics = () => {
                             key={`dr-${m.id}`}
                             position={{ lat: m.lat, lng: m.lng }}
                             clusterer={clusterer}
+                            title={`${getDriverName(m.id)}`}
                             icon={{
                               path: window.google?.maps?.SymbolPath?.FORWARD_CLOSED_ARROW,
                               fillColor: m.isFree ? "#20C997" : "#f5222d",
-                              scale: 4,
+                              scale: 5,
+                              fillOpacity: 1,
+                              strokeWeight: 1,
+                              strokeColor: "#fff",
+                              rotation: m.heading || 0,
+                            }}
+                          />
+                        ))}
+                      </>
+                    )}
+                  </MarkerClusterer>
+                )}
+                {showUsers && (
+                  <MarkerClusterer>
+                    {(clusterer) => (
+                      <>
+                        {mapUsers.map((u) => (
+                          <Marker
+                            key={`u-${u.id}`}
+                            position={{ lat: u.lat, lng: u.lng }}
+                            clusterer={clusterer}
+                            title={`Utilisateur ${u.id}`}
+                            icon={{
+                              path: window.google?.maps?.SymbolPath?.CIRCLE,
+                              fillColor: "#2D99FF",
+                              scale: 5,
                               fillOpacity: 1,
                               strokeWeight: 1,
                               strokeColor: "#fff",
@@ -478,6 +645,7 @@ const Analytics = () => {
               rowKey={(r) => r.id}
               dataSource={recentRequests}
               columns={requestColumns}
+              expandable={{ expandedRowRender: (record) => expandedDriversView(record), onExpand: onExpandRequest, rowExpandable: () => true }}
               pagination={{ pageSize: 10 }}
             />
           </Cards>
@@ -591,5 +759,7 @@ function randomColor() {
   const b = Math.floor(150 + Math.random() * 105);
   return `rgb(${r},${g},${b})`;
 }
+
+export default Analytics;
 
 export default Analytics;
