@@ -15,6 +15,7 @@ import reqSample from "../../requestExample.json";
 import userSample from "../../userExample.json";
 import driverSample from "../../driverExample.json";
 import dayjs from "dayjs";
+import axios from "axios";
 
 const Container = styled.div`
   .kpi-card .ant-statistic-title {
@@ -45,6 +46,7 @@ const Analytics = () => {
   const [range, setRange] = useState("7d");
   const [showDrivers, setShowDrivers] = useState(true);
   const [showRequests, setShowRequests] = useState(true);
+  const [driverCompletions, setDriverCompletions] = useState({});
 
   useEffect(() => {
     const unsubscribers = [];
@@ -93,6 +95,34 @@ const Analytics = () => {
 
     setLoading(false);
     return () => unsubscribers.forEach((u) => (typeof u === "function" ? u() : null));
+  }, []);
+
+  useEffect(() => {
+    const jwt = localStorage.getItem("token");
+    if (!jwt) return;
+    const run = async () => {
+      try {
+        const url = new URL(`${process.env.REACT_APP_BACKUP_URL}commands`);
+        url.searchParams.append("pagination[page]", "1");
+        url.searchParams.append("pagination[pageSize]", "2000");
+        url.searchParams.append("filters[commandStatus][$eq]", "Completed");
+        url.searchParams.append("populate[0]", "driver_id");
+        const { data } = await axios.get(url.toString(), {
+          headers: { Authorization: `Bearer ${jwt}` },
+        });
+        const list = data?.data || [];
+        const counts = {};
+        list.forEach((cmd) => {
+          const d = cmd?.driver_id;
+          const docId = d?.documentId || d?.id || d?.data?.documentId;
+          if (docId) counts[docId] = (counts[docId] || 0) + 1;
+        });
+        setDriverCompletions(counts);
+      } catch (e) {
+        // silent
+      }
+    };
+    run();
   }, []);
 
   const now = Date.now();
@@ -225,6 +255,12 @@ const Analytics = () => {
       dataIndex: "isFree",
       key: "isFree",
       render: (v) => <Tag color={v ? "blue" : "orange"}>{v ? "Oui" : "Occupé"}</Tag>,
+    },
+    {
+      title: "Complétées",
+      dataIndex: "completed",
+      key: "completed",
+      render: (_, r) => driverCompletions?.[r.id] || 0,
     },
     {
       title: "Last seen",
